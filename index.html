@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>River Soul · Dominical</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0c1a14;
+    --card: rgba(255,255,255,0.03);
+    --border: rgba(255,255,255,0.07);
+    --text: #dde8e0;
+    --muted: #4a6e58;
+    --dim: #2a3d30;
+    --green: #3ec48a;
+    --amber: #e0a832;
+    --red: #e05252;
+    --blue: #4ab4e8;
+    --purple: #c8a8e8;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse at 10% 0%, rgba(0,100,60,0.12) 0%, transparent 50%),
+      radial-gradient(ellipse at 90% 100%, rgba(0,60,100,0.10) 0%, transparent 50%);
+  }
+
+  .app {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 0 0 80px;
+  }
+
+  /* ── Header ── */
+  .header {
+    padding: 28px 20px 0;
+  }
+  .site-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: 0.02em;
+  }
+  .site-sub {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .season-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+    padding: 8px 14px;
+    background: rgba(255,255,255,0.025);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  .season-name { font-size: 12px; font-weight: 500; }
+  .lunar-info  { font-size: 11px; color: var(--muted); margin-left: auto; }
+  .sl-dot { font-size: 10px; margin-left: 8px; }
+  .sl-dot.ok   { color: var(--green); }
+  .sl-dot.fail { color: var(--muted); }
+
+  /* ── Tabs ── */
+  .tabs {
+    display: flex;
+    gap: 0;
+    margin: 18px 20px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 11px 4px 10px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    transition: color 0.15s;
+    margin-bottom: -1px;
+  }
+  .tab-btn.active {
+    color: var(--text);
+    border-bottom-color: var(--text);
+  }
+
+  /* ── Content ── */
+  .content { padding: 0 20px; }
+
+  .section-head {
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--dim);
+    padding-top: 24px;
+    margin-bottom: 10px;
+  }
+
+  .panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+
+  /* ── Score ── */
+  .score-num {
+    font-size: 72px;
+    font-weight: 300;
+    line-height: 1;
+    letter-spacing: -2px;
+    font-family: 'DM Mono', monospace;
+  }
+  .score-denom { font-size: 14px; color: var(--muted); margin-top: 4px; }
+  .badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 500;
+    margin-top: 10px;
+  }
+  .score-desc {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 12px;
+    line-height: 1.7;
+  }
+
+  /* ── Score bars ── */
+  .bar-row { margin-bottom: 14px; }
+  .bar-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    font-size: 11px;
+  }
+  .bar-label span:first-child { color: #8aabb8; }
+  .bar-label span:last-child  { font-weight: 500; }
+  .bar-track {
+    height: 4px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.8s ease;
+  }
+
+  /* ── Data rows ── */
+  .data-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 11px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 13px;
+  }
+  .data-row:last-child { border-bottom: none; }
+  .data-row .label { color: var(--muted); }
+  .data-row .value { font-weight: 500; text-align: right; }
+  .data-row .value .sub {
+    display: block;
+    font-size: 10px;
+    color: var(--dim);
+    margin-top: 2px;
+  }
+
+  /* ── Tide chart ── */
+  .tide-chart {
+    display: flex;
+    gap: 1px;
+    align-items: flex-end;
+    height: 80px;
+    margin-bottom: 6px;
+  }
+  .tide-bar-wrap { flex: 1; position: relative; }
+  .tide-bar {
+    border-radius: 2px 2px 0 0;
+    width: 100%;
+  }
+  .tide-label {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 7px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .chart-ends {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    color: var(--dim);
+  }
+
+  /* ── Surf days ── */
+  .surf-day {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .surf-day:last-child { border-bottom: none; }
+  .surf-day .day-label { font-size: 12px; color: var(--muted); width: 38px; }
+  .surf-day .rating-pill {
+    flex: 1;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 3px;
+  }
+  .surf-day .wave-ht { font-size: 14px; font-weight: 500; }
+
+  /* ── UV row ── */
+  .uv-row { display: flex; gap: 4px; }
+  .uv-day { flex: 1; text-align: center; }
+  .uv-day .uv-num { font-size: 18px; font-weight: 500; }
+  .uv-day .uv-lbl { font-size: 9px; color: var(--muted); margin-top: 3px; }
+
+  /* ── Info note ── */
+  .info-note {
+    font-size: 10px;
+    color: var(--dim);
+    line-height: 1.8;
+    margin-top: 10px;
+    padding: 8px 10px;
+    border-left: 2px solid rgba(74,180,232,0.2);
+    background: rgba(74,180,232,0.03);
+    border-radius: 0 4px 4px 0;
+  }
+
+  /* ── Loading ── */
+  .loading {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+  .loading-title {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .loading-sub { font-size: 10px; color: var(--dim); }
+  .spinner {
+    width: 24px; height: 24px;
+    border: 2px solid var(--dim);
+    border-top-color: var(--green);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .footer {
+    padding: 24px 20px;
+    font-size: 10px;
+    color: var(--dim);
+    line-height: 2;
+  }
+</style>
+</head>
+<body>
+
+<div id="loading" class="loading">
+  <div class="spinner"></div>
+  <div class="loading-title">Loading…</div>
+  <div class="loading-sub">Fetching weather, tides & surf</div>
+</div>
+
+<div id="app" class="app" style="display:none">
+
+  <div class="header">
+    <div class="site-title">River Soul</div>
+    <div class="site-sub">Barú River · Dominical, Costa Rica</div>
+    <div class="season-row">
+      <span id="season-icon" style="font-size:18px"></span>
+      <span id="season-name" class="season-name"></span>
+      <span id="lunar-info" class="lunar-info"></span>
+      <span id="sl-dot" class="sl-dot"></span>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('flood')">⚠ Flood</button>
+    <button class="tab-btn" onclick="showTab('tides')">🌊 Tides</button>
+    <button class="tab-btn" onclick="showTab('surf')">🏄 Surf</button>
+    <button class="tab-btn" onclick="showTab('weather')">🌤 Weather</button>
+  </div>
+
+  <div class="content">
+
+    <!-- FLOOD -->
+    <div id="tab-flood" class="tab-panel active">
+      <div class="section-head">Flood Risk Score</div>
+      <div class="panel">
+        <div id="score-num" class="score-num"></div>
+        <div class="score-denom">/100</div>
+        <div id="score-badge" class="badge"></div>
+        <div id="score-desc" class="score-desc"></div>
+      </div>
+
+      <div class="section-head">What's driving it</div>
+      <div class="panel">
+        <div id="bars"></div>
+        <div style="font-size:9px;color:var(--dim);margin-top:4px">
+          Rainfall 40% · Lunar 22% · Soil 18% · Tide 12% · Season 8%
+        </div>
+      </div>
+
+      <div id="flood-tide-section" style="display:none">
+        <div class="section-head">Current Tide · Bahia Uvita</div>
+        <div class="panel">
+          <div id="flood-tide-now" style="font-size:36px;font-weight:300"></div>
+          <div id="flood-tide-nexts" style="margin-top:12px;display:flex;gap:20px;flex-wrap:wrap;font-size:13px"></div>
+          <div id="flood-spring-warn" style="display:none;margin-top:10px;font-size:12px;color:var(--red)">
+            ⚠ Spring tides active — tidal range amplified
+          </div>
+        </div>
+      </div>
+
+      <div class="section-head">Sources</div>
+      <div class="panel">
+        <div style="font-size:10px;color:var(--dim);line-height:2.2">
+          Rainfall · OpenMeteo (live)<br>
+          Soil moisture · ERA5 reanalysis (live)<br>
+          Tides · <span id="src-surfline">Surfline · Bahia Uvita</span><br>
+          Lunar · Epoch calculation (exact)<br>
+          Season · 30-year Dominical averages
+        </div>
+      </div>
+    </div>
+
+    <!-- TIDES -->
+    <div id="tab-tides" class="tab-panel">
+      <div id="tides-content">
+        <div class="section-head">Now · Bahia Uvita</div>
+        <div class="panel">
+          <div id="tide-now-big" style="font-size:64px;font-weight:300;line-height:1"></div>
+          <div style="font-size:14px;color:var(--muted);margin-top:4px">feet</div>
+          <div id="tide-now-type" style="font-size:14px;font-weight:500;margin-top:8px"></div>
+          <div id="tide-spring" style="display:none;margin-top:8px;font-size:12px;color:var(--red)">
+            ⚠ Spring tides — tidal range amplified
+          </div>
+        </div>
+
+        <div class="section-head">Next 48 hours</div>
+        <div class="panel">
+          <div class="tide-chart" id="tide-chart"></div>
+          <div class="chart-ends"><span>Now</span><span>+48h</span></div>
+        </div>
+
+        <div class="section-head">Upcoming highs & lows</div>
+        <div class="panel" id="tide-upcoming"></div>
+      </div>
+      <div id="tides-unavail" style="display:none;padding:40px 0;text-align:center">
+        <div style="font-size:14px;color:var(--muted)">Tide data unavailable</div>
+        <div style="font-size:11px;color:var(--dim);margin-top:6px">Token may have expired</div>
+      </div>
+    </div>
+
+    <!-- SURF -->
+    <div id="tab-surf" class="tab-panel">
+      <div class="section-head">Right now · Dominical</div>
+      <div class="panel" id="surf-now-panel">
+        <div id="surf-now-ht" style="font-size:64px;font-weight:300;line-height:1"></div>
+        <div id="surf-now-rating"></div>
+        <div id="surf-now-wind" style="margin-top:12px;font-size:13px"></div>
+      </div>
+
+      <div id="swell-section" style="display:none">
+        <div class="section-head">Swell</div>
+        <div class="panel" id="swell-rows"></div>
+      </div>
+
+      <div id="surf-forecast-section" style="display:none">
+        <div class="section-head">7-day forecast</div>
+        <div class="panel" id="surf-days"></div>
+      </div>
+    </div>
+
+    <!-- WEATHER -->
+    <div id="tab-weather" class="tab-panel">
+      <div class="section-head">Temperature</div>
+      <div class="panel">
+        <div id="temp-big" style="font-size:64px;font-weight:300;line-height:1"></div>
+      </div>
+
+      <div class="section-head">Conditions</div>
+      <div class="panel" id="conditions-rows"></div>
+
+      <div id="uv-section" style="display:none">
+        <div class="section-head">UV this week</div>
+        <div class="panel">
+          <div class="uv-row" id="uv-row"></div>
+          <div class="info-note" style="margin-top:12px">
+            Extreme UV year-round. SPF 50+ recommended 10am–3pm.
+          </div>
+        </div>
+      </div>
+
+      <div class="section-head">Soil saturation</div>
+      <div class="panel">
+        <div id="soil-pct" style="font-size:36px;font-weight:300"></div>
+        <div class="bar-track" style="margin-top:10px">
+          <div id="soil-bar" class="bar-fill"></div>
+        </div>
+        <div id="soil-desc" style="font-size:12px;color:var(--muted);margin-top:8px"></div>
+      </div>
+
+      <div id="rain-forecast-section" style="display:none">
+        <div class="section-head">7-day rainfall</div>
+        <div class="panel" id="rain-days"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    Tides · Surf · Wind · Surfline Premium &nbsp;·&nbsp; Rainfall · Soil · UV · OpenMeteo
+  </div>
+</div>
+
+<script>
+// ── Constants ──────────────────────────────────────────────────────────────
+const BARU_LAT = 9.0553, BARU_LON = -83.8323;
+const SPOT_ID  = "5842041f4e65fad6a7708b9c";
+const SL_TOKEN = "7059d1864ea0c4513e2fef9bde48b538a3c9c41a";
+const LUNAR_CYCLE = 29.530588853;
+const KNOWN_NEW_MOON = new Date("2024-01-11T11:57:00Z").getTime();
+
+// ── Lunar ──────────────────────────────────────────────────────────────────
+function getLunarAge(date) {
+  const ms = date.getTime() - KNOWN_NEW_MOON;
+  return ((ms / (1000*60*60*24)) % LUNAR_CYCLE + LUNAR_CYCLE) % LUNAR_CYCLE;
+}
+function getLunarPhase(age) {
+  if (age < 1.85)  return { name:"New Moon",        icon:"🌑", risk:0.9, spring:true  };
+  if (age < 7.38)  return { name:"Waxing Crescent", icon:"🌒", risk:0.4, spring:false };
+  if (age < 9.22)  return { name:"First Quarter",   icon:"🌓", risk:0.6, spring:false };
+  if (age < 14.77) return { name:"Waxing Gibbous",  icon:"🌔", risk:0.3, spring:false };
+  if (age < 16.61) return { name:"Full Moon",        icon:"🌕", risk:0.9, spring:true  };
+  if (age < 22.15) return { name:"Waning Gibbous",  icon:"🌖", risk:0.3, spring:false };
+  if (age < 23.99) return { name:"Last Quarter",    icon:"🌗", risk:0.6, spring:false };
+  return               { name:"Waning Crescent",  icon:"🌘", risk:0.4, spring:false };
+}
+
+// ── Season ─────────────────────────────────────────────────────────────────
+const MONTHLY_RAIN = [54,44,47,67,262,374,387,424,416,415,313,124];
+function getSeasonBase(m) { return Math.min(MONTHLY_RAIN[m-1]/430, 1.0); }
+function getSeason(m) {
+  if ([12,1,2,3].includes(m)) return { name:"Dry Season",   icon:"☀️",  color:"#c8860a" };
+  if ([4,5].includes(m))      return { name:"Transition",   icon:"🌤️",  color:"#5a8a1a" };
+  if ([6,7,8,9].includes(m))  return { name:"Green Season", icon:"🌿",  color:"#1a7a50" };
+  return                              { name:"Peak Wet",     icon:"⛈️",  color:"#1a5ca0" };
+}
+
+// ── Scoring ────────────────────────────────────────────────────────────────
+function scoreRain(r24, r72) { return Math.min(r24/100*0.6 + r72/200*0.4, 1.0); }
+function scoreSoil(v)        { return v != null ? Math.min(v/0.45, 1.0) : 0.25; }
+function scoreTide(ft) {
+  if (ft >= 7) return 1.0; if (ft >= 5.5) return 0.85;
+  if (ft >= 4) return 0.6; if (ft >= 2.5) return 0.35; return 0.15;
+}
+function calcRisk(rR, lR, sR, seaR, tR) {
+  return Math.min(rR*0.40 + lR*0.22 + sR*0.18 + tR*0.12 + seaR*0.08, 1.0);
+}
+function riskInfo(s) {
+  if (s >= 0.70) return { label:"HIGH",     color:"#e05252", bg:"rgba(224,82,82,0.12)"    };
+  if (s >= 0.40) return { label:"MODERATE", color:"#e0a832", bg:"rgba(224,168,50,0.12)"   };
+  return               { label:"LOW",      color:"#3ec48a", bg:"rgba(62,196,138,0.12)"   };
+}
+function barColor(v) {
+  return v > 0.6 ? "#e05252" : v > 0.3 ? "#e0a832" : "#3ec48a";
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+function fmtTime(ts) {
+  const d = new Date(ts*1000), h = d.getHours(), m = d.getMinutes();
+  return `${h%12||12}:${m.toString().padStart(2,"0")}${h<12?"am":"pm"}`;
+}
+function fmtDay(ts) { return DAYS[new Date(ts*1000).getDay()]; }
+function windDir(deg) {
+  return ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"][Math.round(deg/22.5)%16];
+}
+function nearest(arr, nowTs) {
+  if (!arr?.length) return null;
+  return arr.reduce((b,x) => Math.abs(x.timestamp-nowTs) < Math.abs(b.timestamp-nowTs) ? x : b, arr[0]);
+}
+function uvLabel(v) {
+  if (v >= 11) return { t:"Extreme",  c:"#8e44ad" };
+  if (v >= 8)  return { t:"V.High",   c:"#e05252" };
+  if (v >= 6)  return { t:"High",     c:"#e0a832" };
+  if (v >= 3)  return { t:"Moderate", c:"#b7950b" };
+  return             { t:"Low",      c:"#3ec48a" };
+}
+function ratingColor(key) {
+  if (!key) return { bg:"rgba(255,255,255,0.04)", c:"#4a6e58" };
+  if (key.includes("GOOD")) return { bg:"rgba(62,196,138,0.12)",  c:"#3ec48a" };
+  if (key.includes("FAIR")) return { bg:"rgba(224,168,50,0.12)",  c:"#e0a832" };
+  return { bg:"rgba(255,255,255,0.04)", c:"#4a6e58" };
+}
+function dataRow(label, value, sub, color) {
+  return `<div class="data-row">
+    <span class="label">${label}</span>
+    <span class="value" style="${color?`color:${color}`:''}">
+      ${value}${sub?`<span class="sub">${sub}</span>`:''}
+    </span>
+  </div>`;
+}
+function makeBar(label, value, weight) {
+  const c = barColor(value);
+  return `<div class="bar-row">
+    <div class="bar-label">
+      <span>${label}</span>
+      <span style="color:${c}">${Math.round(value*100)}</span>
+    </div>
+    <div class="bar-track">
+      <div class="bar-fill" style="width:${value*100}%;background:${c}"></div>
+    </div>
+  </div>`;
+}
+
+// ── Tab switching ──────────────────────────────────────────────────────────
+function showTab(name) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`tab-${name}`).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+// ── Fetch ──────────────────────────────────────────────────────────────────
+async function fetchAll() {
+  const weatherUrl =
+    `https://api.open-meteo.com/v1/forecast?latitude=${BARU_LAT}&longitude=${BARU_LON}` +
+    `&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,uv_index` +
+    `&hourly=soil_moisture_0_to_1cm` +
+    `&daily=precipitation_sum,uv_index_max` +
+    `&past_days=3&forecast_days=7&timezone=America%2FCosta_Rica`;
+
+  function sl(ep, p) {
+    return fetch(`https://services.surfline.com/kbyg/spots/forecasts/${ep}?spotId=${SPOT_ID}&${p}&accesstoken=${SL_TOKEN}`)
+      .then(r => r.json()).catch(() => null);
+  }
+
+  const [weather, tides, waves, wind, rating] = await Promise.all([
+    fetch(weatherUrl).then(r => r.json()).catch(() => null),
+    sl("tides",  "days=7"),
+    sl("wave",   "days=7&intervalHours=3"),
+    sl("wind",   "days=7&intervalHours=3"),
+    sl("rating", "days=7&intervalHours=3"),
+  ]);
+
+  return {
+    weather,
+    tides:  tides?.data?.tides   ?? null,
+    waves:  waves?.data?.wave    ?? null,
+    wind:   wind?.data?.wind     ?? null,
+    rating: rating?.data?.rating ?? null,
+  };
+}
+
+// ── Render ─────────────────────────────────────────────────────────────────
+async function init() {
+  const now    = new Date();
+  const nowTs  = Math.floor(now.getTime()/1000);
+  const month  = now.getMonth()+1;
+  const age    = getLunarAge(now);
+  const phase  = getLunarPhase(age);
+  const season = getSeason(month);
+
+  const { weather, tides, waves, wind, rating } = await fetchAll();
+
+  // Hide loading, show app
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+
+  // ── Header ──
+  document.getElementById('season-icon').textContent = season.icon;
+  const sn = document.getElementById('season-name');
+  sn.textContent = season.name;
+  sn.style.color = season.color;
+  document.getElementById('lunar-info').textContent = `${phase.icon} ${phase.name}`;
+  const dot = document.getElementById('sl-dot');
+  if (tides) {
+    dot.textContent = '● Live';
+    dot.className = 'sl-dot ok';
+  } else {
+    dot.textContent = '● Surfline offline';
+    dot.className = 'sl-dot fail';
+  }
+
+  // ── Weather values ──
+  const cur    = weather?.current || {};
+  const daily  = weather?.daily   || {};
+  const soil   = weather?.hourly?.soil_moisture_0_to_1cm ?? [];
+  const soilNow = soil.length ? soil[Math.min(soil.length-1,71)] : null;
+  const rain24 = daily.precipitation_sum?.[3] ?? 0;
+  const rain72 = (daily.precipitation_sum?.slice(1,4)??[]).reduce((a,b)=>a+(b||0),0);
+
+  // ── Tide values ──
+  const curTide   = nearest(tides,  nowTs);
+  const curWave   = nearest(waves,  nowTs);
+  const curWind   = nearest(wind,   nowTs);
+  const curRating = nearest(rating, nowTs);
+  const tideH     = curTide?.height ?? null;
+
+  // ── Score ──
+  const rainR  = scoreRain(rain24, rain72);
+  const soilR  = scoreSoil(soilNow);
+  const tideR  = tideH != null ? scoreTide(tideH) : 0.3;
+  const seaB   = getSeasonBase(month);
+  const score  = calcRisk(rainR, phase.risk, soilR, seaB, tideR);
+  const risk   = riskInfo(score);
+
+  // ── FLOOD TAB ──
+  const sn2 = document.getElementById('score-num');
+  sn2.textContent = Math.round(score*100);
+  sn2.style.color = risk.color;
+
+  const badge = document.getElementById('score-badge');
+  badge.textContent = risk.label;
+  badge.style.background = risk.bg;
+  badge.style.color = risk.color;
+  badge.style.border = `1px solid ${risk.color}44`;
+
+  document.getElementById('score-desc').textContent =
+    score < 0.40 ? "River levels normal. No flood concern right now." :
+    score < 0.70 ? "Conditions building. Monitor the Barú before crossing." :
+                   "⚠ Elevated flood risk. Check river level before any crossing.";
+
+  document.getElementById('bars').innerHTML =
+    makeBar(`Rainfall — ${rain24.toFixed(0)}mm today, ${rain72.toFixed(0)}mm 3d`, rainR) +
+    makeBar(`Lunar — ${phase.name} (${age.toFixed(1)} days)`, phase.risk) +
+    makeBar(`Soil saturation — ${soilNow!=null?`${(soilNow*100).toFixed(0)}%`:"—"}`, soilR) +
+    makeBar(`Tide — ${tideH!=null?`${tideH.toFixed(1)} ft`:"no data"}`, tideR) +
+    makeBar(`Season — ${season.name}`, seaB);
+
+  if (curTide) {
+    document.getElementById('flood-tide-section').style.display = 'block';
+    document.getElementById('flood-tide-now').innerHTML =
+      `${curTide.height.toFixed(1)} <span style="font-size:18px;color:var(--muted)">ft</span>`;
+    const nexts = (tides??[]).filter(t=>t.timestamp>nowTs&&(t.type==="HIGH"||t.type==="LOW")).slice(0,4);
+    document.getElementById('flood-tide-nexts').innerHTML = nexts.map(t=>
+      `<div>
+        <span style="font-weight:500;color:${t.type==="HIGH"?"#4ab4e8":"#4a6e58"}">${t.type==="HIGH"?"▲":"▽"} ${t.height.toFixed(1)} ft</span>
+        <span style="color:var(--dim);margin-left:5px">${fmtTime(t.timestamp)}</span>
+      </div>`
+    ).join('');
+    if (phase.spring) document.getElementById('flood-spring-warn').style.display = 'block';
+  }
+
+  document.getElementById('src-surfline').textContent =
+    `Surfline · Bahia Uvita (${tides?"live ✓":"unavailable"})`;
+
+  // ── TIDES TAB ──
+  if (curTide) {
+    const big = document.getElementById('tide-now-big');
+    big.textContent = curTide.height.toFixed(1);
+    big.style.color = '#4ab4e8';
+    document.getElementById('tide-now-type').textContent =
+      curTide.type==="HIGH"?"High tide":curTide.type==="LOW"?"Low tide":"Between tides";
+    if (phase.spring) document.getElementById('tide-spring').style.display = 'block';
+
+    // 48h chart
+    const tide48 = (tides??[]).filter(t=>t.timestamp>=nowTs-3600&&t.timestamp<=nowTs+48*3600);
+    if (tide48.length > 1) {
+      const mn = Math.min(...tide48.map(t=>t.height));
+      const mx = Math.max(...tide48.map(t=>t.height));
+      document.getElementById('tide-chart').innerHTML = tide48.map(t => {
+        const h = Math.max(((t.height-mn)/(mx-mn||1))*68+6, 6);
+        const isCur  = Math.abs(t.timestamp-nowTs) < 1800;
+        const isHigh = t.type==="HIGH", isLow = t.type==="LOW";
+        const labelStyle = `bottom:${h+4}px;color:${isHigh?"#4ab4e8":"#4a6e58"}`;
+        return `<div class="tide-bar-wrap">
+          <div class="tide-bar" style="height:${h}px;background:${isCur?"#dde8e0":t.height>(mx+mn)/2?"#4ab4e8":"#1a3a50"}"></div>
+          ${(isHigh||isLow)?`<div class="tide-label" style="${labelStyle}">${t.height.toFixed(1)}</div>`:''}
+        </div>`;
+      }).join('');
+    }
+
+    // Upcoming
+    const upcoming = (tides??[]).filter(t=>t.timestamp>nowTs&&(t.type==="HIGH"||t.type==="LOW")).slice(0,8);
+    document.getElementById('tide-upcoming').innerHTML = upcoming.map(t=>
+      dataRow(
+        `${t.type==="HIGH"?"▲ High":"▽ Low"} · ${fmtDay(t.timestamp)} ${fmtTime(t.timestamp)}`,
+        `${t.height.toFixed(1)} ft`, null,
+        t.type==="HIGH"?"#4ab4e8":"#4a6e58"
+      )
+    ).join('');
+  } else {
+    document.getElementById('tides-content').style.display = 'none';
+    document.getElementById('tides-unavail').style.display = 'block';
+  }
+
+  // ── SURF TAB ──
+  if (curWave) {
+    const ht = document.getElementById('surf-now-ht');
+    ht.innerHTML = `${curWave.surf.min}–${curWave.surf.max} <span style="font-size:24px;color:var(--muted)">ft</span>`;
+    ht.style.color = '#dde8e0';
+
+    if (curRating?.rating?.key) {
+      const rc = ratingColor(curRating.rating.key);
+      document.getElementById('surf-now-rating').innerHTML =
+        `<span class="badge" style="background:${rc.bg};color:${rc.c};border:1px solid ${rc.c}44;margin-top:10px">
+          ${curRating.rating.key.replace(/_/g,' ')}
+        </span>`;
+    }
+
+    if (curWind) {
+      const wEl = document.getElementById('surf-now-wind');
+      const offColor = curWind.optimalWind ? "#3ec48a" : "#e0a832";
+      wEl.innerHTML = `<span style="font-weight:500;color:${offColor}">${curWind.optimalWind?"✓ Offshore":"Onshore"}</span>
+        <span style="color:var(--muted)"> · ${curWind.speed.toFixed(0)} kts ${windDir(curWind.direction)}</span>`;
+    }
+
+    const swells = (curWave.swells??[]).filter(s=>s.height>0.1).slice(0,3);
+    if (swells.length) {
+      document.getElementById('swell-section').style.display = 'block';
+      document.getElementById('swell-rows').innerHTML = swells.map((sw,i)=>
+        dataRow(`Swell ${i+1}`, `${sw.height.toFixed(1)} ft · ${sw.period}s · ${windDir(sw.direction)}`)
+      ).join('');
+    }
+
+    // Wave days
+    const byDay = {};
+    (waves??[]).forEach(w => {
+      const d = new Date(w.timestamp*1000);
+      const k = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+      if (!byDay[k]) byDay[k] = { ts:w.timestamp, his:[], los:[], ratings:[] };
+      byDay[k].his.push(w.surf.max);
+      byDay[k].los.push(w.surf.min);
+    });
+    (rating??[]).forEach(r => {
+      const d = new Date(r.timestamp*1000);
+      const k = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+      if (byDay[k]) byDay[k].ratings.push(r.rating?.key);
+    });
+    const waveDays = Object.values(byDay).slice(0,7).map(d => ({
+      ts:d.ts, hi:Math.max(...d.his), lo:Math.min(...d.los),
+      rating:d.ratings[Math.floor(d.ratings.length/2)]??null
+    }));
+    if (waveDays.length) {
+      document.getElementById('surf-forecast-section').style.display = 'block';
+      document.getElementById('surf-days').innerHTML = waveDays.map((d,i) => {
+        const rc = ratingColor(d.rating);
+        return `<div class="surf-day">
+          <span class="day-label">${i===0?"Today":fmtDay(d.ts)}</span>
+          ${d.rating?`<span class="rating-pill" style="background:${rc.bg};color:${rc.c}">${d.rating.replace(/_/g,' ')}</span>`:'<span style="flex:1"></span>'}
+          <span class="wave-ht">${d.lo}–${d.hi} ft</span>
+        </div>`;
+      }).join('');
+    }
+  } else {
+    document.getElementById('surf-now-panel').innerHTML =
+      '<div style="font-size:14px;color:var(--muted);padding:8px 0">Wave data unavailable</div>';
+  }
+
+  // ── WEATHER TAB ──
+  const tempEl = document.getElementById('temp-big');
+  tempEl.innerHTML = cur.temperature_2m!=null
+    ? `${cur.temperature_2m.toFixed(0)}<span style="font-size:24px;color:var(--muted)">°C</span>`
+    : `<span style="color:var(--muted)">—°C</span>`;
+
+  const humColor = cur.relative_humidity_2m > 90 ? "#e05252" : null;
+  document.getElementById('conditions-rows').innerHTML =
+    dataRow("Humidity",  `${cur.relative_humidity_2m??'—'}%`, cur.relative_humidity_2m>90?"Near saturation":null, humColor) +
+    dataRow("Rain now",  `${cur.precipitation?.toFixed(1)??'—'} mm`) +
+    dataRow("Rain 24h",  `${rain24.toFixed(1)} mm`) +
+    dataRow("Rain 72h",  `${rain72.toFixed(1)} mm`) +
+    dataRow("Wind",      `${cur.wind_speed_10m?.toFixed(0)??'—'} km/h`) +
+    (cur.uv_index!=null ? (() => { const uv=uvLabel(cur.uv_index); return dataRow("UV Index", cur.uv_index.toFixed(0), uv.t, uv.c); })() : '');
+
+  if (daily.uv_index_max) {
+    document.getElementById('uv-section').style.display = 'block';
+    document.getElementById('uv-row').innerHTML = daily.uv_index_max.slice(3).map((v,i) => {
+      const uv = uvLabel(v??0);
+      return `<div class="uv-day">
+        <div class="uv-num" style="color:${uv.c}">${v?.toFixed(0)??"—"}</div>
+        <div class="uv-lbl">${i===0?"T":DAYS[new Date(Date.now()+i*86400000).getDay()].slice(0,1)}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Soil
+  const soilPct = soilNow!=null ? Math.round(soilNow*100) : null;
+  document.getElementById('soil-pct').textContent = soilPct!=null ? `${soilPct}%` : '—';
+  const soilBarColor = soilR>0.7?"#e05252":soilR>0.4?"#e0a832":"#3ec48a";
+  document.getElementById('soil-bar').style.width = `${Math.round(soilR*100)}%`;
+  document.getElementById('soil-bar').style.background = soilBarColor;
+  document.getElementById('soil-desc').textContent =
+    soilR>0.7 ? "Saturated — rain will run straight into the Barú" :
+    soilR>0.4 ? "Moist — reduced ability to absorb more rainfall" :
+                "Dry — soil can soak up rainfall normally";
+
+  if (daily.precipitation_sum) {
+    document.getElementById('rain-forecast-section').style.display = 'block';
+    document.getElementById('rain-days').innerHTML = daily.precipitation_sum.slice(3).map((v,i) => {
+      const mm = v||0;
+      const c  = mm>50?"#e05252":mm>15?"#e0a832":"#3ec48a";
+      return dataRow(i===0?"Today":DAYS[new Date(Date.now()+i*86400000).getDay()], `${mm.toFixed(0)} mm`, null, c);
+    }).join('');
+  }
+}
+
+init().catch(console.error);
+</script>
+</body>
+</html>
