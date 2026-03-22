@@ -366,30 +366,27 @@ async function fetchAll() {
     `&daily=precipitation_sum,uv_index_max` +
     `&past_days=3&forecast_days=7&timezone=America%2FCosta_Rica`;
 
-  // Stormglass tide extremes (high/low events) — 1 request
+  // Pass key as URL param — avoids CORS preflight, works on Safari
+  const sgAuth = `&authorizationKey=${SG_KEY}`;
+
   const sgTideUrl =
     `https://api.stormglass.io/v2/tide/extremes/point?lat=${BARU_LAT}&lng=${BARU_LON}` +
-    `&start=${now.toISOString()}&end=${end.toISOString()}`;
+    `&start=${now.toISOString()}&end=${end.toISOString()}${sgAuth}`;
 
-  // Stormglass sea level (hourly) — 1 request
   const sgSeaUrl =
     `https://api.stormglass.io/v2/tide/sea-level/point?lat=${BARU_LAT}&lng=${BARU_LON}` +
-    `&start=${now.toISOString()}&end=${new Date(now.getTime()+48*3600*1000).toISOString()}`;
+    `&start=${now.toISOString()}&end=${new Date(now.getTime()+48*3600*1000).toISOString()}${sgAuth}`;
 
-  // Stormglass wave data — 1 request
   const sgWaveUrl =
     `https://api.stormglass.io/v2/weather/point?lat=${BARU_LAT}&lng=${BARU_LON}` +
     `&params=waveHeight,wavePeriod,waveDirection,windSpeed,windDirection` +
-    `&start=${now.toISOString()}&end=${end.toISOString()}` +
-    `&source=sg`;
-
-  const sgHeaders = { 'Authorization': SG_KEY };
+    `&start=${now.toISOString()}&end=${end.toISOString()}&source=sg${sgAuth}`;
 
   const [weather, sgTides, sgSea, sgWave] = await Promise.all([
     fetch(weatherUrl).then(r=>r.json()).catch(()=>null),
-    fetch(sgTideUrl, {headers:sgHeaders}).then(r=>r.json()).catch(()=>null),
-    fetch(sgSeaUrl,  {headers:sgHeaders}).then(r=>r.json()).catch(()=>null),
-    fetch(sgWaveUrl, {headers:sgHeaders}).then(r=>r.json()).catch(()=>null),
+    fetch(sgTideUrl).then(r=>r.json()).catch(()=>null),
+    fetch(sgSeaUrl).then(r=>r.json()).catch(()=>null),
+    fetch(sgWaveUrl).then(r=>r.json()).catch(()=>null),
   ]);
 
   return { weather, sgTides, sgSea, sgWave };
