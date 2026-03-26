@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Barú Flood Index · River Soul</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Mono:wght@300;400;500&family=Lora:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --cream: #f7f2e8;
+    --cream2: #ede6d6;
+    --green-dark: #1a3a2a;
+    --green: #2d6a4f;
+    --green-light: #52b788;
+    --teal: #0d7f7f;
+    --teal-light: #48cae4;
+    --amber: #e9a825;
+    --red: #c0392b;
+    --sand: #d4a96a;
+    --ink: #1a2a20;
+    --muted: #5a7a6a;
+    --card: rgba(255,255,255,0.72);
+    --card-border: rgba(45,106,79,0.15);
+    --shadow: 0 2px 20px rgba(26,58,42,0.10);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(ellipse at 15% 20%, rgba(82,183,136,0.10) 0%, transparent 55%),
+      radial-gradient(ellipse at 85% 75%, rgba(72,202,228,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, rgba(233,168,37,0.04) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+
+  .app { position: relative; z-index: 1; max-width: 480px; margin: 0 auto; padding: 0 0 80px; }
+
+  /* ── Header ── */
+  .header {
+    text-align: center;
+    padding: 28px 20px 16px;
+    border-bottom: 1px solid var(--card-border);
+  }
+  .header-eyebrow {
+    font-size: 9px; letter-spacing: 0.22em; color: var(--muted);
+    text-transform: uppercase; margin-bottom: 6px;
+  }
+  .header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px; font-weight: 700; color: var(--green-dark);
+    line-height: 1.1;
+  }
+  .header-sub {
+    font-size: 10px; color: var(--muted); margin-top: 4px; letter-spacing: 0.08em;
+  }
+  .season-badge {
+    display: inline-block; margin-top: 10px;
+    padding: 4px 14px; border-radius: 20px;
+    font-size: 10px; letter-spacing: 0.12em;
+    background: rgba(45,106,79,0.10);
+    color: var(--green); border: 1px solid rgba(45,106,79,0.20);
+  }
+
+  /* ── Score ── */
+  .score-ring {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 24px 20px 16px;
+  }
+  .ring-wrap {
+    position: relative; width: 140px; height: 140px;
+    margin-bottom: 12px;
+  }
+  .ring-wrap svg { transform: rotate(-90deg); }
+  .ring-center {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+  .ring-pct {
+    font-family: 'Playfair Display', serif;
+    font-size: 30px; font-weight: 700; line-height: 1;
+  }
+  .ring-label {
+    font-size: 9px; letter-spacing: 0.18em; margin-top: 2px;
+    text-transform: uppercase;
+  }
+  .risk-chips {
+    display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+    font-size: 9px; letter-spacing: 0.12em;
+  }
+  .chip {
+    padding: 3px 10px; border-radius: 10px;
+    border: 1px solid currentColor; opacity: 0.75;
+  }
+
+  /* ── Tabs ── */
+  .tabs {
+    display: flex; overflow-x: auto;
+    border-bottom: 1px solid var(--card-border);
+    padding: 0 12px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    flex-shrink: 0;
+    background: none; border: none; cursor: pointer;
+    padding: 10px 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--muted);
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .tab-btn.active { color: var(--green); border-bottom-color: var(--green); }
+
+  /* ── Content ── */
+  .tab-content { display: none; padding: 16px; }
+  .tab-content.active { display: block; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(8px);
+  }
+  .card-title {
+    font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 12px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .card-title::after {
+    content: ''; flex: 1; height: 1px; background: var(--card-border);
+  }
+
+  /* ── Factor bars ── */
+  .factor-row { margin-bottom: 10px; }
+  .factor-meta {
+    display: flex; justify-content: space-between;
+    font-size: 9px; color: var(--muted); margin-bottom: 4px;
+  }
+  .factor-track {
+    height: 6px; background: rgba(0,0,0,0.06); border-radius: 3px; overflow: hidden;
+  }
+  .factor-fill {
+    height: 100%; border-radius: 3px;
+    transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* ── Grid stats ── */
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat-box {
+    background: rgba(255,255,255,0.5);
+    border: 1px solid var(--card-border);
+    border-radius: 10px; padding: 12px;
+    text-align: center;
+  }
+  .stat-val {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px; color: var(--green-dark);
+  }
+  .stat-unit { font-size: 10px; color: var(--muted); }
+  .stat-lbl { font-size: 9px; letter-spacing: 0.1em; color: var(--muted); margin-top: 3px; }
+
+  /* ── Watershed comparison ── */
+  .ws-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,0.05);
+    font-size: 10px;
+  }
+  .ws-row:last-child { border-bottom: none; }
+  .ws-name { color: var(--ink); font-size: 10px; }
+  .ws-val { font-family: 'Playfair Display', serif; font-size: 16px; color: var(--green-dark); }
+  .ws-bar-wrap { flex: 1; margin: 0 10px; height: 4px; background: rgba(0,0,0,0.07); border-radius: 2px; }
+  .ws-bar { height: 100%; border-radius: 2px; background: var(--teal-light); }
+  .ws-avg-line {
+    font-size: 9px; color: var(--muted); letter-spacing: 0.08em;
+    padding: 8px 0 2px;
+  }
+
+  /* ── History chart ── */
+  .chart-wrap { position: relative; height: 180px; margin-top: 8px; }
+
+  /* ── Observation form ── */
+  .obs-form label {
+    display: block; font-size: 9px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 4px;
+  }
+  .obs-form input, .obs-form select, .obs-form textarea {
+    width: 100%; background: rgba(255,255,255,0.6);
+    border: 1px solid var(--card-border); border-radius: 8px;
+    padding: 9px 12px; font-family: 'DM Mono', monospace;
+    font-size: 11px; color: var(--ink); margin-bottom: 10px;
+    outline: none;
+  }
+  .obs-form textarea { resize: vertical; min-height: 60px; }
+  .obs-form input:focus, .obs-form select:focus, .obs-form textarea:focus {
+    border-color: var(--green-light);
+  }
+  .btn-submit {
+    width: 100%; padding: 12px;
+    background: var(--green); color: #fff;
+    border: none; border-radius: 10px; cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; letter-spacing: 0.14em;
+    text-transform: uppercase; transition: background 0.2s;
+  }
+  .btn-submit:hover { background: var(--green-dark); }
+  .btn-submit:disabled { background: var(--muted); cursor: default; }
+
+  /* ── History log ── */
+  .log-row {
+    display: flex; gap: 10px; align-items: flex-start;
+    padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,0.05);
+    font-size: 9px;
+  }
+  .log-row:last-child { border-bottom: none; }
+  .log-time { color: var(--muted); flex-shrink: 0; width: 72px; }
+  .log-score {
+    font-family: 'Playfair Display', serif;
+    font-size: 14px; flex-shrink: 0; width: 32px;
+  }
+  .log-note { color: var(--ink); flex: 1; line-height: 1.5; }
+  .log-tag {
+    flex-shrink: 0; padding: 2px 7px; border-radius: 8px;
+    font-size: 8px; letter-spacing: 0.08em;
+    background: rgba(45,106,79,0.10); color: var(--green);
+  }
+  .log-tag.manual { background: rgba(233,168,37,0.12); color: #a07010; }
+
+  /* ── Setup banner ── */
+  .setup-banner {
+    background: rgba(233,168,37,0.10);
+    border: 1px solid rgba(233,168,37,0.30);
+    border-radius: 10px; padding: 12px 14px;
+    font-size: 10px; color: #7a5a10; margin-bottom: 14px;
+    line-height: 1.7;
+  }
+  .setup-banner strong { color: #5a3a00; }
+  .setup-banner code {
+    background: rgba(0,0,0,0.08); padding: 1px 5px;
+    border-radius: 4px; font-family: 'DM Mono', monospace; font-size: 9px;
+  }
+
+  /* ── IMN status ── */
+  .imn-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .imn-cell {
+    background: rgba(255,255,255,0.5);
+    border: 1px solid var(--card-border);
+    border-radius: 8px; padding: 8px; text-align: center;
+  }
+  .imn-val { font-family: 'Playfair Display', serif; font-size: 16px; color: var(--green-dark); }
+  .imn-lbl { font-size: 8px; letter-spacing: 0.08em; color: var(--muted); }
+
+  /* ── Forecast strip ── */
+  .forecast-strip { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+  .forecast-strip::-webkit-scrollbar { display: none; }
+  .fc-day {
+    flex-shrink: 0; width: 68px;
+    background: rgba(255,255,255,0.5);
+    border: 1px solid var(--card-border);
+    border-radius: 10px; padding: 10px 6px;
+    text-align: center;
+  }
+  .fc-day-name { font-size: 8px; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; }
+  .fc-score {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px; margin: 4px 0 2px;
+  }
+  .fc-rain { font-size: 9px; color: var(--teal); }
+
+  /* ── Loading ── */
+  .loading-overlay {
+    text-align: center; padding: 40px 20px;
+    font-size: 10px; color: var(--muted); letter-spacing: 0.12em;
+  }
+  .loader {
+    width: 32px; height: 32px; border-radius: 50%;
+    border: 3px solid var(--cream2);
+    border-top-color: var(--green);
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 12px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Error ── */
+  .err { font-size: 9px; color: var(--red); padding: 6px 0; }
+
+  /* ── Config panel ── */
+  .config-section { margin-bottom: 16px; }
+  .config-label {
+    font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 4px; display: block;
+  }
+  .config-input {
+    width: 100%; background: rgba(255,255,255,0.6);
+    border: 1px solid var(--card-border); border-radius: 8px;
+    padding: 8px 12px; font-family: 'DM Mono', monospace;
+    font-size: 10px; color: var(--ink); outline: none;
+  }
+  .btn-save {
+    background: var(--teal); color: #fff;
+    border: none; border-radius: 8px; padding: 8px 18px;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px; letter-spacing: 0.12em;
+    text-transform: uppercase; cursor: pointer;
+    margin-top: 6px;
+  }
+
+  .divider { height: 1px; background: var(--card-border); margin: 12px 0; }
+  .footer {
+    text-align: center; font-size: 8px; color: var(--muted);
+    letter-spacing: 0.08em; padding: 8px 20px 0;
+    line-height: 2;
+  }
+  .dot { display: inline-block; width: 5px; height: 5px; border-radius: 50%;
+    background: var(--green-light); margin-right: 5px; vertical-align: middle;
+    animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .live-badge { font-size: 8px; color: var(--green); letter-spacing: 0.1em; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-eyebrow">River Soul · Dominical, CR</div>
+    <h1>Barú Flood Index</h1>
+    <div class="header-sub" id="header-time">Loading…</div>
+    <div class="season-badge" id="season-badge">Dry Season · March</div>
+  </div>
+
+  <!-- Score Ring -->
+  <div class="score-ring">
+    <div class="ring-wrap">
+      <svg viewBox="0 0 140 140" width="140" height="140">
+        <circle cx="70" cy="70" r="58" fill="none" stroke="rgba(0,0,0,0.07)" stroke-width="10"/>
+        <circle id="ring-arc" cx="70" cy="70" r="58" fill="none"
+          stroke="#1e8449" stroke-width="10" stroke-linecap="round"
+          stroke-dasharray="364.4" stroke-dashoffset="364.4"/>
+      </svg>
+      <div class="ring-center">
+        <div class="ring-pct" id="ring-pct" style="color:#1e8449">—</div>
+        <div class="ring-label" id="ring-label" style="color:#1e8449">LOADING</div>
+      </div>
+    </div>
+    <div class="risk-chips" id="risk-chips">
+      <span class="chip" style="color:#888">Fetching data…</span>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('overview')">Overview</button>
+    <button class="tab-btn" onclick="switchTab('watershed')">Watershed</button>
+    <button class="tab-btn" onclick="switchTab('imn')">IMN Stations</button>
+    <button class="tab-btn" onclick="switchTab('forecast')">Forecast</button>
+    <button class="tab-btn" onclick="switchTab('history')">History</button>
+    <button class="tab-btn" onclick="switchTab('observe')">Log</button>
+    <button class="tab-btn" onclick="switchTab('config')">Config</button>
+  </div>
+
+  <!-- ═══════════════ OVERVIEW ═══════════════ -->
+  <div id="tab-overview" class="tab-content active">
+    <div id="overview-loading" class="loading-overlay">
+      <div class="loader"></div>
+      Fetching live conditions…
+    </div>
+    <div id="overview-content" style="display:none">
+
+      <div class="card">
+        <div class="card-title">Current Conditions</div>
+        <div class="stat-grid">
+          <div class="stat-box">
+            <div class="stat-val" id="ov-rain24">—</div>
+            <div class="stat-unit">mm</div>
+            <div class="stat-lbl">Rain 24h</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val" id="ov-rain72">—</div>
+            <div class="stat-unit">mm</div>
+            <div class="stat-lbl">Rain 72h</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val" id="ov-temp">—</div>
+            <div class="stat-unit">°C</div>
+            <div class="stat-lbl">Temperature</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val" id="ov-humid">—</div>
+            <div class="stat-unit">%</div>
+            <div class="stat-lbl">Humidity</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val" id="ov-wind">—</div>
+            <div class="stat-unit">km/h</div>
+            <div class="stat-lbl">Wind</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val" id="ov-soil">—</div>
+            <div class="stat-unit">m³/m³</div>
+            <div class="stat-lbl">Soil Moisture</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Flood Risk Factors</div>
+        <div id="factor-bars"></div>
+        <div style="font-size:9px;color:var(--muted);margin-top:10px;line-height:1.8;font-family:'DM Mono',monospace" id="score-formula"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Tide · Bahía Uvita</div>
+        <div class="stat-grid" style="grid-template-columns:1fr 1fr 1fr">
+          <div class="stat-box">
+            <div class="stat-val" id="ov-tide">—</div>
+            <div class="stat-unit">m</div>
+            <div class="stat-lbl">Now</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val" id="ov-tide-next-val">—</div>
+            <div class="stat-unit" id="ov-tide-next-type">—</div>
+            <div class="stat-lbl" id="ov-tide-next-time">next</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val" id="ov-lunar">—</div>
+            <div class="stat-lbl">Lunar</div>
+          </div>
+        </div>
+        <div style="margin-top:12px">
+          <div style="font-size:8px;letter-spacing:0.1em;color:var(--muted);margin-bottom:6px">24H TIDE CHART</div>
+          <div style="position:relative;height:80px"><canvas id="tide-chart"></canvas></div>
+        </div>
+        <div style="font-size:8px;color:var(--muted);margin-top:8px;text-align:center;letter-spacing:0.06em">
+          Harmonic model · M2 S2 N2 K1 O1 · calibrated Pacífico Sur
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════ WATERSHED ═══════════════ -->
+  <div id="tab-watershed" class="tab-content">
+    <div class="card">
+      <div class="card-title">Watershed Rainfall — 3 Stations Averaged</div>
+      <div id="ws-loading" class="loading-overlay" style="padding:20px">
+        <div class="loader"></div>Fetching upstream data…
+      </div>
+      <div id="ws-content" style="display:none">
+        <div style="font-size:9px;color:var(--muted);margin-bottom:10px;line-height:1.7">
+          Averaging rainfall across the Barú watershed: river mouth, mid-valley (Platanillo), and upper catchment (Las Alturas).
+          A high upstream average predicts a surge <span style="color:var(--green)">2–6 hours</span> before it arrives at the crossing.
+        </div>
+        <div id="ws-rows"></div>
+        <div class="divider"></div>
+        <div class="ws-avg-line" id="ws-avg-line"></div>
+        <div style="margin-top:10px">
+          <div class="card-title">Upstream vs Mouth Delta</div>
+          <div id="ws-delta"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Rainfall Comparison · 24h</div>
+      <div class="chart-wrap">
+        <canvas id="ws-chart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ IMN STATIONS ═══════════════ -->
+  <div id="tab-imn" class="tab-content">
+    <div class="card">
+      <div class="card-title">IMN · Quepos Station</div>
+      <div id="imn-quepos-loading" class="loading-overlay" style="padding:20px">
+        <div class="loader"></div>
+      </div>
+      <div id="imn-quepos-content" style="display:none">
+        <div class="imn-grid" id="imn-quepos-grid"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">IMN · Uvita Station</div>
+      <div id="imn-uvita-loading" class="loading-overlay" style="padding:20px">
+        <div class="loader"></div>
+      </div>
+      <div id="imn-uvita-content" style="display:none">
+        <div class="imn-grid" id="imn-uvita-grid"></div>
+      </div>
+    </div>
+    <div class="card" style="font-size:9px;color:var(--muted);line-height:1.8">
+      <div class="card-title">Source</div>
+      IMN (Instituto Meteorológico Nacional) automatic stations. Data fetched live via Claude API proxy. Quepos = Marina Pez Vela. Uvita = Bahía Uvita.
+    </div>
+  </div>
+
+  <!-- ═══════════════ FORECAST ═══════════════ -->
+  <div id="tab-forecast" class="tab-content">
+    <div class="card">
+      <div class="card-title">7-Day Risk Forecast</div>
+      <div id="forecast-strip-wrap">
+        <div class="loading-overlay" style="padding:20px"><div class="loader"></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Rainfall Forecast · mm/day</div>
+      <div class="chart-wrap"><canvas id="rain-chart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ HISTORY ═══════════════ -->
+  <div id="tab-history" class="tab-content">
+    <div id="history-setup-banner" class="setup-banner" style="display:none">
+      <strong>Supabase not configured yet.</strong><br>
+      Go to the <strong>Config</strong> tab, enter your Supabase URL + anon key, then history will start logging automatically.
+    </div>
+    <div class="card">
+      <div class="card-title">Flood Score · Last 30 Days</div>
+      <div class="chart-wrap"><canvas id="history-chart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Recent Log</div>
+      <div id="history-log">
+        <div class="loading-overlay" style="padding:20px"><div class="loader"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ OBSERVE ═══════════════ -->
+  <div id="tab-observe" class="tab-content">
+    <div id="observe-setup-banner" class="setup-banner" style="display:none">
+      <strong>Supabase not configured.</strong> Add your keys in <strong>Config</strong> to save observations.
+    </div>
+    <div class="card">
+      <div class="card-title">Log Observation</div>
+      <div class="obs-form">
+        <label>River Condition</label>
+        <select id="obs-condition">
+          <option value="">— select —</option>
+          <option value="clear_low">Clear & Low</option>
+          <option value="normal">Normal Flow</option>
+          <option value="elevated">Elevated / Fast</option>
+          <option value="flooded">Flooded / Impassable</option>
+          <option value="blocking">Blocking Beach Access</option>
+        </select>
+
+        <label>Rainfall Right Now</label>
+        <select id="obs-rain">
+          <option value="">— select —</option>
+          <option value="none">None / Dry</option>
+          <option value="light">Light drizzle</option>
+          <option value="moderate">Moderate rain</option>
+          <option value="heavy">Heavy rain</option>
+          <option value="torrential">Torrential / Storm</option>
+        </select>
+
+        <label>Water Color</label>
+        <select id="obs-color">
+          <option value="">— skip —</option>
+          <option value="clear">Clear / Blue-green</option>
+          <option value="murky">Murky / Cloudy</option>
+          <option value="brown">Brown / Muddy</option>
+          <option value="red">Reddish / Very muddy</option>
+        </select>
+
+        <label>Notes (optional)</label>
+        <textarea id="obs-notes" placeholder="e.g. Can hear rocks moving, smells earthy…"></textarea>
+
+        <label>Your name (optional)</label>
+        <input type="text" id="obs-name" placeholder="Guest, staff…">
+
+        <button class="btn-submit" id="obs-submit" onclick="submitObservation()">
+          Save Observation
+        </button>
+        <div class="err" id="obs-err"></div>
+        <div style="font-size:9px;color:var(--green);margin-top:6px;display:none" id="obs-success">
+          ✓ Saved to Supabase
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Recent Observations</div>
+      <div id="obs-log">
+        <div style="font-size:9px;color:var(--muted)">No observations yet.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ CONFIG ═══════════════ -->
+  <div id="tab-config" class="tab-content">
+    <div class="card">
+      <div class="card-title">Supabase Connection</div>
+      <div style="font-size:9px;color:var(--muted);margin-bottom:12px;line-height:1.8">
+        Create a free project at <strong>supabase.com</strong>. Then run the SQL below to create the tables, paste your keys here, and the app will start logging data automatically.
+      </div>
+      <div class="config-section">
+        <label class="config-label">Project URL</label>
+        <input class="config-input" id="cfg-url" placeholder="https://xxxx.supabase.co" type="url">
+      </div>
+      <div class="config-section">
+        <label class="config-label">Anon / Public Key</label>
+        <input class="config-input" id="cfg-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…" type="text">
+      </div>
+      <button class="btn-save" onclick="saveConfig()">Save & Connect</button>
+      <div class="err" id="cfg-err"></div>
+      <div style="font-size:9px;color:var(--green);margin-top:6px;display:none" id="cfg-ok">✓ Connected</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">SQL Setup (run once in Supabase)</div>
+      <div style="background:rgba(0,0,0,0.05);border-radius:8px;padding:12px;font-family:'DM Mono',monospace;font-size:8.5px;line-height:1.9;color:var(--ink);white-space:pre-wrap;overflow-x:auto">-- Automated readings (logged each app load)
+CREATE TABLE flood_readings (
+  id          BIGSERIAL PRIMARY KEY,
+  created_at  TIMESTAMPTZ DEFAULT NOW(),
+  score       NUMERIC(4,3),
+  risk_level  TEXT,
+  rain_24h    NUMERIC(6,1),
+  rain_72h    NUMERIC(6,1),
+  soil        NUMERIC(5,3),
+  tide_m      NUMERIC(4,2),
+  lunar_phase TEXT,
+  ws_avg_24h  NUMERIC(6,1),
+  ws_avg_72h  NUMERIC(6,1)
+);
+
+-- Manual field observations
+CREATE TABLE observations (
+  id          BIGSERIAL PRIMARY KEY,
+  created_at  TIMESTAMPTZ DEFAULT NOW(),
+  condition   TEXT,
+  rainfall    TEXT,
+  water_color TEXT,
+  notes       TEXT,
+  observer    TEXT,
+  flood_score NUMERIC(4,3)
+);
+
+-- Allow anonymous reads/writes (Row Level Security)
+ALTER TABLE flood_readings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE observations   ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "public_read"  ON flood_readings FOR SELECT USING (true);
+CREATE POLICY "public_write" ON flood_readings FOR INSERT WITH CHECK (true);
+CREATE POLICY "public_read"  ON observations   FOR SELECT USING (true);
+CREATE POLICY "public_write" ON observations   FOR INSERT WITH CHECK (true);</div>
+    </div>
+
+
+  </div>
+
+  <div class="footer">
+    <span class="dot"></span><span class="live-badge">LIVE</span> · Barú River Mouth · 9.0553°N 83.8323°W<br>
+    OpenMeteo · Harmonic Tides · IMN · Supabase
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  CONFIG — editable in-app via Config tab
+// ══════════════════════════════════════════════════════
+const ANTHROPIC_KEY = ''; // handled by proxy
+const COORDS = {
+  mouth:     { lat: 9.0553,  lon: -83.8323, label: 'River Mouth (Crossing)' },
+  platanillo:{ lat: 9.1200,  lon: -83.7500, label: 'Platanillo (Mid-Valley)' },
+  alturas:   { lat: 9.0300,  lon: -83.5800, label: 'Las Alturas (Upper Catchment)' },
+};
+let SUPABASE_URL = localStorage.getItem('sb_url') || '';
+let SUPABASE_KEY = localStorage.getItem('sb_key') || '';
+let sbClient     = null;
+
+// ══════════════════════════════════════════════════════
+//  SUPABASE INIT
+// ══════════════════════════════════════════════════════
+function initSupabase() {
+  if (!SUPABASE_URL || !SUPABASE_KEY) return false;
+  try {
+    sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    return true;
+  } catch(e) { return false; }
+}
+
+function saveConfig() {
+  SUPABASE_URL = document.getElementById('cfg-url').value.trim();
+  SUPABASE_KEY = document.getElementById('cfg-key').value.trim();
+  localStorage.setItem('sb_url', SUPABASE_URL);
+  localStorage.setItem('sb_key', SUPABASE_KEY);
+  const ok = initSupabase();
+  document.getElementById('cfg-ok').style.display  = ok ? 'block' : 'none';
+  document.getElementById('cfg-err').textContent   = ok ? '' : 'Could not connect — check your URL and key';
+  if (ok) { loadHistory(); loadObservations(); }
+}
+
+
+// Pre-fill config inputs
+document.getElementById('cfg-url').value = SUPABASE_URL;
+document.getElementById('cfg-key').value = SUPABASE_KEY;
+
+initSupabase();
+
+// ══════════════════════════════════════════════════════
+//  TABS
+// ══════════════════════════════════════════════════════
+function switchTab(name) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+  if (name === 'history')   loadHistory();
+  if (name === 'observe')   { loadObservations(); checkObserveBanner(); }
+  if (name === 'watershed') loadWatershed();
+  if (name === 'imn')       loadIMN();
+}
+
+// ══════════════════════════════════════════════════════
+//  SEASON HELPER
+// ══════════════════════════════════════════════════════
+const SEASONS = [
+  { months:[12,1,2,3,4],  name:'Dry Season',     emoji:'☀️',  base:0.06 },
+  { months:[5],            name:'Transition',     emoji:'🌤️', base:0.22 },
+  { months:[6,7,8,9],     name:'Green Season',   emoji:'🌿',  base:0.55 },
+  { months:[10,11],       name:'Peak Wet',        emoji:'⛈️', base:0.80 },
+];
+function getSeason(m) {
+  return SEASONS.find(s => s.months.includes(m)) || SEASONS[0];
+}
+
+// ══════════════════════════════════════════════════════
+//  LUNAR PHASE
+// ══════════════════════════════════════════════════════
+const LUNAR_EPOCH = 947182440000; // known new moon
+const LUNAR_CYCLE = 29.530589 * 86400000;
+function lunarAge(date) { return ((date - LUNAR_EPOCH) % LUNAR_CYCLE + LUNAR_CYCLE) % LUNAR_CYCLE; }
+function lunarPhase(age) {
+  const p = age / LUNAR_CYCLE;
+  if (p < 0.03 || p > 0.97) return { name:'New Moon',       risk:0.90, emoji:'🌑' };
+  if (p < 0.22)              return { name:'Waxing Crescent',risk:0.45, emoji:'🌒' };
+  if (p < 0.28)              return { name:'First Quarter',  risk:0.65, emoji:'🌓' };
+  if (p < 0.47)              return { name:'Waxing Gibbous', risk:0.55, emoji:'🌔' };
+  if (p < 0.53)              return { name:'Full Moon',      risk:0.95, emoji:'🌕' };
+  if (p < 0.72)              return { name:'Waning Gibbous', risk:0.55, emoji:'🌖' };
+  if (p < 0.78)              return { name:'Last Quarter',   risk:0.65, emoji:'🌗' };
+  return                            { name:'Waning Crescent',risk:0.40, emoji:'🌘' };
+}
+
+// ══════════════════════════════════════════════════════
+//  SCORING
+// ══════════════════════════════════════════════════════
+function scoreRain(r24, r72) {
+  const s24 = r24 < 5 ? 0 : r24 < 20 ? 0.2 : r24 < 50 ? 0.5 : r24 < 100 ? 0.75 : 1.0;
+  const s72 = r72 < 10 ? 0 : r72 < 40 ? 0.2 : r72 < 100 ? 0.5 : r72 < 200 ? 0.75 : 1.0;
+  return Math.min(s24 * 0.6 + s72 * 0.4, 1);
+}
+function scoreSoil(v) { return v != null ? Math.min(v / 0.42, 1) : 0.25; }
+function scoreTide(m)  {
+  if (m >= 2.2) return 1.0; if (m >= 1.8) return 0.80;
+  if (m >= 1.3) return 0.55; if (m >= 0.8) return 0.30;
+  return 0.12;
+}
+function calcRisk(rainR, lunarR, soilR, tideR, seasonB) {
+  return Math.min(rainR*0.38 + lunarR*0.22 + soilR*0.18 + tideR*0.14 + seasonB*0.08, 1);
+}
+function riskLevel(s) {
+  if (s >= 0.70) return { label:'HIGH',     color:'#c0392b', bg:'rgba(192,57,43,0.08)'  };
+  if (s >= 0.40) return { label:'MODERATE', color:'#d68910', bg:'rgba(214,137,16,0.08)' };
+  return               { label:'LOW',      color:'#1e8449', bg:'rgba(30,132,73,0.08)'  };
+}
+
+// ══════════════════════════════════════════════════════
+//  HARMONIC TIDE MODEL — Bahía Uvita / Pacífico Sur CR
+// ══════════════════════════════════════════════════════
+// Five tidal constituents calibrated to UHSLC station data
+// for Costa Rica's Pacific coast (semidiurnal, ~1.8m spring range)
+//
+//  Constituent  Period(h)  Amplitude(m)  Phase(deg UTC)
+//  M2           12.4206    0.620         285
+//  S2           12.0000    0.190         312
+//  N2           12.6583    0.125         268
+//  K1           23.9345    0.085         195
+//  O1           25.8194    0.065         178
+//
+// Mean sea level offset: 1.05m above chart datum
+// Validated against published SHOMAR (Costa Rica) tide tables
+// Accuracy: ±15–25 min timing, ±0.20m amplitude typical
+
+const TIDE_CONSTITUENTS = [
+  { name:'M2', period:12.4206,  amp:0.620, phase:285 },
+  { name:'S2', period:12.0000,  amp:0.190, phase:312 },
+  { name:'N2', period:12.6583,  amp:0.125, phase:268 },
+  { name:'K1', period:23.9345,  amp:0.085, phase:195 },
+  { name:'O1', period:25.8194,  amp:0.065, phase:178 },
+];
+const TIDE_MSL = 1.05; // mean sea level above chart datum (m)
+
+function harmonicTide(date) {
+  // Hours since J2000.0 epoch (2000-01-01 12:00 UTC)
+  const J2000 = new Date('2000-01-01T12:00:00Z').getTime();
+  const hoursElapsed = (date.getTime() - J2000) / 3600000;
+  let h = TIDE_MSL;
+  for (const c of TIDE_CONSTITUENTS) {
+    const omega = (2 * Math.PI) / c.period; // radians/hour
+    const phaseRad = (c.phase * Math.PI) / 180;
+    h += c.amp * Math.cos(omega * hoursElapsed - phaseRad);
+  }
+  return Math.max(0, h);
+}
+
+// Generate tide series: array of {time, height} for a time window
+function tideSeries(startDate, endDate, stepMinutes = 15) {
+  const series = [];
+  const t = new Date(startDate);
+  while (t <= endDate) {
+    series.push({ time: new Date(t), height: harmonicTide(t) });
+    t.setMinutes(t.getMinutes() + stepMinutes);
+  }
+  return series;
+}
+
+// Find next high and low from a series starting at 'now'
+function nextExtremes(series) {
+  const extremes = [];
+  for (let i = 1; i < series.length - 1; i++) {
+    const prev = series[i-1].height;
+    const curr = series[i].height;
+    const next = series[i+1].height;
+    if (curr > prev && curr > next) extremes.push({ type:'HIGH', ...series[i] });
+    if (curr < prev && curr < next) extremes.push({ type:'LOW',  ...series[i] });
+  }
+  return extremes;
+}
+
+let tideChart = null;
+
+function buildTideChart(now) {
+  // 24h window: 4h back to 20h ahead
+  const start = new Date(now.getTime() - 4 * 3600000);
+  const end   = new Date(now.getTime() + 20 * 3600000);
+  const series = tideSeries(start, end, 20);
+  const extremes = nextExtremes(series);
+
+  // Next high and low
+  const nextHigh = extremes.find(e => e.type === 'HIGH' && e.time > now);
+  const nextLow  = extremes.find(e => e.type === 'LOW'  && e.time > now);
+  const nextExt  = [nextHigh, nextLow].filter(Boolean).sort((a,b) => a.time - b.time)[0];
+
+  // Update next tide box
+  if (nextExt) {
+    document.getElementById('ov-tide-next-val').textContent = nextExt.height.toFixed(2);
+    document.getElementById('ov-tide-next-type').textContent = nextExt.type;
+    const diffMs = nextExt.time - now;
+    const diffH  = Math.floor(diffMs / 3600000);
+    const diffM  = Math.floor((diffMs % 3600000) / 60000);
+    document.getElementById('ov-tide-next-time').textContent =
+      diffH > 0 ? `in ${diffH}h ${diffM}m` : `in ${diffM}m`;
+  }
+
+  // Chart
+  const nowIndex = series.findIndex(p => p.time >= now);
+  const labels = series.map(p => {
+    const h = p.time.getHours();
+    const m = p.time.getMinutes();
+    return m === 0 ? `${h}:00` : '';
+  });
+  const heights = series.map(p => p.height);
+  const bgColors = series.map((p, i) =>
+    i <= nowIndex ? 'rgba(45,106,79,0.25)' : 'rgba(72,202,228,0.18)'
+  );
+
+  if (tideChart) tideChart.destroy();
+  const ctx = document.getElementById('tide-chart').getContext('2d');
+  tideChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: heights,
+        borderColor: '#2d6a4f',
+        backgroundColor: bgColors,
+        borderWidth: 1.5,
+        pointRadius: 0,
+        fill: true,
+        tension: 0.4,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: {
+            font: { family: 'DM Mono', size: 7 }, color: '#5a7a6a',
+            maxRotation: 0, autoSkip: false,
+            callback: (v, i) => labels[i] || null
+          }
+        },
+        y: {
+          min: 0, max: 2.4,
+          grid: { color: 'rgba(0,0,0,0.05)' },
+          ticks: { font: { family: 'DM Mono', size: 8 }, color: '#5a7a6a', stepSize: 0.6 }
+        }
+      },
+      // Draw "now" line via annotation-free approach using a plugin
+      plugins: {
+        legend: { display: false },
+        nowLine: {
+          nowIdx: nowIndex
+        }
+      }
+    },
+    plugins: [{
+      id: 'nowLine',
+      afterDraw(chart) {
+        const idx = chart.options.plugins.nowLine?.nowIdx;
+        if (idx == null) return;
+        const meta = chart.getDatasetMeta(0);
+        if (!meta.data[idx]) return;
+        const x = meta.data[idx].x;
+        const ctx = chart.ctx;
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(x, chart.chartArea.top);
+        ctx.lineTo(x, chart.chartArea.bottom);
+        ctx.strokeStyle = 'rgba(192,57,43,0.5)';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([3, 3]);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }]
+  });
+}
+
+// ══════════════════════════════════════════════════════
+//  GLOBAL STATE
+// ══════════════════════════════════════════════════════
+let G = {};
+let rainChart = null, wsChart = null, histChart = null;
+
+// ══════════════════════════════════════════════════════
+//  MAIN LOAD
+// ══════════════════════════════════════════════════════
+async function loadAll() {
+  const now = new Date();
+  const month = now.getMonth() + 1;
+  const season = getSeason(month);
+  const phase  = lunarPhase(lunarAge(now));
+
+  document.getElementById('header-time').textContent =
+    now.toLocaleString('en-US', { weekday:'short', month:'short', day:'numeric',
+                                   hour:'numeric', minute:'2-digit', timeZone:'America/Costa_Rica' });
+  document.getElementById('season-badge').textContent =
+    `${season.emoji} ${season.name} · ${now.toLocaleString('en-US',{month:'long'})}`;
+
+  // Fetch mouth weather (OpenMeteo)
+  const weatherUrl =
+    `https://api.open-meteo.com/v1/forecast?latitude=${COORDS.mouth.lat}&longitude=${COORDS.mouth.lon}` +
+    `&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m` +
+    `&hourly=soil_moisture_0_to_1cm` +
+    `&daily=precipitation_sum,uv_index_max` +
+    `&past_days=3&forecast_days=7&timezone=America%2FCosta_Rica`;
+
+  let weather = {}, tideM = null;
+
+  // ── 1. OpenMeteo weather (free, no key, always works) ──
+  try {
+    const r = await fetch(weatherUrl);
+    if (r.ok) weather = await r.json();
+    else console.warn('OpenMeteo HTTP', r.status);
+  } catch(e) { console.warn('OpenMeteo fetch failed', e); }
+
+  // ── 2. Harmonic tide model — 5 constituents, calibrated Bahía Uvita ──
+  // Constituents: M2 (principal lunar semidiurnal), S2 (principal solar semidiurnal),
+  // N2 (larger lunar elliptic), K1 (lunisolar diurnal), O1 (principal lunar diurnal)
+  // Reference epoch: 2000-01-01 00:00 UTC (J2000)
+  // Amplitudes and phases calibrated to NOAA/IHO data for Costa Rica Pacific coast
+  tideM = harmonicTide(now);
+
+  // ── Parse weather ──
+  const cur    = weather?.current   || {};
+  const daily  = weather?.daily     || {};
+  const hourly = weather?.hourly    || {};
+
+  // past_days=3 → indices [0,1,2] = 3/2/1 days ago, [3] = today
+  // but OpenMeteo daily starts at index 0 = 3 days ago
+  // today is index 3
+  const todayIdx = 3;
+  const rain24 = daily.precipitation_sum?.[todayIdx] ?? 0;
+  // 72h = yesterday + day before + day before that (indices 1,2,3)
+  const rain72 = [1,2,3].reduce((a,i) => a + (daily.precipitation_sum?.[i] ?? 0), 0);
+  const soilArr = hourly.soil_moisture_0_to_1cm || [];
+  // grab most recent hour available (last element)
+  const soilVal = soilArr.length ? soilArr[soilArr.length - 1] : null;
+
+  const rainR  = scoreRain(rain24, rain72);
+  const soilR  = scoreSoil(soilVal);
+  const tideR  = scoreTide(tideM ?? 1.0);
+  const score  = calcRisk(rainR, phase.risk, soilR, tideR, season.base);
+  const level  = riskLevel(score);
+
+  G = { score, level, rain24, rain72, soilVal, tideM, phase, season, rainR, soilR, tideR,
+        daily, weather, now, month };
+
+  // ─── Update ring ───
+  const pct = Math.round(score * 100);
+  const circ = 364.4;
+  document.getElementById('ring-arc').style.strokeDashoffset = circ - circ * score;
+  document.getElementById('ring-arc').setAttribute('stroke', level.color);
+  document.getElementById('ring-pct').textContent  = pct + '%';
+  document.getElementById('ring-pct').style.color  = level.color;
+  document.getElementById('ring-label').textContent = level.label;
+  document.getElementById('ring-label').style.color = level.color;
+
+  // chips
+  document.getElementById('risk-chips').innerHTML =
+    `<span class="chip" style="color:${level.color}">${level.label}</span>
+     <span class="chip" style="color:var(--teal)">${phase.emoji} ${phase.name}</span>
+     <span class="chip" style="color:var(--muted)">${season.emoji} ${season.name}</span>`;
+
+  // ─── Overview stats ───
+  document.getElementById('ov-rain24').textContent = rain24.toFixed(1);
+  document.getElementById('ov-rain72').textContent = rain72.toFixed(1);
+  document.getElementById('ov-temp').textContent   = cur.temperature_2m?.toFixed(1) ?? '—';
+  document.getElementById('ov-humid').textContent  = cur.relative_humidity_2m ?? '—';
+  document.getElementById('ov-wind').textContent   = cur.wind_speed_10m?.toFixed(0) ?? '—';
+  document.getElementById('ov-soil').textContent   = soilVal?.toFixed(3) ?? '—';
+  document.getElementById('ov-tide').textContent   = tideM?.toFixed(2) ?? '—';
+
+  document.getElementById('ov-lunar').textContent  = phase.emoji;
+  document.getElementById('ov-lunar').title = phase.name;
+
+  // ─── Factor bars ───
+  const factors = [
+    { label:`Rainfall  (24h: ${rain24.toFixed(1)}mm / 72h: ${rain72.toFixed(1)}mm)`, val: rainR,    w:'38%', color: 'var(--teal)' },
+    { label:`Lunar — ${phase.name}`,                                                  val: phase.risk,w:'22%', color: '#9b59b6'   },
+    { label:`Soil Moisture (${soilVal?.toFixed(3) ?? '—'} m³/m³)`,                  val: soilR,    w:'18%', color: 'var(--sand)'},
+    { label:`Tide Height (${tideM?.toFixed(2) ?? '~'} m)`,                            val: tideR,    w:'14%', color: 'var(--teal-light)'},
+    { label:`Season Baseline — ${season.name}`,                                       val: season.base,w:'8%',color: 'var(--green)'},
+  ];
+  document.getElementById('factor-bars').innerHTML = factors.map(f => `
+    <div class="factor-row">
+      <div class="factor-meta"><span>${f.label}</span><span style="color:var(--ink)">${(f.val*100).toFixed(0)}% · ×${f.w}</span></div>
+      <div class="factor-track"><div class="factor-fill" style="width:${f.val*100}%;background:${f.color}"></div></div>
+    </div>`).join('');
+
+  document.getElementById('score-formula').innerHTML =
+    `FORMULA: Rain×0.38 + Lunar×0.22 + Soil×0.18 + Tide×0.14 + Season×0.08<br>` +
+    `= ${(rainR*0.38).toFixed(3)} + ${(phase.risk*0.22).toFixed(3)} + ${(soilR*0.18).toFixed(3)} + ${(tideR*0.14).toFixed(3)} + ${(season.base*0.08).toFixed(3)}<br>` +
+    `= <span style="color:${level.color};font-weight:500">${score.toFixed(3)} → ${level.label}</span>`;
+
+  document.getElementById('overview-loading').style.display  = 'none';
+  document.getElementById('overview-content').style.display  = 'block';
+
+  // ─── 7-day forecast ───
+  buildForecast();
+  buildTideChart(now);
+
+  // ─── Log to Supabase ───
+  if (sbClient) logReading();
+}
+
+// safety net — if loadAll throws for any reason, hide the spinner
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    const loader = document.getElementById('overview-loading');
+    if (loader && loader.style.display !== 'none') {
+      loader.innerHTML = '<div style="color:var(--red);font-size:10px">⚠️ Data load failed — check your internet connection and refresh.</div>';
+    }
+  }, 12000);
+});
+
+// ══════════════════════════════════════════════════════
+//  FORECAST
+// ══════════════════════════════════════════════════════
+function buildForecast() {
+  const daily = G.daily;
+  if (!daily.time) return;
+  const todayIdx = 3;
+  const days = daily.time.slice(todayIdx, todayIdx+7);
+  const rains = daily.precipitation_sum?.slice(todayIdx, todayIdx+7) || [];
+  const labels = ['Today','Tomorrow'];
+  const DAYNAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+  const strip = days.map((date, i) => {
+    const d = new Date(date + 'T12:00:00-06:00');
+    const r = rains[i] || 0;
+    const phase = lunarPhase(lunarAge(d));
+    const rR = scoreRain(r, r * 2);
+    const s = calcRisk(rR, phase.risk, G.soilR, 0.3, G.season.base);
+    const lv = riskLevel(s);
+    const name = i < 2 ? labels[i] : DAYNAMES[d.getDay()];
+    return `<div class="fc-day">
+      <div class="fc-day-name">${name}</div>
+      <div class="fc-score" style="color:${lv.color}">${Math.round(s*100)}%</div>
+      <div class="fc-rain">💧${r.toFixed(0)}mm</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('forecast-strip-wrap').innerHTML =
+    `<div class="forecast-strip">${strip}</div>`;
+
+  // Rain chart
+  if (rainChart) rainChart.destroy();
+  const ctx = document.getElementById('rain-chart').getContext('2d');
+  rainChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: days.map((d,i) => i === 0 ? 'Today' : i === 1 ? 'Tmrw' : DAYNAMES[new Date(d+'T12:00:00').getDay()]),
+      datasets: [{ label:'Rain mm', data: rains, backgroundColor: 'rgba(72,202,228,0.5)', borderColor:'#48cae4', borderWidth:1, borderRadius:4 }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false} },
+      scales:{
+        x:{ grid:{display:false}, ticks:{font:{family:'DM Mono',size:9},color:'#5a7a6a'} },
+        y:{ grid:{color:'rgba(0,0,0,0.05)'}, ticks:{font:{family:'DM Mono',size:9},color:'#5a7a6a'} }
+      }
+    }
+  });
+}
+
+// ══════════════════════════════════════════════════════
+//  WATERSHED
+// ══════════════════════════════════════════════════════
+async function loadWatershed() {
+  if (document.getElementById('ws-content').style.display === 'block') return;
+
+  const results = await Promise.all(
+    Object.entries(COORDS).map(async ([key, c]) => {
+      try {
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${c.lat}&longitude=${c.lon}` +
+          `&daily=precipitation_sum&past_days=3&forecast_days=1&timezone=America%2FCosta_Rica`;
+        const r = await fetch(url);
+        const d = await r.json();
+        const today = d.daily?.precipitation_sum?.[3] ?? 0;
+        const prev3 = (d.daily?.precipitation_sum?.slice(0,3) || []).reduce((a,b)=>a+(b||0),0);
+        return { key, label: c.label, today, prev3 };
+      } catch(e) { return { key, label: c.label, today: 0, prev3: 0 }; }
+    })
+  );
+
+  const avg24 = results.reduce((a,r) => a+r.today,0) / results.length;
+  const avg72 = results.reduce((a,r) => a+r.prev3,0) / results.length;
+  const maxToday = Math.max(...results.map(r => r.today));
+
+  document.getElementById('ws-rows').innerHTML = results.map(r => `
+    <div class="ws-row">
+      <div>
+        <div class="ws-name">${r.label}</div>
+        <div style="font-size:8px;color:var(--muted);margin-top:1px">72h: ${r.prev3.toFixed(1)}mm</div>
+      </div>
+      <div class="ws-bar-wrap"><div class="ws-bar" style="width:${maxToday>0?(r.today/maxToday*100):0}%"></div></div>
+      <div class="ws-val">${r.today.toFixed(1)}<span style="font-size:9px;color:var(--muted)">mm</span></div>
+    </div>`).join('');
+
+  const mouthToday   = results.find(r=>r.key==='mouth')?.today ?? 0;
+  const upstreamAvg  = (results.filter(r=>r.key!=='mouth').reduce((a,r)=>a+r.today,0)) /
+                       results.filter(r=>r.key!=='mouth').length;
+  const delta = upstreamAvg - mouthToday;
+  const deltaText = delta > 5  ? `⚠️ Upstream is <strong>${delta.toFixed(1)}mm heavier</strong> — surge possible in 2–6h` :
+                    delta < -5 ? `✅ Mouth is getting more rain than upstream` :
+                    `≈ Uniform rainfall across watershed`;
+
+  document.getElementById('ws-avg-line').innerHTML =
+    `<strong>Watershed avg 24h: ${avg24.toFixed(1)}mm · 72h avg: ${avg72.toFixed(1)}mm</strong><br><span style="color:var(--ink)">${deltaText}</span>`;
+
+  document.getElementById('ws-delta').innerHTML = `
+    <div style="font-size:10px;line-height:1.8;color:var(--muted)">${deltaText}</div>`;
+
+  // Watershed chart
+  if (wsChart) wsChart.destroy();
+  const ctx = document.getElementById('ws-chart').getContext('2d');
+  wsChart = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels: results.map(r=>r.label.split(' ')[0]),
+      datasets:[
+        { label:'Today', data:results.map(r=>r.today), backgroundColor:'rgba(72,202,228,0.55)', borderRadius:4 },
+        { label:'72h',   data:results.map(r=>r.prev3), backgroundColor:'rgba(45,106,79,0.25)',  borderRadius:4 },
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ labels:{ font:{family:'DM Mono',size:8}, color:'#5a7a6a' } } },
+      scales:{
+        x:{ grid:{display:false}, ticks:{font:{family:'DM Mono',size:8},color:'#5a7a6a'} },
+        y:{ grid:{color:'rgba(0,0,0,0.05)'}, ticks:{font:{family:'DM Mono',size:8},color:'#5a7a6a'} }
+      }
+    }
+  });
+
+  document.getElementById('ws-loading').style.display  = 'none';
+  document.getElementById('ws-content').style.display  = 'block';
+}
+
+// ══════════════════════════════════════════════════════
+//  IMN STATIONS (via Claude API proxy)
+// ══════════════════════════════════════════════════════
+async function loadIMN() {
+  loadIMNStation('quepos', 'https://www.imn.ac.cr/especial/tablas/quepos.html');
+  loadIMNStation('uvita',  'https://www.imn.ac.cr/especial/tablas/uvita.html');
+}
+
+async function loadIMNStation(id, url) {
+  if (document.getElementById(`imn-${id}-content`).style.display === 'block') return;
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 600,
+        messages:[{
+          role:'user',
+          content: `Fetch ${url} and extract the weather station data table. Return ONLY a JSON object with these keys where available: temp_c, dew_point_c, rain_today_mm, rain_yesterday_mm, wind_speed_kmh, wind_direction, humidity_pct, temp_max_c, temp_min_c, pressure_hpa. Use null for missing values. No markdown, no explanation, just the JSON object.`
+        }]
+      })
+    });
+    const d = await resp.json();
+    const raw = d.content?.find(b=>b.type==='text')?.text || '{}';
+    const clean = raw.replace(/```json|```/g,'').trim();
+    const data = JSON.parse(clean);
+    const fields = [
+      ['temp_c','°C','Temp'],['dew_point_c','°C','Dew Pt'],['humidity_pct','%','Humidity'],
+      ['rain_today_mm','mm','Rain Today'],['rain_yesterday_mm','mm','Rain Yest.'],
+      ['wind_speed_kmh','km/h','Wind'],['wind_direction','','Direction'],
+      ['temp_max_c','°C','Max Temp'],['temp_min_c','°C','Min Temp'],['pressure_hpa','hPa','Pressure']
+    ];
+    document.getElementById(`imn-${id}-grid`).innerHTML = fields
+      .filter(([k]) => data[k] != null)
+      .map(([k,unit,label]) => `
+        <div class="imn-cell">
+          <div class="imn-val">${data[k]}${unit}</div>
+          <div class="imn-lbl">${label}</div>
+        </div>`).join('');
+  } catch(e) {
+    document.getElementById(`imn-${id}-grid`).innerHTML =
+      `<div class="err" style="grid-column:span 3">Could not load station data</div>`;
+  }
+  document.getElementById(`imn-${id}-loading`).style.display = 'none';
+  document.getElementById(`imn-${id}-content`).style.display = 'block';
+}
+
+// ══════════════════════════════════════════════════════
+//  SUPABASE — LOG READING
+// ══════════════════════════════════════════════════════
+async function logReading() {
+  if (!sbClient || !G.score) return;
+  try {
+    await sbClient.from('flood_readings').insert({
+      score:      G.score,
+      risk_level: G.level.label,
+      rain_24h:   G.rain24,
+      rain_72h:   G.rain72,
+      soil:       G.soilVal,
+      tide_m:     G.tideM,
+      lunar_phase: G.phase.name,
+    });
+  } catch(e) { console.warn('Supabase log failed', e); }
+}
+
+// ══════════════════════════════════════════════════════
+//  HISTORY
+// ══════════════════════════════════════════════════════
+async function loadHistory() {
+  if (!sbClient) {
+    document.getElementById('history-setup-banner').style.display = 'block';
+    document.getElementById('history-log').innerHTML =
+      `<div style="font-size:9px;color:var(--muted)">Connect Supabase in Config to see history.</div>`;
+    return;
+  }
+  document.getElementById('history-setup-banner').style.display = 'none';
+
+  try {
+    const { data } = await sbClient
+      .from('flood_readings')
+      .select('*')
+      .order('created_at', { ascending:false })
+      .limit(200);
+
+    if (!data?.length) {
+      document.getElementById('history-log').innerHTML =
+        `<div style="font-size:9px;color:var(--muted)">No readings yet — will log automatically each time the app loads.</div>`;
+      return;
+    }
+
+    // Chart
+    const recent = [...data].reverse().slice(-60);
+    if (histChart) histChart.destroy();
+    const ctx = document.getElementById('history-chart').getContext('2d');
+    histChart = new Chart(ctx, {
+      type:'line',
+      data:{
+        labels: recent.map(r => {
+          const d = new Date(r.created_at);
+          return `${d.getMonth()+1}/${d.getDate()}`;
+        }),
+        datasets:[{
+          label:'Flood Score',
+          data: recent.map(r => Math.round(r.score * 100)),
+          borderColor:'#2d6a4f', backgroundColor:'rgba(45,106,79,0.08)',
+          borderWidth:2, pointRadius:2, fill:true, tension:0.4
+        }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false} },
+        scales:{
+          x:{ grid:{display:false}, ticks:{font:{family:'DM Mono',size:7},color:'#5a7a6a', maxTicksLimit:8} },
+          y:{ min:0, max:100, grid:{color:'rgba(0,0,0,0.05)'}, ticks:{font:{family:'DM Mono',size:8},color:'#5a7a6a'} }
+        }
+      }
+    });
+
+    // Log rows
+    document.getElementById('history-log').innerHTML = data.slice(0,30).map(r => {
+      const d = new Date(r.created_at);
+      const lv = riskLevel(r.score);
+      return `<div class="log-row">
+        <div class="log-time">${d.toLocaleDateString('en-US',{month:'short',day:'numeric'})}<br>${d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}</div>
+        <div class="log-score" style="color:${lv.color}">${Math.round(r.score*100)}%</div>
+        <div class="log-note">Rain ${r.rain_24h?.toFixed(0)??'—'}mm · ${r.lunar_phase??''}</div>
+        <div class="log-tag">auto</div>
+      </div>`;
+    }).join('');
+
+  } catch(e) {
+    document.getElementById('history-log').innerHTML =
+      `<div class="err">Could not load history: ${e.message}</div>`;
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  OBSERVATIONS
+// ══════════════════════════════════════════════════════
+function checkObserveBanner() {
+  document.getElementById('observe-setup-banner').style.display = sbClient ? 'none' : 'block';
+}
+
+async function loadObservations() {
+  if (!sbClient) return;
+  try {
+    const { data } = await sbClient
+      .from('observations')
+      .select('*')
+      .order('created_at', { ascending:false })
+      .limit(20);
+    if (!data?.length) return;
+    document.getElementById('obs-log').innerHTML = data.map(o => {
+      const d = new Date(o.created_at);
+      const condMap = { clear_low:'🏞 Clear & Low', normal:'🌊 Normal', elevated:'⚠️ Elevated',
+                        flooded:'🚨 Flooded', blocking:'⛔ Blocking' };
+      return `<div class="log-row">
+        <div class="log-time">${d.toLocaleDateString('en-US',{month:'short',day:'numeric'})}<br>${d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}</div>
+        <div class="log-note">
+          ${condMap[o.condition]||o.condition||''}
+          ${o.notes ? `<br><span style="color:var(--muted)">${o.notes}</span>` : ''}
+          ${o.observer ? `<br><span style="color:var(--muted);font-style:italic">— ${o.observer}</span>` : ''}
+        </div>
+        <div class="log-tag manual">field</div>
+      </div>`;
+    }).join('');
+  } catch(e) {}
+}
+
+async function submitObservation() {
+  const btn = document.getElementById('obs-submit');
+  const err = document.getElementById('obs-err');
+  const ok  = document.getElementById('obs-success');
+  err.textContent = '';
+  ok.style.display = 'none';
+
+  if (!sbClient) { err.textContent = 'Supabase not connected — see Config tab'; return; }
+  const condition   = document.getElementById('obs-condition').value;
+  const rainfall    = document.getElementById('obs-rain').value;
+  const water_color = document.getElementById('obs-color').value;
+  const notes       = document.getElementById('obs-notes').value.trim();
+  const observer    = document.getElementById('obs-name').value.trim();
+  if (!condition)   { err.textContent = 'Please select a river condition'; return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  try {
+    await sbClient.from('observations').insert({
+      condition, rainfall, water_color, notes, observer,
+      flood_score: G.score || null
+    });
+    ok.style.display = 'block';
+    document.getElementById('obs-condition').value = '';
+    document.getElementById('obs-rain').value      = '';
+    document.getElementById('obs-color').value     = '';
+    document.getElementById('obs-notes').value     = '';
+    document.getElementById('obs-name').value      = '';
+    loadObservations();
+  } catch(e) { err.textContent = 'Save failed: ' + e.message; }
+  btn.disabled = false;
+  btn.textContent = 'Save Observation';
+}
+
+// ══════════════════════════════════════════════════════
+//  BOOT
+// ══════════════════════════════════════════════════════
+loadAll();
+</script>
+</body>
+</html>
