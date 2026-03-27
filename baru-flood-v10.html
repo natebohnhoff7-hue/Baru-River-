@@ -579,8 +579,8 @@ function buildTideChart(now) {
   while(t<=end){ series.push({time:new Date(t),h:harmonicTide(t)}); t.setMinutes(t.getMinutes()+20); }
   const extremes=[];
   for(let i=1;i<series.length-1;i++) {
-    if(series[i].h>series[i-1].h&&series[i].h>series[i+1].h) extremes.push({type:'HIGH',...series[i]});
-    if(series[i].h<series[i-1].h&&series[i].h<series[i+1].h) extremes.push({type:'LOW',...series[i]});
+    if(series[i].h>series[i-1].h&&series[i].h>series[i+1].h) extremes.push({type:'HIGH',time:series[i].time,height:series[i].h});
+    if(series[i].h<series[i-1].h&&series[i].h<series[i+1].h) extremes.push({type:'LOW',time:series[i].time,height:series[i].h});
   }
   const nextE=[extremes.find(e=>e.type==='HIGH'&&e.time>now),extremes.find(e=>e.type==='LOW'&&e.time>now)].filter(Boolean).sort((a,b)=>a.time-b.time)[0];
   if(nextE) {
@@ -638,10 +638,14 @@ async function loadAll() {
   buildTideChart(now);
 
   let weather={};
-  try {
-    const url=`https://api.open-meteo.com/v1/forecast?latitude=${MOUTH.lat}&longitude=${MOUTH.lon}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&hourly=soil_moisture_0_to_1cm&daily=precipitation_sum,uv_index_max&past_days=3&forecast_days=7&timezone=America%2FCosta_Rica`;
-    weather=await fetchJSON(url);
-  } catch(e) { console.warn('OpenMeteo:',e.message); }
+  const weatherParams=`latitude=${MOUTH.lat}&longitude=${MOUTH.lon}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&hourly=soil_moisture_0_to_1cm&daily=precipitation_sum,uv_index_max&past_days=3&forecast_days=7&timezone=America%2FCosta_Rica`;
+  const endpoints=[
+    `https://api.open-meteo.com/v1/forecast?${weatherParams}`,
+    `https://customer-api.open-meteo.com/v1/forecast?${weatherParams}&apikey=JiCxSLpk3sIaLWmEPyLi4`,
+  ];
+  for(const url of endpoints) {
+    try { weather=await fetchJSON(url,8000); break; } catch(e) { console.warn('OpenMeteo endpoint failed:',e.message); }
+  }
 
   const cur=weather?.current||{};
   const daily=weather?.daily||{};
