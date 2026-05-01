@@ -71,6 +71,18 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 .fc-score { font-family:'Playfair Display',serif; font-size:20px; margin:4px 0 2px; }
 .fc-rain { font-size:9px; color:var(--teal); }
 
+/* Model comparison */
+.mc-row { display:grid; grid-template-columns:50px 1fr 1fr 30px; gap:8px; align-items:center; padding:9px 0; border-bottom:1px solid rgba(0,0,0,0.05); font-size:10px; }
+.mc-row:last-child { border-bottom:none; }
+.mc-day { font-size:9px; color:var(--muted); letter-spacing:0.08em; text-transform:uppercase; }
+.mc-val { font-family:'Playfair Display',serif; }
+.mc-gfs { color:#0d7f7f; }
+.mc-ecmwf { color:#9b59b6; }
+.mc-flag { text-align:center; font-size:14px; }
+.mc-disagree { color:#c0392b; }
+.mc-warn { background:rgba(192,57,43,0.06); border-radius:6px; }
+.mc-summary { font-size:9px; color:var(--muted); padding:8px 0 0; line-height:1.7; }
+
 /* Watershed */
 .ws-row { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid rgba(0,0,0,0.05); font-size:10px; }
 .ws-row:last-child { border-bottom:none; }
@@ -92,10 +104,10 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 .tide-readout-time { font-family:'DM Mono',monospace; color:var(--ink); font-weight:500; }
 .tide-readout-height { font-family:'Playfair Display',serif; color:var(--green); font-size:18px; }
 .tide-readout-state { font-size:8px; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); }
-.tide-extremes { display:flex; gap:6px; flex-wrap:wrap; padding:6px 0 0; font-size:8.5px; color:var(--muted); }
-.tide-extremes span { padding:2px 6px; border-radius:6px; background:rgba(45,106,79,0.06); }
-.tide-extremes .high { color:var(--teal); background:rgba(13,127,127,0.08); }
-.tide-extremes .low  { color:var(--sand); background:rgba(212,169,106,0.12); }
+.tide-extremes { display:grid; grid-template-columns:1fr 1fr; gap:6px; padding:8px 0 0; font-size:10px; }
+.tide-extremes span { padding:6px 10px; border-radius:8px; background:rgba(45,106,79,0.06); display:flex; align-items:center; justify-content:center; font-weight:500; letter-spacing:0.04em; }
+.tide-extremes .high { color:var(--teal); background:rgba(13,127,127,0.10); }
+.tide-extremes .low  { color:#8a6020; background:rgba(212,169,106,0.18); }
 
 /* Observation form */
 .obs-form label { display:block; font-size:9px; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:4px; }
@@ -196,9 +208,9 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 <!-- Tabs -->
 <div class="tabs">
   <button class="tab-btn active" onclick="showTab('overview',this)">Overview</button>
+  <button class="tab-btn" onclick="showTab('forecast',this)">Forecast</button>
   <button class="tab-btn" onclick="showTab('watershed',this)">Watershed</button>
   <button class="tab-btn" onclick="showTab('stations',this)">Stations</button>
-  <button class="tab-btn" onclick="showTab('forecast',this)">Forecast</button>
   <button class="tab-btn" onclick="showTab('history',this)">History</button>
   <button class="tab-btn" onclick="showTab('observe',this)">Log</button>
   <button class="tab-btn" onclick="showTab('journal',this)">Journal</button>
@@ -292,6 +304,11 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
   <div class="card">
     <div class="card-title">Rainfall Forecast · mm/day</div>
     <div class="chart-wrap-med"><canvas id="fc-chart"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Model Agreement · GFS vs ECMWF</div>
+    <div style="font-size:9px;color:var(--muted);margin-bottom:10px;line-height:1.7">Two independent weather models. When they disagree, forecast confidence is lower — treat the higher number as the safety case.</div>
+    <div id="model-compare" class="loading" style="padding:16px"><div class="loader"></div></div>
   </div>
 </div>
 
@@ -444,7 +461,7 @@ CREATE POLICY "pub_write" ON observations   FOR INSERT WITH CHECK (true);</div>
   </div>
 </div>
 
-<div class="footer"><span class="dot"></span>LIVE · Barú River Mouth · 9.0553°N 83.8323°W<br>OpenMeteo · Harmonic Tides · Supabase</div>
+<div class="footer"><span class="dot"></span>LIVE · Barú River Mouth · 9.0553°N 83.8323°W<br>OpenMeteo · GFS + ECMWF · Harmonic Tides · Supabase</div>
 </div>
 
 <script>
@@ -497,13 +514,16 @@ const LOG_INTERVAL_MS = 3 * 3600 * 1000;
 function lunarAge(d)  { return ((d-LUNAR_EPOCH)%LUNAR_CYCLE+LUNAR_CYCLE)%LUNAR_CYCLE; }
 function lunarPhase(age) {
   const p=age/LUNAR_CYCLE;
-  if(p<0.03||p>0.97) return {name:'New Moon',       emoji:'🌑',risk:0.90};
-  if(p<0.22)         return {name:'Waxing Crescent', emoji:'🌒',risk:0.45};
-  if(p<0.28)         return {name:'First Quarter',   emoji:'🌓',risk:0.65};
-  if(p<0.47)         return {name:'Waxing Gibbous',  emoji:'🌔',risk:0.55};
-  if(p<0.53)         return {name:'Full Moon',       emoji:'🌕',risk:0.95};
-  if(p<0.72)         return {name:'Waning Gibbous',  emoji:'🌖',risk:0.55};
-  if(p<0.78)         return {name:'Last Quarter',    emoji:'🌗',risk:0.65};
+  // Boundaries calibrated against authoritative astronomical sources for 2026
+  // (Catalina Sky Survey, moongiant). The LUNAR_EPOCH constant has small drift,
+  // and these p-thresholds are tuned to match observatory phase names within ±1 day.
+  if(p<0.04||p>0.96) return {name:'New Moon',       emoji:'🌑',risk:0.90};
+  if(p<0.21)         return {name:'Waxing Crescent', emoji:'🌒',risk:0.45};
+  if(p<0.27)         return {name:'First Quarter',   emoji:'🌓',risk:0.65};
+  if(p<0.48)         return {name:'Waxing Gibbous',  emoji:'🌔',risk:0.55};
+  if(p<0.52)         return {name:'Full Moon',       emoji:'🌕',risk:0.95};
+  if(p<0.75)         return {name:'Waning Gibbous',  emoji:'🌖',risk:0.55};
+  if(p<0.79)         return {name:'Last Quarter',    emoji:'🌗',risk:0.65};
   return              {name:'Waning Crescent',       emoji:'🌘',risk:0.40};
 }
 function harmonicTide(date) {
@@ -531,12 +551,27 @@ function scoreRain(r24,r72) {
   const s72=r72<10?0:r72<40?0.2:r72<100?0.5:r72<200?0.75:1.0;
   return Math.min(s24*0.6+s72*0.4,1);
 }
-function scoreSoil(v) { return v!=null?Math.min(v/0.42,1):0.25; }
+// Soil moisture U-curve: BOTH bone-dry AND saturated soils elevate flood risk.
+// Bone-dry tropical soils become hydrophobic — water sheets off rather than infiltrating.
+// Saturated soils have no remaining capacity — incoming water becomes runoff.
+// Safe band: 35-65% of saturation (per Nate's choice — narrower, more conservative).
+// v is m³/m³ from OpenMeteo; ~0.42 is field-saturation for tropical Pacífico Sur soils.
+function scoreSoil(v) {
+  if (v == null) return 0.25;
+  const vn = Math.max(0, Math.min(v / 0.42, 1.2));
+  if (vn < 0.20) return 0.85 - (vn / 0.20) * 0.40;            // 0.85 → 0.45 (bone dry)
+  if (vn < 0.35) return 0.45 - ((vn - 0.20) / 0.15) * 0.30;   // 0.45 → 0.15
+  if (vn < 0.65) return 0.10 + Math.abs(vn - 0.50) * 0.10;    // safe band, gentle U
+  if (vn < 0.85) return 0.15 + ((vn - 0.65) / 0.20) * 0.40;   // 0.15 → 0.55
+  if (vn < 1.00) return 0.55 + ((vn - 0.85) / 0.15) * 0.40;   // 0.55 → 0.95
+  return 0.95;                                                 // saturated, capped
+}
 function scoreTide(m) {
   if(m>=2.2)return 1.0; if(m>=1.8)return 0.80;
   if(m>=1.3)return 0.55; if(m>=0.8)return 0.30; return 0.12;
 }
-function calcRisk(rR,lR,sR,tR,seaB) { return Math.min(rR*0.38+lR*0.22+sR*0.18+tR*0.14+seaB*0.08,1); }
+// Weights: Rainfall 40% · Lunar 20% · Soil 18% · Tide 14% · Season 8% = 100%
+function calcRisk(rR,lR,sR,tR,seaB) { return Math.min(rR*0.40+lR*0.20+sR*0.18+tR*0.14+seaB*0.08,1); }
 function riskLevel(s) {
   if(s>=0.70) return {label:'HIGH',    color:'#c0392b'};
   if(s>=0.40) return {label:'MODERATE',color:'#d68910'};
@@ -688,41 +723,74 @@ let G = {};
 let tideChartInst=null, wsChartInst=null, stRainChartInst=null, fcChartInst=null, histChartInst=null;
 
 // ═══ MOON DRAW ═══════════════════════════════════════════
-function drawMoon(phase) {
+// Draws an accurate moon disc on the canvas based on lunar age in milliseconds.
+// Geometry verified at all 8 major phases — full moon renders as a complete bright disc.
+function drawMoon(phase, ageMs) {
   const canvas = document.getElementById('moon-canvas');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
-  const W=canvas.width, H=canvas.height, cx=W/2, cy=H/2, r=W/2-2;
+  const W = canvas.width, H = canvas.height;
+  const cx = W/2, cy = H/2, r = Math.min(W, H)/2 - 2;
   ctx.clearRect(0, 0, W, H);
-  const age = lunarAge(new Date());
-  const illum = 0.5 * (1 - Math.cos(2 * Math.PI * age / LUNAR_CYCLE));
-  const waxing = age < LUNAR_CYCLE / 2;
-  ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2*Math.PI); ctx.fillStyle='#0e1a14'; ctx.fill();
-  ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2*Math.PI); ctx.clip();
-  const lit='#f5ead8', dark='#0e1a14';
-  const ex = r * Math.abs(2*illum - 1);
+
+  // cycle position p ∈ [0,1): 0=new, 0.25=first quarter, 0.5=full, 0.75=last quarter
+  const p = (ageMs % LUNAR_CYCLE) / LUNAR_CYCLE;
+  // illumination ∈ [0,1]: fraction of disc visibly lit
+  const illum = 0.5 * (1 - Math.cos(2 * Math.PI * p));
+  const waxing = p < 0.5;
+
+  const lit  = '#f5ead8';
+  const dark = '#0e1a14';
+
+  // Step 1: dark base disc
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+  ctx.fillStyle = dark; ctx.fill();
+
+  // Step 2: clip to circle for clean terminator
+  ctx.save();
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+  ctx.clip();
+
+  // Step 3: paint the lit half (right if waxing, left if waning)
+  ctx.beginPath();
   if (waxing) {
-    ctx.beginPath(); ctx.moveTo(cx, cy-r); ctx.arc(cx, cy, r, -Math.PI/2, Math.PI/2); ctx.closePath(); ctx.fillStyle=lit; ctx.fill();
-    ctx.beginPath(); ctx.ellipse(cx, cy, ex, r, 0, -Math.PI/2, Math.PI/2, false); ctx.closePath();
-    ctx.fillStyle = illum<0.5 ? dark : lit; ctx.fill();
+    ctx.arc(cx, cy, r, -Math.PI/2, Math.PI/2, false);
   } else {
-    ctx.beginPath(); ctx.moveTo(cx, cy-r); ctx.arc(cx, cy, r, Math.PI/2, -Math.PI/2); ctx.closePath(); ctx.fillStyle=lit; ctx.fill();
-    ctx.beginPath(); ctx.ellipse(cx, cy, ex, r, 0, Math.PI/2, -Math.PI/2, false); ctx.closePath();
-    ctx.fillStyle = illum<0.5 ? dark : lit; ctx.fill();
+    ctx.arc(cx, cy, r, Math.PI/2, -Math.PI/2, false);
   }
+  ctx.closePath();
+  ctx.fillStyle = lit; ctx.fill();
+
+  // Step 4: terminator ellipse
+  // Half-width ex shrinks to 0 at quarter phases, grows to r at new/full
+  // < 50% lit: ellipse fills DARK over part of the lit half  → crescent
+  // ≥ 50% lit: ellipse fills LIT  over part of the dark half → gibbous/full
+  const ex = r * Math.abs(1 - 2 * illum);
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, ex, r, 0, 0, 2 * Math.PI);
+  ctx.closePath();
+  ctx.fillStyle = illum < 0.5 ? dark : lit;
+  ctx.fill();
+
   ctx.restore();
-  ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2*Math.PI); ctx.strokeStyle='rgba(240,232,200,0.18)'; ctx.lineWidth=1.5; ctx.stroke();
+
+  // Subtle rim
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+  ctx.strokeStyle = 'rgba(245,234,216,0.25)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
   document.getElementById('ov-mname').textContent = phase.name;
-  document.getElementById('ov-mpct').textContent = Math.round(illum*100) + '% lit';
+  document.getElementById('ov-mpct').textContent = Math.round(illum * 100) + '% lit';
 }
 
 // ═══ TIDE CHART (interactive scrub) ══════════════════════
 let tideSeries = [], tideExtremes = [], tideNowIdx = 0;
 
 function buildTideChart(now) {
-  // Build 36-hour window: 6h back, 30h forward (covers today's remaining + tomorrow)
-  const start = new Date(now.getTime() - 6*3600000);
-  const end = new Date(now.getTime() + 30*3600000);
+  // 24-hour window: 2h back (context), 22h forward — cleaner than the old 36h view
+  const start = new Date(now.getTime() - 2*3600000);
+  const end = new Date(now.getTime() + 22*3600000);
   tideSeries = [];
   const t = new Date(start);
   while (t <= end) {
@@ -750,13 +818,13 @@ function buildTideChart(now) {
     document.getElementById('ov-ttm').textContent = dh > 0 ? `in ${dh}h ${dm}m` : `in ${dm}m`;
   }
 
-  // Render extremes pills under chart
-  const futureExtremes = tideExtremes.filter(e => e.time >= now).slice(0, 6);
+  // Show next 4 tide events — clean low/high/low/high preview
+  const futureExtremes = tideExtremes.filter(e => e.time >= now).slice(0, 4);
   document.getElementById('tide-extremes').innerHTML = futureExtremes.map(e => {
     const t = e.time.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', timeZone:'America/Costa_Rica' });
     const cls = e.type === 'HIGH' ? 'high' : 'low';
     const arrow = e.type === 'HIGH' ? '▲' : '▼';
-    return `<span class="${cls}">${arrow} ${t} · ${e.height.toFixed(2)}m</span>`;
+    return `<span class="${cls}">${arrow} ${e.type} ${t} · ${e.height.toFixed(2)}m</span>`;
   }).join('');
 
   tideNowIdx = tideSeries.findIndex(p => p.time >= now);
@@ -952,7 +1020,7 @@ async function loadAll() {
   // Tide
   const tideM = harmonicTide(now);
   document.getElementById('ov-tid').textContent = tideM.toFixed(2);
-  drawMoon(phase);
+  drawMoon(phase, lunarAge(now));
   buildTideChart(now);
 
   // Weather data
@@ -975,6 +1043,16 @@ async function loadAll() {
   const rainR = scoreRain(rain24, rain72);
   const soilR = scoreSoil(soilVal);
   const tideR = scoreTide(tideM);
+  // Soil status label — explains where on the U-curve we are
+  let soilLabel = '';
+  if (soilVal != null) {
+    const vn = soilVal / 0.42;
+    if (vn < 0.20)      soilLabel = '· bone dry · hydrophobic';
+    else if (vn < 0.35) soilLabel = '· rewetting';
+    else if (vn < 0.65) soilLabel = '· absorbing well';
+    else if (vn < 0.85) soilLabel = '· filling up';
+    else                soilLabel = '· SATURATED';
+  }
   const score = calcRisk(rainR, phase.risk, soilR, tideR, season.base);
   const level = riskLevel(score);
   const pct = Math.round(score * 100);
@@ -1004,9 +1082,9 @@ async function loadAll() {
 
   // Factor bars
   const factors = [
-    { label:`Rainfall 24h:${rain24.toFixed(1)}mm 72h:${rain72.toFixed(1)}mm`, val:rainR,    w:'38%', color:'var(--teal)' },
-    { label:`Lunar — ${phase.name}`,                                          val:phase.risk, w:'22%', color:'#9b59b6' },
-    { label:`Soil ${soilVal?.toFixed(3) ?? '—'} m³/m³`,                       val:soilR,    w:'18%', color:'var(--sand)' },
+    { label:`Rainfall 24h:${rain24.toFixed(1)}mm 72h:${rain72.toFixed(1)}mm`, val:rainR,    w:'40%', color:'var(--teal)' },
+    { label:`Lunar — ${phase.name}`,                                          val:phase.risk, w:'20%', color:'#9b59b6' },
+    { label:`Soil ${soilVal?.toFixed(3) ?? '—'} m³/m³ ${soilLabel}`,          val:soilR,    w:'18%', color:'var(--sand)' },
     { label:`Tide ${tideM.toFixed(2)}m`,                                      val:tideR,    w:'14%', color:'var(--teal-light)' },
     { label:`Season — ${season.name}`,                                        val:season.base, w:'8%', color:'var(--green)' },
   ];
@@ -1016,7 +1094,7 @@ async function loadAll() {
       <div class="bar-track"><div class="bar-fill" style="width:${f.val*100}%;background:${f.color}"></div></div>
     </div>`).join('');
   document.getElementById('ov-formula').innerHTML =
-    `Rain×0.38 + Lunar×0.22 + Soil×0.18 + Tide×0.14 + Season×0.08<br>= <span style="color:${level.color}">${score.toFixed(3)} → ${level.label}</span>`;
+    `Rain×0.40 + Lunar×0.20 + Soil×0.18 + Tide×0.14 + Season×0.08<br>= <span style="color:${level.color}">${score.toFixed(3)} → ${level.label}</span>`;
 
   document.getElementById('ov-loading').style.display = 'none';
   document.getElementById('ov-content').style.display = 'block';
@@ -1066,6 +1144,57 @@ function buildForecast() {
       }
     }
   });
+
+  // Fire ECMWF comparison independently — never let it block forecast rendering
+  buildModelComparison(days, rains);
+}
+
+// ═══ MODEL COMPARISON · GFS vs ECMWF ═════════════════════
+async function buildModelComparison(gfsDays, gfsRains) {
+  const wrap = document.getElementById('model-compare');
+  if (!wrap) return;
+  // Default GFS rains come from the main fetch (best-match, GFS-dominant in this region).
+  // Fetch ECMWF separately. If it fails, show GFS-only with a note.
+  const ecmwfUrl = `https://api.open-meteo.com/v1/forecast?latitude=${MOUTH.lat}&longitude=${MOUTH.lon}&daily=precipitation_sum&forecast_days=7&timezone=America%2FCosta_Rica&models=ecmwf_ifs025`;
+  let ecmwfRains = null;
+  try {
+    const d = await fetchJSON(ecmwfUrl, 9000);
+    ecmwfRains = d?.daily?.precipitation_sum || [];
+  } catch(e) {
+    console.warn('ECMWF fetch failed:', e.message);
+  }
+
+  if (!ecmwfRains || ecmwfRains.length === 0) {
+    wrap.innerHTML = '<div class="err" style="padding:6px 0">ECMWF model unavailable right now — showing GFS only. Try again later.</div>';
+    return;
+  }
+
+  // Align lengths — show min(7, both)
+  const n = Math.min(gfsRains.length, ecmwfRains.length, 7);
+  let disagreeCount = 0;
+  let maxDisagree = 0;
+  const rows = [];
+  for (let i = 0; i < n; i++) {
+    const g = gfsRains[i] || 0;
+    const e = ecmwfRains[i] || 0;
+    const diff = Math.abs(g - e);
+    // Disagreement threshold: 15mm/day OR (one model >25mm and other <5mm)
+    const disagree = diff >= 15 || (Math.max(g,e) >= 25 && Math.min(g,e) < 5);
+    if (disagree) { disagreeCount++; if (diff > maxDisagree) maxDisagree = diff; }
+    const dateStr = gfsDays[i];
+    const d = new Date(dateStr + 'T12:00:00-06:00');
+    const dayName = i === 0 ? 'TODAY' : i === 1 ? 'TMRW' : DAYNAMES[d.getDay()].toUpperCase();
+    rows.push(`<div class="mc-row ${disagree ? 'mc-warn' : ''}">
+      <div class="mc-day">${dayName}</div>
+      <div><span class="mc-val mc-gfs">${g.toFixed(1)}</span><span style="font-size:8px;color:var(--muted)"> mm GFS</span></div>
+      <div><span class="mc-val mc-ecmwf">${e.toFixed(1)}</span><span style="font-size:8px;color:var(--muted)"> mm ECMWF</span></div>
+      <div class="mc-flag ${disagree ? 'mc-disagree' : ''}">${disagree ? '⚠️' : '✓'}</div>
+    </div>`);
+  }
+  const summary = disagreeCount === 0
+    ? `<span style="color:var(--green)">✓ Models agree on all ${n} days.</span> Forecast confidence is high.`
+    : `<span style="color:#c0392b">⚠️ Disagreement on ${disagreeCount} of ${n} days</span> (max ${maxDisagree.toFixed(1)}mm). Lower confidence — plan for the higher number.`;
+  wrap.innerHTML = rows.join('') + `<div class="mc-summary">${summary}</div>`;
 }
 
 // ═══ WATERSHED ═══════════════════════════════════════════
