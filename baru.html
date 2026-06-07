@@ -173,6 +173,18 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 .dot { display:inline-block; width:5px; height:5px; border-radius:50%; background:var(--green-light); margin-right:5px; animation:pulse 2s infinite; }
 @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
 
+/* Flood override */
+.flood-banner { background:#c0392b; color:#fff; text-align:center; font-size:11px; font-weight:500; letter-spacing:0.04em; padding:10px 16px; line-height:1.5; cursor:pointer; }
+.flood-banner small { display:block; font-size:8.5px; opacity:0.88; letter-spacing:0.06em; margin-top:3px; font-weight:400; }
+.flood-report-btn { margin-top:10px; background:none; border:1px solid rgba(192,57,43,0.4); color:var(--red); border-radius:20px; padding:7px 18px; font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.1em; text-transform:uppercase; cursor:pointer; transition:background .2s,color .2s; }
+.flood-report-btn:hover { background:rgba(192,57,43,0.08); }
+.flood-report-btn.active { background:var(--red); color:#fff; border-color:var(--red); }
+
+/* Powered-by / River Soul credit */
+.powered-by { text-align:center; padding:8px 20px 18px; font-family:'DM Mono',monospace; font-size:8.5px; letter-spacing:0.16em; text-transform:uppercase; color:var(--muted); border-top:1px solid var(--border); margin:2px 20px 0; }
+.powered-by a { font-family:'Playfair Display',serif; font-style:italic; font-size:15px; letter-spacing:0.01em; text-transform:none; color:var(--green); text-decoration:none; border-bottom:1px solid rgba(45,106,79,0.3); padding-bottom:1px; transition:color .2s,border-color .2s; margin-left:4px; }
+.powered-by a:hover { color:var(--green-dark); border-color:var(--green-dark); }
+
 /* Moon canvas */
 #moon-canvas { display:block; margin:0 auto 4px; }
 </style>
@@ -187,6 +199,9 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
   <div class="header-sub" id="htime">Loading…</div>
   <div class="badge" id="hbadge">Loading season…</div>
 </div>
+
+<!-- Flooding alert banner (raised by the Report-flooding button) -->
+<div id="flood-banner" class="flood-banner" style="display:none" onclick="clearFloodOverride()"></div>
 
 <!-- Score -->
 <div class="ring-wrap">
@@ -203,6 +218,7 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
     </div>
   </div>
   <div class="chips" id="chips"><span class="chip" style="color:#888">Fetching…</span></div>
+  <button id="flood-report-btn" class="flood-report-btn" onclick="reportFlooding()">⚠️ Report flooding now</button>
 </div>
 
 <!-- Tabs -->
@@ -258,7 +274,7 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
       </div>
       <div class="chart-wrap-tide"><canvas id="tide-chart"></canvas></div>
       <div class="tide-extremes" id="tide-extremes"></div>
-      <div style="font-size:8px;color:var(--muted);margin-top:6px;text-align:center" id="tide-source">Slide left/right to read tide at any time · model RMSE 1.3cm vs Bahía Uvita</div>
+      <div style="font-size:8px;color:var(--muted);margin-top:6px;text-align:center" id="tide-source">Observed highs &amp; lows · Dominical (Bahía Uvita port) · via costarica.com · slide to read any time</div>
     </div>
   </div>
 </div>
@@ -419,7 +435,7 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
   </div>
   <div class="card">
     <div class="card-title">WorldTides API (optional)</div>
-    <div style="font-size:9px;color:var(--muted);margin-bottom:12px;line-height:1.8">Optional upgrade for tides. Free tier at <strong>worldtides.info</strong>. Leave blank to use harmonic model.</div>
+    <div style="font-size:9px;color:var(--muted);margin-bottom:12px;line-height:1.8">Optional upgrade for tides. Free tier at <strong>worldtides.info</strong>. Leave blank — the app uses the built-in Costa Rica tide table.</div>
     <label class="cfg-label">WorldTides Key</label>
     <input class="cfg-input" id="cfg-wt-key" placeholder="abc123…" type="text">
     <button class="btn-save" onclick="saveWorldTides()">Save WorldTides</button>
@@ -461,7 +477,8 @@ CREATE POLICY "pub_write" ON observations   FOR INSERT WITH CHECK (true);</div>
   </div>
 </div>
 
-<div class="footer"><span class="dot"></span>LIVE · Barú River Mouth · 9.0553°N 83.8323°W<br>OpenMeteo · GFS + ECMWF · Harmonic Tides · Supabase</div>
+<div class="footer"><span class="dot"></span>LIVE · Barú River Mouth · 9.0553°N 83.8323°W<br>OpenMeteo · GFS + ECMWF · Costa Rica Tide Tables · Supabase</div>
+<div class="powered-by">Brought to you by<a href="https://riversoulcr.com" target="_blank" rel="noopener">River Soul</a></div>
 </div>
 
 <script>
@@ -492,19 +509,36 @@ function getSeasonByDate(date) {
 
 const LUNAR_EPOCH = 947182440000, LUNAR_CYCLE = 29.530589*86400000;
 
-// ── TIDE MODEL · Ridge-regression fit against 11 real tide extremes
-// from official tide tables for Bahía Uvita, April 28-30, 2026 (UTC-6).
-// Regularized to keep amplitudes physically realistic for tropical East Pacific.
-// RMSE: 7.5 cm · M2 dominant (1.10m) as expected.
-const TIDE_DATUM = 1.2364;
-const TIDE_C = [
-  { p:12.4206, a:1.0990, ph:108.28 },  // M2 - principal lunar
-  { p:12.0000, a:0.1094, ph:239.22 },  // S2 - principal solar
-  { p:12.6583, a:0.0714, ph:128.97 },  // N2 - lunar elliptic
-  { p:23.9345, a:0.0432, ph:167.74 },  // K1 - lunisolar diurnal
-  { p:25.8194, a:0.0821, ph:225.74 },  // O1 - principal lunar diurnal
+// ── TIDE MODEL · Observed high/low tide extremes for Dominical (tide port:
+// Bahía Uvita), taken from costarica.com daily tide tables — the same source the
+// scraper targets. These are real published extremes (feet, converted to metres).
+// Between extremes we cosine-interpolate, which matches the natural shape of a
+// semidiurnal tide. Covers Jun 7–21, 2026. When the clock runs past the last row,
+// TIDE_STALE flips true and the UI shows a refresh warning instead of a wrong number.
+const FT_TO_M = 0.3048;
+// [ Costa-Rica-local ISO time, height (ft), 'H' | 'L' ]
+const TIDE_RAW = [
+  ['2026-06-07T00:45:00-06:00',1.28,'L'],['2026-06-07T07:08:00-06:00',7.84,'H'],['2026-06-07T13:15:00-06:00',1.87,'L'],['2026-06-07T19:21:00-06:00',7.38,'H'],
+  ['2026-06-08T01:30:00-06:00',1.48,'L'],['2026-06-08T07:54:00-06:00',7.91,'H'],['2026-06-08T14:07:00-06:00',1.80,'L'],['2026-06-08T20:13:00-06:00',7.22,'H'],
+  ['2026-06-09T02:18:00-06:00',1.57,'L'],['2026-06-09T08:44:00-06:00',8.04,'H'],['2026-06-09T15:02:00-06:00',1.67,'L'],['2026-06-09T21:09:00-06:00',7.19,'H'],
+  ['2026-06-10T03:11:00-06:00',1.57,'L'],['2026-06-10T09:37:00-06:00',8.27,'H'],['2026-06-10T15:59:00-06:00',1.44,'L'],['2026-06-10T22:08:00-06:00',7.32,'H'],
+  ['2026-06-11T04:07:00-06:00',1.48,'L'],['2026-06-11T10:33:00-06:00',8.60,'H'],['2026-06-11T16:57:00-06:00',1.08,'L'],['2026-06-11T23:07:00-06:00',7.58,'H'],
+  ['2026-06-12T05:05:00-06:00',1.25,'L'],['2026-06-12T11:29:00-06:00',8.96,'H'],['2026-06-12T17:54:00-06:00',0.62,'L'],
+  ['2026-06-13T00:05:00-06:00',7.94,'H'],['2026-06-13T06:03:00-06:00',0.98,'L'],['2026-06-13T12:24:00-06:00',9.35,'H'],['2026-06-13T18:50:00-06:00',0.20,'L'],
+  ['2026-06-14T01:02:00-06:00',8.40,'H'],['2026-06-14T07:01:00-06:00',0.66,'L'],['2026-06-14T13:19:00-06:00',9.71,'H'],['2026-06-14T19:44:00-06:00',-0.23,'L'],
+  ['2026-06-15T01:57:00-06:00',8.83,'H'],['2026-06-15T07:58:00-06:00',0.36,'L'],['2026-06-15T14:14:00-06:00',9.94,'H'],['2026-06-15T20:37:00-06:00',-0.56,'L'],
+  ['2026-06-16T02:51:00-06:00',9.22,'H'],['2026-06-16T08:54:00-06:00',0.13,'L'],['2026-06-16T15:07:00-06:00',10.04,'H'],['2026-06-16T21:29:00-06:00',-0.72,'L'],
+  ['2026-06-17T03:44:00-06:00',9.48,'H'],['2026-06-17T09:49:00-06:00',0.07,'L'],['2026-06-17T16:01:00-06:00',9.94,'H'],['2026-06-17T22:21:00-06:00',-0.69,'L'],
+  ['2026-06-18T04:37:00-06:00',9.61,'H'],['2026-06-18T10:44:00-06:00',0.13,'L'],['2026-06-18T16:54:00-06:00',9.68,'H'],['2026-06-18T23:12:00-06:00',-0.49,'L'],
+  ['2026-06-19T05:30:00-06:00',9.58,'H'],['2026-06-19T11:40:00-06:00',0.33,'L'],['2026-06-19T17:48:00-06:00',9.25,'H'],
+  ['2026-06-20T00:04:00-06:00',-0.16,'L'],['2026-06-20T06:24:00-06:00',9.38,'H'],['2026-06-20T12:36:00-06:00',0.62,'L'],['2026-06-20T18:43:00-06:00',8.76,'H'],
+  ['2026-06-21T00:56:00-06:00',0.30,'L'],['2026-06-21T07:18:00-06:00',9.12,'H'],['2026-06-21T13:33:00-06:00',0.98,'L'],['2026-06-21T19:40:00-06:00',8.23,'H'],
 ];
-const J2000 = new Date('2000-01-01T12:00:00Z').getTime();
+const TIDE_TABLE = TIDE_RAW.map(r => ({ ms:new Date(r[0]).getTime(), h:r[1]*FT_TO_M, type:r[2] }))
+                           .sort((a,b) => a.ms - b.ms);
+const TIDE_T0 = TIDE_TABLE[0].ms;
+const TIDE_T1 = TIDE_TABLE[TIDE_TABLE.length - 1].ms;
+let TIDE_STALE = false;
 const DAYNAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
 // Throttle Supabase auto-logging to once every 3 hours
@@ -526,11 +560,21 @@ function lunarPhase(age) {
   if(p<0.79)         return {name:'Last Quarter',    emoji:'🌗',risk:0.65};
   return              {name:'Waning Crescent',       emoji:'🌘',risk:0.40};
 }
+// Cosine interpolation between the two bracketing observed extremes. Returns
+// metres. Name kept as harmonicTide() so existing call sites are unchanged.
+// Outside the table range it clamps to the nearest known extreme (never NaN);
+// staleness is surfaced separately via TIDE_STALE so we never show wrong data quietly.
 function harmonicTide(date) {
-  const h=(date.getTime()-J2000)/3600000;
-  let t=TIDE_DATUM;
-  TIDE_C.forEach(c=>{ t+=c.a*Math.cos((2*Math.PI/c.p)*h-c.ph*Math.PI/180); });
-  return Math.max(0,t);
+  const ms = date.getTime();
+  if (ms <= TIDE_T0) return TIDE_TABLE[0].h;
+  if (ms >= TIDE_T1) return TIDE_TABLE[TIDE_TABLE.length - 1].h;
+  let lo = 0;
+  for (let i = 0; i < TIDE_TABLE.length - 1; i++) {
+    if (ms >= TIDE_TABLE[i].ms && ms <= TIDE_TABLE[i + 1].ms) { lo = i; break; }
+  }
+  const a = TIDE_TABLE[lo], b = TIDE_TABLE[lo + 1];
+  const frac = (ms - a.ms) / (b.ms - a.ms);
+  return a.h + (b.h - a.h) * (1 - Math.cos(frac * Math.PI)) / 2;
 }
 function nextTideExtreme(now) {
   let prev = harmonicTide(new Date(now.getTime()-15*60000));
@@ -867,8 +911,8 @@ function buildTideChart(now) {
           ticks:{ font:{family:'DM Mono',size:7}, color:'#5a7a6a', autoSkip:false, callback:(v,i) => labels[i] || null, maxRotation:0 }
         },
         y: {
-          min: 0,
-          max: 3.0,
+          min: -1.0,
+          max: 3.5,
           grid:{ color:'rgba(0,0,0,0.05)' },
           ticks:{ font:{family:'DM Mono',size:8}, color:'#5a7a6a', stepSize:0.5 }
         }
@@ -1005,6 +1049,97 @@ function updateTideReadout(idx, isNow) {
   document.getElementById('tide-readout-height').innerHTML = `${p.h.toFixed(2)}<span style="font-size:10px;color:var(--muted);font-family:'DM Mono'">m</span>`;
 }
 
+// ═══ FLOOD OVERRIDE · manual "it's flooding right now" report ════════════
+// Anyone can raise the alarm. For a life-safety tool a false alarm (people are
+// extra cautious) is the SAFE direction of error, so we don't gate raising it.
+// A report forces the index to HIGH / 100%, shows a red banner, logs to Supabase
+// if connected (so other guests see it too), and auto-expires after 6h so a stale
+// report clears itself. A true "only the owner can set it" would need a login.
+const OVERRIDE_WINDOW_MS = 6 * 3600 * 1000;
+
+function getLocalOverride() {
+  try {
+    const raw = localStorage.getItem('flood_override');
+    if (!raw) return null;
+    const o = JSON.parse(raw);
+    if (!o || !o.ts) return null;
+    if (Date.now() - o.ts > OVERRIDE_WINDOW_MS) { localStorage.removeItem('flood_override'); return null; }
+    return o;
+  } catch(e) { return null; }
+}
+
+function floodOverrideActive() { return !!getLocalOverride(); }
+
+function applyFloodOverride() {
+  const o = getLocalOverride();
+  const banner = document.getElementById('flood-banner');
+  const btn = document.getElementById('flood-report-btn');
+  if (!o) {
+    if (banner) banner.style.display = 'none';
+    if (btn) { btn.classList.remove('active'); btn.textContent = '⚠️ Report flooding now'; }
+    return;
+  }
+  // Force the score + ring to HIGH / 100%, overriding the calculated value
+  G.score = 1; G.level = riskLevel(1);
+  const arc = document.getElementById('arc');
+  if (arc) { arc.style.strokeDashoffset = 0; arc.setAttribute('stroke', '#c0392b'); }
+  const snum = document.getElementById('snum');
+  if (snum) { snum.textContent = '100%'; snum.style.color = '#c0392b'; }
+  const slbl = document.getElementById('slbl');
+  if (slbl) { slbl.textContent = 'FLOODING'; slbl.style.color = '#c0392b'; }
+  const chips = document.getElementById('chips');
+  if (chips) chips.innerHTML = '<span class="chip" style="color:#c0392b">⚠️ FLOODING REPORTED</span>';
+  const when = new Date(o.ts).toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', timeZone:'America/Costa_Rica' });
+  if (banner) {
+    banner.style.display = 'block';
+    banner.innerHTML = `⚠️ FLOODING REPORTED · index forced to HIGH<small>Reported ${when} · clears automatically after 6h · tap here if the river is NOT flooding</small>`;
+  }
+  if (btn) { btn.classList.add('active'); btn.textContent = '✓ Flooding reported — tap to clear'; }
+}
+
+function reportFlooding() {
+  if (floodOverrideActive()) { clearFloodOverride(); return; }
+  if (!confirm('Report that the Barú is flooding RIGHT NOW?\n\nThis forces the index to HIGH (100%) and logs it. It clears itself after 6 hours.')) return;
+  try { localStorage.setItem('flood_override', JSON.stringify({ ts: Date.now() })); } catch(e) {}
+  // Share it via the existing observations table (proven insert path) so other guests see HIGH too
+  if (sbClient) {
+    sbClient.from('observations').insert({
+      condition: 'flooded',
+      rainfall: '',
+      water_color: '',
+      notes: 'Flooding reported via the Report-flooding button',
+      observer: '',
+      flood_score: 1
+    }).then(({ error }) => { if (error) console.warn('flood report log failed:', error.message); });
+  }
+  applyFloodOverride();
+}
+
+function clearFloodOverride() {
+  if (!confirm('Clear the flooding report and go back to the calculated index?')) return;
+  try { localStorage.removeItem('flood_override'); } catch(e) {}
+  loadAll();
+}
+
+// Cross-device mirror: if anyone logged a flooded/blocking observation in the last
+// 6h, reflect it as an override here too. Non-blocking; failures are ignored.
+async function checkSharedFloodReports() {
+  if (!sbClient || floodOverrideActive()) return;
+  try {
+    const since = new Date(Date.now() - OVERRIDE_WINDOW_MS).toISOString();
+    const { data, error } = await sbClient.from('observations')
+      .select('condition,created_at')
+      .gte('created_at', since)
+      .order('created_at', { ascending:false })
+      .limit(5);
+    if (error || !data) return;
+    if (data.some(o => o.condition === 'flooded' || o.condition === 'blocking')) {
+      localStorage.setItem('flood_override', JSON.stringify({ ts: new Date(data[0].created_at).getTime() }));
+      applyFloodOverride();
+    }
+  } catch(e) { /* ignore */ }
+}
+
 // ═══ MAIN LOAD ═══════════════════════════════════════════
 async function loadAll() {
   const now = new Date();
@@ -1018,10 +1153,19 @@ async function loadAll() {
   document.getElementById('hbadge').textContent = `${season.emoji} ${season.name} · ${crMonth}`;
 
   // Tide
+  TIDE_STALE = (now.getTime() > TIDE_T1) || (now.getTime() < TIDE_T0);
   const tideM = harmonicTide(now);
   document.getElementById('ov-tid').textContent = tideM.toFixed(2);
   drawMoon(phase, lunarAge(now));
   buildTideChart(now);
+  const tideSrcEl = document.getElementById('tide-source');
+  if (tideSrcEl) {
+    const lastDay = new Date(TIDE_T1).toLocaleDateString('en-US', { month:'short', day:'numeric', timeZone:'America/Costa_Rica' });
+    tideSrcEl.innerHTML = TIDE_STALE
+      ? `⚠️ Tide table needs refresh — data ends ${lastDay}. Values shown are estimates until updated.`
+      : `Observed highs &amp; lows · Dominical (Bahía Uvita port) · via costarica.com · slide to read any time`;
+    tideSrcEl.style.color = TIDE_STALE ? '#c0392b' : 'var(--muted)';
+  }
 
   // Weather data
   let weather = {};
@@ -1098,6 +1242,10 @@ async function loadAll() {
 
   document.getElementById('ov-loading').style.display = 'none';
   document.getElementById('ov-content').style.display = 'block';
+
+  // A manual flood report (tapped button) forces HIGH regardless of the calculation
+  applyFloodOverride();
+  checkSharedFloodReports();
 
   buildForecast();
   // Auto-log every 3 hours if Supabase connected
