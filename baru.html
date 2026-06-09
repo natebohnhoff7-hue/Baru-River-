@@ -195,6 +195,12 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 .radar-modal-close { background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.25); color:#fff; border-radius:8px; padding:7px 14px; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.08em; cursor:pointer; }
 .radar-modal-frame { flex:1; width:100%; border:0; }
 
+/* Sunset mini score */
+.sunset-mini { display:inline-flex; align-items:center; gap:6px; margin-top:8px; padding:5px 13px; border-radius:20px; background:rgba(233,168,37,0.08); border:1px solid rgba(233,168,37,0.22); font-size:9px; letter-spacing:0.05em; color:var(--muted); }
+.sunset-mini .sm-label { letter-spacing:0.1em; text-transform:uppercase; }
+.sunset-mini .sm-score { font-family:'Playfair Display',serif; font-size:15px; font-weight:700; line-height:1; }
+.sunset-mini .sm-note { color:var(--muted); }
+
 /* Moon canvas */
 #moon-canvas { display:block; margin:0 auto 4px; }
 </style>
@@ -228,6 +234,7 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
     </div>
   </div>
   <div class="chips" id="chips"><span class="chip" style="color:#888">Fetching…</span></div>
+  <div id="sunset-mini" class="sunset-mini" style="display:none"></div>
   <button id="flood-report-btn" class="flood-report-btn" onclick="reportFlooding()">⚠️ Report flooding now</button>
 </div>
 
@@ -286,6 +293,16 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
       <div class="chart-wrap-tide"><canvas id="tide-chart"></canvas></div>
       <div class="tide-extremes" id="tide-extremes"></div>
       <div style="font-size:8px;color:var(--muted);margin-top:6px;text-align:center" id="tide-source">Observed highs &amp; lows · Dominical (Bahía Uvita port) · via costarica.com · slide to read any time</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Sun &amp; Surf</div>
+      <div class="grid2">
+        <div class="stat-box"><div class="stat-val" id="ov-sunrise" style="font-size:16px">—</div><div class="stat-lbl">Sunrise</div></div>
+        <div class="stat-box"><div class="stat-val" id="ov-sunset" style="font-size:16px">—</div><div class="stat-lbl">Sunset</div></div>
+        <div class="stat-box"><div class="stat-val" id="ov-wave">—</div><div class="stat-unit">m</div><div class="stat-lbl">Wave Height</div></div>
+        <div class="stat-box"><div class="stat-val" id="ov-swell">—</div><div class="stat-unit" id="ov-swell-deg"></div><div class="stat-lbl">Swell Dir</div></div>
+      </div>
+      <div style="font-size:8px;color:var(--muted);margin-top:8px;text-align:center">Sun times · Open-Meteo · Waves · Open-Meteo Marine (off Dominical)</div>
     </div>
   </div>
 </div>
@@ -510,21 +527,21 @@ CREATE POLICY "pub_write" ON observations   FOR INSERT WITH CHECK (true);</div>
   <iframe id="radar-modal-frame" class="radar-modal-frame" title="Windy radar — full screen" frameborder="0"></iframe>
 </div>
 
-<div class="footer"><span class="dot"></span>LIVE · Barú River Mouth · 9.0553°N 83.8323°W<br>OpenMeteo · GFS + ECMWF · Costa Rica Tide Tables · Supabase</div>
+<div class="footer"><span class="dot"></span>LIVE · Barú River Mouth · 9.2553°N 83.8323°W<br>OpenMeteo · GFS + ECMWF · Costa Rica Tide Tables · Supabase</div>
 <div class="powered-by">Brought to you by<a href="https://riversoulcr.com" target="_blank" rel="noopener">River Soul</a></div>
 </div>
 
 <script>
 // ═══ CONSTANTS ═══════════════════════════════════════════
-const MOUTH  = { lat:9.0553,  lon:-83.8323 };
+const MOUTH  = { lat:9.2553,  lon:-83.8323 };
 const COORDS = {
-  mouth:      { lat:9.0553,  lon:-83.8323, label:'River Mouth (River Road)' },
+  mouth:      { lat:9.2553,  lon:-83.8323, label:'River Mouth (River Road)' },
   platanillo: { lat:9.2900,  lon:-83.8100, label:'Platanillo (Mid-Valley)' },
   tinamastes: { lat:9.3059,  lon:-83.7779, label:'Tinamastes Valley' },
 };
 const STATIONS = [
   { id:'quepos',    label:'Quepos',    lat:9.4319, lon:-84.1604, color:'#2d6a4f', dist:'38km N' },
-  { id:'dominical', label:'Dominical', lat:9.0725, lon:-83.8614, color:'#0d7f7f', dist:'2km W'  },
+  { id:'dominical', label:'Dominical', lat:9.2725, lon:-83.8614, color:'#0d7f7f', dist:'2km W'  },
   { id:'uvita',     label:'Uvita',     lat:9.1533, lon:-83.7347, color:'#d4a96a', dist:'15km S'  },
 ];
 
@@ -1203,7 +1220,7 @@ async function loadAll() {
 
   // Weather data
   let weather = {};
-  const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${MOUTH.lat}&longitude=${MOUTH.lon}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&hourly=soil_moisture_0_to_1cm&daily=precipitation_sum,uv_index_max&past_days=3&forecast_days=7&timezone=America%2FCosta_Rica`;
+  const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${MOUTH.lat}&longitude=${MOUTH.lon}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&hourly=soil_moisture_0_to_1cm&daily=precipitation_sum,uv_index_max,sunrise,sunset&past_days=3&forecast_days=7&timezone=America%2FCosta_Rica`;
   try {
     weather = await fetchJSON(weatherUrl, 10000);
   } catch(e) {
@@ -1258,6 +1275,10 @@ async function loadAll() {
   document.getElementById('ov-wnd').textContent = cur.wind_speed_10m?.toFixed(0) ?? '—';
   document.getElementById('ov-soi').textContent = soilVal?.toFixed(3) ?? '—';
 
+  // Sun times (today) from the daily block — index 3 = today (past_days=3)
+  const srEl = document.getElementById('ov-sunrise'); if (srEl) srEl.textContent = daily.sunrise?.[3] ? fmtSunsetTime(daily.sunrise[3]) : '—';
+  const ssEl = document.getElementById('ov-sunset');  if (ssEl) ssEl.textContent  = daily.sunset?.[3]  ? fmtSunsetTime(daily.sunset[3])  : '—';
+
   // Factor bars
   const factors = [
     { label:`Rainfall 24h:${rain24.toFixed(1)}mm 72h:${rain72.toFixed(1)}mm`, val:rainR,    w:'40%', color:'var(--teal)' },
@@ -1282,6 +1303,8 @@ async function loadAll() {
   checkSharedFloodReports();
 
   buildForecast();
+  loadSunsetMini();
+  loadSurf();
   // Auto-log every 3 hours if Supabase connected
   if (sbClient && (Date.now() - lastLogTime) >= LOG_INTERVAL_MS) {
     logReading();
@@ -1695,14 +1718,111 @@ function buildJournal() {
   journalBuilt = true;
 }
 
+// ═══ SUNSET MINI · tonight's sunset quality (1–10) ══════════
+// Inverse of the flood model, for sky color — cross-referenced against how
+// SunsetWx / Alpenglow score it. High & mid clouds are the canvas that catches
+// low-angle light; low cloud on the western (ocean) horizon blocks the light
+// path; drier, cleaner air = punchier color; a MODERATE aerosol/dust load
+// enriches reds while a heavy load mutes them. Built on Open-Meteo cloud-by-
+// altitude + humidity + visibility, with the Air Quality API for dust. Fully
+// independent of the flood index — if it fails, the flood tool is untouched.
+// Weights: canvas 35% · sky gaps 25% · clear horizon 20% · humidity 12% · air 8%
+function ssHighCloud(ch){ if(ch<10)return 0.30; if(ch<35)return 0.30+(ch-10)/25*0.50; if(ch<70)return 0.80+(ch-35)/35*0.20; return 1.00-(ch-70)/30*0.25; }
+function ssMidCloud(cm){ if(cm<15)return 0.55; if(cm<45)return 0.55+(cm-15)/30*0.45; if(cm<75)return 1.00-(cm-45)/30*0.45; return Math.max(0.20,0.55-(cm-75)/25*0.35); }
+function ssLowCloud(cl){ if(cl<15)return 1.00; if(cl<40)return 1.00-(cl-15)/25*0.45; if(cl<70)return 0.55-(cl-40)/30*0.35; return Math.max(0.05,0.20-(cl-70)/30*0.15); }
+function ssGap(tot){ if(tot<20)return 0.65; if(tot<70)return 1.00; if(tot<90)return 1.00-(tot-70)/20*0.45; return Math.max(0.15,0.55-(tot-90)/10*0.40); }
+function ssHumidity(rh){ if(rh==null)return 0.5; if(rh<60)return 1.00; if(rh<75)return 1.00-(rh-60)/15*0.30; if(rh<88)return 0.70-(rh-75)/13*0.35; return Math.max(0.15,0.35-(rh-88)/12*0.20); }
+function ssAir(visM,aod,dust){
+  const km=(visM==null?24000:visM)/1000;
+  let v; if(km>=20)v=1.0; else if(km>=10)v=0.7+(km-10)/10*0.3; else if(km>=5)v=0.4+(km-5)/5*0.3; else v=Math.max(0.15,km/5*0.4);
+  let a=0.75; if(aod!=null){ if(aod<0.10)a=0.80; else if(aod<0.40)a=0.80+(aod-0.10)/0.30*0.20; else if(aod<0.80)a=1.00-(aod-0.40)/0.40*0.45; else a=Math.max(0.25,0.55-(aod-0.80)/0.80*0.30); }
+  let dpen=1.0; if(dust!=null&&dust>40)dpen=Math.max(0.6,1-(dust-40)/160*0.4);
+  return Math.min(1,(v*0.5+a*0.5)*dpen);
+}
+function ssNum(x){ return (x==null||isNaN(x))?0:x; }
+function sunsetHourKey(iso){ const m=iso&&iso.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})/); if(!m)return null; let h=parseInt(m[2],10); if(parseInt(m[3],10)>=30)h=(h+1)%24; return `${m[1]}T${String(h).padStart(2,'0')}:00`; }
+function fmtSunsetTime(iso){ const m=iso&&iso.match(/T(\d{2}):(\d{2})/); if(!m)return ''; let h=parseInt(m[1],10); const mn=m[2]; const ap=h>=12?'PM':'AM'; let h12=h%12; if(h12===0)h12=12; return `${h12}:${mn} ${ap}`; }
+function sunsetMiniColor(t){ if(t>=8)return '#e8590c'; if(t>=6)return '#e9a825'; if(t>=4)return '#9b8a3a'; return '#6a8a9a'; }
+function sunsetMiniNote(d){
+  if(d.cl>=60) return 'low cloud may block it';
+  if(d.tot>=88) return 'overcast — flat light';
+  if(d.tot<15 && d.ch<15) return 'clear but bare';
+  if(d.ch>=30||d.cm>=30) return d.cl<25?'high clouds, clear horizon':'good clouds aloft';
+  return 'mixed sky';
+}
+
+let sunMiniDone = false;
+async function loadSunsetMini(){
+  const el = document.getElementById('sunset-mini');
+  if(!el || sunMiniDone) return;
+  let w;
+  try {
+    w = await fetchJSON(`https://api.open-meteo.com/v1/forecast?latitude=${MOUTH.lat}&longitude=${MOUTH.lon}&hourly=cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,relative_humidity_2m,visibility&daily=sunset&forecast_days=2&timezone=America%2FCosta_Rica`, 9000);
+  } catch(e){ console.warn('sunset mini fetch failed:', e.message); return; }
+  let aq = null;
+  try {
+    aq = await fetchJSON(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${MOUTH.lat}&longitude=${MOUTH.lon}&hourly=aerosol_optical_depth,dust&forecast_days=2&timezone=America%2FCosta_Rica`, 8000);
+  } catch(e){ /* optional — neutral air if missing */ }
+
+  const H = w.hourly || {};
+  const times = H.time || [];
+  const sunsets = w.daily?.sunset || [];
+  if(!times.length || !sunsets.length) return;
+
+  // Tonight's sunset — or tomorrow's if tonight's has already passed
+  const nowCR = getCRHour(new Date()) + getCRMinute(new Date())/60;
+  const sunsetHourOf = iso => { const m = iso.match(/T(\d{2}):(\d{2})/); return m ? parseInt(m[1],10)+parseInt(m[2],10)/60 : 18; };
+  let di = 0, label = 'Sunset tonight';
+  if(sunsets.length > 1 && nowCR > sunsetHourOf(sunsets[0]) + 0.5){ di = 1; label = 'Sunset tomorrow'; }
+  const iso = sunsets[di];
+
+  const key = sunsetHourKey(iso);
+  let idx = key ? times.indexOf(key) : -1;
+  if(idx < 0) idx = 0;
+  const ch=ssNum(H.cloud_cover_high?.[idx]), cm=ssNum(H.cloud_cover_mid?.[idx]), cl=ssNum(H.cloud_cover_low?.[idx]), tot=ssNum(H.cloud_cover?.[idx]);
+  const rh=H.relative_humidity_2m?.[idx], vis=H.visibility?.[idx];
+  let aod=null, dust=null;
+  if(aq?.hourly?.time){ const ai = aq.hourly.time.indexOf(key); if(ai>=0){ aod=aq.hourly.aerosol_optical_depth?.[ai]; dust=aq.hourly.dust?.[ai]; } }
+
+  const canvas = ssHighCloud(ch)*0.6 + ssMidCloud(cm)*0.4;
+  const score01 = Math.min(1, canvas*0.35 + ssGap(tot)*0.25 + ssLowCloud(cl)*0.20 + ssHumidity(rh==null?null:rh)*0.12 + ssAir(vis,aod,dust)*0.08);
+  const ten = Math.max(1, Math.min(10, Math.round(score01*10)));
+  const color = sunsetMiniColor(ten);
+  const note = sunsetMiniNote({ ch, cm, cl, tot });
+
+  el.innerHTML = `🌅 <span class="sm-label">${label}</span> <span class="sm-score" style="color:${color}">${ten}</span><span>/10</span> <span class="sm-note">· ${note} · ${fmtSunsetTime(iso)}</span>`;
+  el.style.display = 'inline-flex';
+  sunMiniDone = true;
+}
+
+// ═══ SURF · wave height + swell direction (Open-Meteo Marine) ═══════
+// Marine API needs an ocean point, so this samples just off Dominical beach
+// (MOUTH is now on land). Independent + non-blocking — failure leaves the
+// Sun & Surf wave fields as "—" and never affects the flood path.
+const SURF = { lat:9.25, lon:-83.90 };
+async function loadSurf(){
+  try {
+    const d = await fetchJSON(`https://marine-api.open-meteo.com/v1/marine?latitude=${SURF.lat}&longitude=${SURF.lon}&current=wave_height,swell_wave_height,swell_wave_direction,swell_wave_period&timezone=America%2FCosta_Rica`, 9000);
+    const c = d?.current || {};
+    const waveEl = document.getElementById('ov-wave');
+    if (waveEl && c.wave_height != null) waveEl.textContent = c.wave_height.toFixed(1);
+    const swEl = document.getElementById('ov-swell');
+    const degEl = document.getElementById('ov-swell-deg');
+    if (swEl) swEl.textContent = c.swell_wave_direction != null ? degToCompass(c.swell_wave_direction) : '—';
+    if (degEl) degEl.textContent = c.swell_wave_direction != null ? Math.round(c.swell_wave_direction) + '°' : '';
+  } catch(e) {
+    console.warn('marine fetch failed:', e.message);
+  }
+}
+
 // ═══ WINDY RADAR ═════════════════════════════════════════
 // Free keyless Windy embed. Lazy-loaded only when the Radar tab is first opened,
 // so it adds zero weight to the flood load. Thumbnail is non-interactive (a click
 // overlay sits on top); tapping expands a full-screen modal with the live,
 // interactive radar. Fully independent of the flood score — if Windy is down,
 // only this tab is affected.
-const RADAR_THUMB_SRC = 'https://embed.windy.com/embed2.html?lat=9.16&lon=-83.80&detailLat=9.0553&detailLon=-83.8323&zoom=9&overlay=radar&product=radar&menu=&message=&marker=true&calendar=now&type=map&location=coordinates&metricWind=default&metricTemp=default&radarRange=-1';
-const RADAR_FULL_SRC  = 'https://embed.windy.com/embed2.html?lat=9.16&lon=-83.80&detailLat=9.0553&detailLon=-83.8323&zoom=9&overlay=radar&product=radar&message=true&marker=true&calendar=now&type=map&location=coordinates&metricWind=default&metricTemp=default&radarRange=-1';
+const RADAR_THUMB_SRC = 'https://embed.windy.com/embed2.html?lat=9.28&lon=-83.81&detailLat=9.2553&detailLon=-83.8323&zoom=10&overlay=radar&product=radar&menu=&message=&marker=true&calendar=now&type=map&location=coordinates&metricWind=default&metricTemp=default&radarRange=-1';
+const RADAR_FULL_SRC  = 'https://embed.windy.com/embed2.html?lat=9.28&lon=-83.81&detailLat=9.2553&detailLon=-83.8323&zoom=10&overlay=radar&product=radar&message=true&marker=true&calendar=now&type=map&location=coordinates&metricWind=default&metricTemp=default&radarRange=-1';
 let radarLoaded = false;
 function loadRadar() {
   if (radarLoaded) return;
