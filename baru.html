@@ -185,6 +185,16 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 .powered-by a { font-family:'Playfair Display',serif; font-style:italic; font-size:15px; letter-spacing:0.01em; text-transform:none; color:var(--green); text-decoration:none; border-bottom:1px solid rgba(45,106,79,0.3); padding-bottom:1px; transition:color .2s,border-color .2s; margin-left:4px; }
 .powered-by a:hover { color:var(--green-dark); border-color:var(--green-dark); }
 
+/* Radar map */
+.radar-thumb { position:relative; width:100%; height:200px; border-radius:12px; overflow:hidden; border:1px solid var(--border); }
+.radar-thumb-frame { position:absolute; inset:0; width:100%; height:100%; border:0; pointer-events:none; }
+.radar-thumb-click { position:absolute; inset:0; cursor:pointer; display:flex; align-items:flex-end; justify-content:flex-end; background:linear-gradient(to top, rgba(26,42,32,0.16), rgba(26,42,32,0) 38%); }
+.radar-thumb-badge { margin:10px; background:rgba(26,42,32,0.78); color:#f7f2e8; font-size:9px; letter-spacing:0.1em; text-transform:uppercase; padding:6px 12px; border-radius:20px; }
+.radar-modal { position:fixed; inset:0; z-index:1000; background:rgba(20,30,24,0.96); flex-direction:column; }
+.radar-modal-bar { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; color:#f7f2e8; font-size:11px; letter-spacing:0.08em; background:var(--green-dark); flex-shrink:0; }
+.radar-modal-close { background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.25); color:#fff; border-radius:8px; padding:7px 14px; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.08em; cursor:pointer; }
+.radar-modal-frame { flex:1; width:100%; border:0; }
+
 /* Moon canvas */
 #moon-canvas { display:block; margin:0 auto 4px; }
 </style>
@@ -225,6 +235,7 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 <div class="tabs">
   <button class="tab-btn active" onclick="showTab('overview',this)">Overview</button>
   <button class="tab-btn" onclick="showTab('forecast',this)">Forecast</button>
+  <button class="tab-btn" onclick="showTab('radar',this)">Radar</button>
   <button class="tab-btn" onclick="showTab('watershed',this)">Watershed</button>
   <button class="tab-btn" onclick="showTab('stations',this)">Stations</button>
   <button class="tab-btn" onclick="showTab('history',this)">History</button>
@@ -325,6 +336,19 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
     <div class="card-title">Model Agreement · GFS vs ECMWF</div>
     <div style="font-size:9px;color:var(--muted);margin-bottom:10px;line-height:1.7">Two independent weather models. When they disagree, forecast confidence is lower — treat the higher number as the safety case.</div>
     <div id="model-compare" class="loading" style="padding:16px"><div class="loader"></div></div>
+  </div>
+</div>
+
+<!-- RADAR -->
+<div id="tab-radar" class="tab-pane">
+  <div class="card">
+    <div class="card-title">Live Radar · Windy</div>
+    <div style="font-size:9px;color:var(--muted);margin-bottom:10px;line-height:1.7">Rain radar over the Barú watershed, centered on the river mouth. Tap to expand full-screen — pan, zoom, scrub the timeline, or switch layers in the menu.</div>
+    <div class="radar-thumb">
+      <iframe id="radar-thumb-frame" class="radar-thumb-frame" title="Windy radar — Barú watershed" frameborder="0"></iframe>
+      <div class="radar-thumb-click" onclick="openRadarModal()"><span class="radar-thumb-badge">⤢ Tap to expand</span></div>
+    </div>
+    <div style="font-size:8px;color:var(--muted);margin-top:8px;text-align:center">Radar © Windy.com · independent of the flood score</div>
   </div>
 </div>
 
@@ -475,6 +499,15 @@ CREATE POLICY "pub_write" ON flood_readings FOR INSERT WITH CHECK (true);
 CREATE POLICY "pub_read"  ON observations   FOR SELECT USING (true);
 CREATE POLICY "pub_write" ON observations   FOR INSERT WITH CHECK (true);</div>
   </div>
+</div>
+
+<!-- Windy radar fullscreen modal -->
+<div id="radar-modal" class="radar-modal" style="display:none">
+  <div class="radar-modal-bar">
+    <span>Windy Radar · Barú Watershed</span>
+    <button class="radar-modal-close" onclick="closeRadarModal()">✕ Close</button>
+  </div>
+  <iframe id="radar-modal-frame" class="radar-modal-frame" title="Windy radar — full screen" frameborder="0"></iframe>
 </div>
 
 <div class="footer"><span class="dot"></span>LIVE · Barú River Mouth · 9.0553°N 83.8323°W<br>OpenMeteo · GFS + ECMWF · Costa Rica Tide Tables · Supabase</div>
@@ -760,6 +793,7 @@ function showTab(name, btn) {
   if (name === 'history')   loadHistory();
   if (name === 'observe')   { loadObsLog(); checkObsBanner(); }
   if (name === 'journal')   buildJournal();
+  if (name === 'radar')     loadRadar();
 }
 
 // ═══ GLOBAL STATE ════════════════════════════════════════
@@ -1660,6 +1694,36 @@ function buildJournal() {
     </div>`).join('');
   journalBuilt = true;
 }
+
+// ═══ WINDY RADAR ═════════════════════════════════════════
+// Free keyless Windy embed. Lazy-loaded only when the Radar tab is first opened,
+// so it adds zero weight to the flood load. Thumbnail is non-interactive (a click
+// overlay sits on top); tapping expands a full-screen modal with the live,
+// interactive radar. Fully independent of the flood score — if Windy is down,
+// only this tab is affected.
+const RADAR_THUMB_SRC = 'https://embed.windy.com/embed2.html?lat=9.16&lon=-83.80&detailLat=9.0553&detailLon=-83.8323&zoom=9&overlay=radar&product=radar&menu=&message=&marker=true&calendar=now&type=map&location=coordinates&metricWind=default&metricTemp=default&radarRange=-1';
+const RADAR_FULL_SRC  = 'https://embed.windy.com/embed2.html?lat=9.16&lon=-83.80&detailLat=9.0553&detailLon=-83.8323&zoom=9&overlay=radar&product=radar&message=true&marker=true&calendar=now&type=map&location=coordinates&metricWind=default&metricTemp=default&radarRange=-1';
+let radarLoaded = false;
+function loadRadar() {
+  if (radarLoaded) return;
+  const thumb = document.getElementById('radar-thumb-frame');
+  if (thumb) thumb.src = RADAR_THUMB_SRC;
+  radarLoaded = true;
+}
+function openRadarModal() {
+  const modal = document.getElementById('radar-modal');
+  const frame = document.getElementById('radar-modal-frame');
+  if (!modal || !frame) return;
+  if (!frame.dataset.loaded) { frame.src = RADAR_FULL_SRC; frame.dataset.loaded = '1'; }
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function closeRadarModal() {
+  const modal = document.getElementById('radar-modal');
+  if (modal) modal.style.display = 'none';
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeRadarModal(); });
 
 // ═══ BOOT ════════════════════════════════════════════════
 loadAll();
