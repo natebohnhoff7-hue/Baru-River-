@@ -527,21 +527,21 @@ CREATE POLICY "pub_write" ON observations   FOR INSERT WITH CHECK (true);</div>
   <iframe id="radar-modal-frame" class="radar-modal-frame" title="Windy radar — full screen" frameborder="0"></iframe>
 </div>
 
-<div class="footer"><span class="dot"></span>LIVE · Barú River Mouth · 9.2553°N 83.8323°W<br>OpenMeteo · GFS + ECMWF · Costa Rica Tide Tables · Supabase</div>
+<div class="footer"><span class="dot"></span>LIVE · River Soul · Barú River · 9.2703°N 83.8580°W<br>OpenMeteo · GFS + ECMWF · Costa Rica Tide Tables · Supabase</div>
 <div class="powered-by">Brought to you by<a href="https://riversoulcr.com" target="_blank" rel="noopener">River Soul</a></div>
 </div>
 
 <script>
 // ═══ CONSTANTS ═══════════════════════════════════════════
-const MOUTH  = { lat:9.2553,  lon:-83.8323 };
+const MOUTH  = { lat:9.2703,  lon:-83.8580 };
 const COORDS = {
-  mouth:      { lat:9.2553,  lon:-83.8323, label:'River Mouth (River Road)' },
+  mouth:      { lat:9.2703,  lon:-83.8580, label:'River Soul (Barú River)' },
   platanillo: { lat:9.2900,  lon:-83.8100, label:'Platanillo (Mid-Valley)' },
   tinamastes: { lat:9.3059,  lon:-83.7779, label:'Tinamastes Valley' },
 };
 const STATIONS = [
   { id:'quepos',    label:'Quepos',    lat:9.4319, lon:-84.1604, color:'#2d6a4f', dist:'38km N' },
-  { id:'dominical', label:'Dominical', lat:9.2725, lon:-83.8614, color:'#0d7f7f', dist:'2km W'  },
+  { id:'dominical', label:'Dominical', lat:9.2528, lon:-83.8648, color:'#0d7f7f', dist:'2km SW' },
   { id:'uvita',     label:'Uvita',     lat:9.1533, lon:-83.7347, color:'#d4a96a', dist:'15km S'  },
 ];
 
@@ -1821,8 +1821,8 @@ async function loadSurf(){
 // overlay sits on top); tapping expands a full-screen modal with the live,
 // interactive radar. Fully independent of the flood score — if Windy is down,
 // only this tab is affected.
-const RADAR_THUMB_SRC = 'https://embed.windy.com/embed2.html?lat=9.28&lon=-83.81&detailLat=9.2553&detailLon=-83.8323&zoom=10&overlay=radar&product=radar&menu=&message=&marker=true&calendar=now&type=map&location=coordinates&metricWind=default&metricTemp=default&radarRange=-1';
-const RADAR_FULL_SRC  = 'https://embed.windy.com/embed2.html?lat=9.28&lon=-83.81&detailLat=9.2553&detailLon=-83.8323&zoom=10&overlay=radar&product=radar&message=true&marker=true&calendar=now&type=map&location=coordinates&metricWind=default&metricTemp=default&radarRange=-1';
+const RADAR_THUMB_SRC = 'https://embed.windy.com/embed2.html?lat=9.2703&lon=-83.8580&detailLat=9.2703&detailLon=-83.8580&zoom=10&overlay=radar&product=radar&menu=&message=&marker=true&calendar=now&type=map&location=coordinates&metricWind=default&metricTemp=default&radarRange=-1';
+const RADAR_FULL_SRC  = 'https://embed.windy.com/embed2.html?lat=9.2703&lon=-83.8580&detailLat=9.2703&detailLon=-83.8580&zoom=10&overlay=radar&product=radar&message=true&marker=true&calendar=now&type=map&location=coordinates&metricWind=default&metricTemp=default&radarRange=-1';
 let radarLoaded = false;
 function loadRadar() {
   if (radarLoaded) return;
