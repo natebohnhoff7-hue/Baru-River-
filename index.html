@@ -24,6 +24,9 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 .header-sub { font-size:10px; color:var(--muted); margin-top:4px; letter-spacing:0.08em; }
 .site-brand { font-family:'Fraunces',serif; font-style:italic; font-weight:600; font-size:25px; color:var(--green-dark); line-height:1.05; letter-spacing:0.01em; margin-bottom:3px; }
 .brand-logo { display:block; margin:0 auto 8px; width:150px; max-width:52%; height:auto; }
+.footer-logo-link { display:block; text-align:center; margin:16px 0 4px; }
+.footer-logo { display:inline-block; width:128px; max-width:44%; height:auto; transition:opacity .2s; }
+.footer-logo-link:hover .footer-logo { opacity:0.62; }
 .badge { display:inline-block; margin-top:8px; padding:3px 12px; border-radius:20px; font-size:10px; background:rgba(45,106,79,0.10); color:var(--green); border:1px solid rgba(45,106,79,0.20); }
 
 /* Score ring */
@@ -282,7 +285,7 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 
 <!-- Header -->
 <div class="header">
-  <img class="brand-logo" src="riversoul.png" alt="River Soul · Dominical, Costa Rica" />
+  <div style="font-size:9px;letter-spacing:0.2em;color:var(--muted);margin-bottom:5px">DOMINICAL, COSTA RICA</div>
   <h1>Barú Flood Index</h1>
   <div class="header-sub" id="htime">Loading…</div>
   <div class="badge" id="hbadge">Loading season…</div>
@@ -617,7 +620,7 @@ CREATE POLICY "pub_write" ON observations   FOR INSERT WITH CHECK (true);</div>
   <a class="call-911-btn" href="tel:911">📞 Call 911</a>
 </div>
 <div class="footer"><span class="dot"></span>LIVE · River Soul · Barú River · 9.2703°N 83.8580°W<br>OpenMeteo · GFS + ECMWF · Costa Rica Tide Tables · Supabase</div>
-<div class="powered-by">Brought to you by<a href="https://riversoulcr.com" target="_blank" rel="noopener">River Soul</a></div>
+<a class="footer-logo-link" href="https://riversoulcr.com" target="_blank" rel="noopener"><img class="footer-logo" src="riversoul.png" alt="River Soul · Dominical, Costa Rica" /></a>
 <div style="text-align:center;padding:0 20px 18px;font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted)">Free community tool · <a href="https://paypal.me/elbaru22" target="_blank" rel="noopener" style="color:var(--teal);text-decoration:none;border-bottom:1px solid rgba(15,118,110,0.3)">support its upkeep ♥</a></div>
 </div>
 
