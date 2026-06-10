@@ -767,8 +767,15 @@ function getCRMinute(date) {
 }
 
 // ═══ SUPABASE ════════════════════════════════════════════
-let SB_URL = localStorage.getItem('sb_url') || '';
-let SB_KEY = localStorage.getItem('sb_key') || '';
+// Baked-in River Soul connection. This is the PUBLISHABLE key — it's meant to live
+// in public client code and is protected by the row-level-security policies set up
+// in Supabase. localStorage still overrides if someone enters their own in Config,
+// but by default every visitor on every device connects automatically (so History,
+// Log, and logging work for guests too — no setup form needed).
+const SB_DEFAULT_URL = 'https://vrssvfmwiblmfvtcdjib.supabase.co';
+const SB_DEFAULT_KEY = 'sb_publishable_iL5hhtUaAg-1VXMmb_gocg_viqM3LJQ';
+let SB_URL = localStorage.getItem('sb_url') || SB_DEFAULT_URL;
+let SB_KEY = localStorage.getItem('sb_key') || SB_DEFAULT_KEY;
 let sbClient = null;
 let lastLogTime = parseInt(localStorage.getItem('last_log_time')||'0', 10);
 
@@ -785,6 +792,11 @@ function initSB() {
 initSB();
 document.getElementById('cfg-url').value = SB_URL;
 document.getElementById('cfg-key').value = SB_KEY;
+// If connected on load (baked-in or saved keys), show it so Config doesn't look unconfigured
+if (sbClient) {
+  var _ok = document.getElementById('cfg-ok');
+  if (_ok) _ok.style.display = 'block';
+}
 
 async function saveConfig() {
   SB_URL = document.getElementById('cfg-url').value.trim();
