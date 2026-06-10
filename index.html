@@ -1,7 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Barú Flood Index · River Soul</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Mono:wght@400;500&family=Lora:ital@0;1&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --cream:#f7f2e8; --green-dark:#1a3a2a; --green:#2d6a4f; --green-light:#52b788;
+  --teal:#0d7f7f; --teal-light:#48cae4; --amber:#e9a825; --red:#c0392b;
+  --sand:#d4a96a; --ink:#1a2a20; --muted:#5a7a6a;
+  --card:rgba(255,255,255,0.72); --border:rgba(45,106,79,0.15);
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink); min-height:100vh; overflow-x:hidden; }
+.app { max-width:480px; margin:0 auto; padding:0 0 80px; }
+
+/* Header */
+.header { text-align:center; padding:24px 20px 14px; border-bottom:1px solid var(--border); }
+.header h1 { font-family:'Playfair Display',serif; font-size:26px; color:var(--green-dark); }
+.header-sub { font-size:10px; color:var(--muted); margin-top:4px; letter-spacing:0.08em; }
+.badge { display:inline-block; margin-top:8px; padding:3px 12px; border-radius:20px; font-size:10px; background:rgba(45,106,79,0.10); color:var(--green); border:1px solid rgba(45,106,79,0.20); }
+
+/* Score ring */
+.ring-wrap { display:flex; flex-direction:column; align-items:center; padding:20px; }
+.ring-outer { position:relative; width:140px; height:140px; margin-bottom:10px; }
+.ring-outer svg { transform:rotate(-90deg); }
+.ring-center { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.score-num { font-family:'Playfair Display',serif; font-size:32px; font-weight:700; }
+.score-lbl { font-size:9px; letter-spacing:0.16em; margin-top:2px; }
+.chips { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; font-size:9px; }
+.chip { padding:3px 10px; border-radius:10px; border:1px solid currentColor; letter-spacing:0.08em; }
+
+/* Tabs */
+.tabs { display:flex; overflow-x:auto; border-bottom:1px solid var(--border); padding:0 12px; scrollbar-width:none; }
+.tabs::-webkit-scrollbar { display:none; }
+.tab-btn { flex-shrink:0; background:none; border:none; cursor:pointer; padding:10px 14px; font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); border-bottom:2px solid transparent; }
+.tab-btn.active { color:var(--green); border-bottom-color:var(--green); }
+
+/* Content */
+.tab-pane { display:none; padding:14px; }
+.tab-pane.active { display:block; }
+
+/* Cards */
+.card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px; margin-bottom:12px; }
+.card-title { font-size:9px; letter-spacing:0.16em; text-transform:uppercase; color:var(--muted); margin-bottom:12px; display:flex; align-items:center; gap:6px; }
+.card-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+/* Grids */
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+.stat-box { background:rgba(255,255,255,0.5); border:1px solid var(--border); border-radius:10px; padding:10px; text-align:center; }
+.stat-val { font-family:'Playfair Display',serif; font-size:20px; color:var(--green-dark); line-height:1; }
+.stat-unit { font-size:9px; color:var(--muted); }
+.stat-lbl { font-size:8px; color:var(--muted); margin-top:3px; letter-spacing:0.08em; }
+
+/* Bars */
+.bar-row { margin-bottom:9px; }
+.bar-meta { display:flex; justify-content:space-between; font-size:9px; color:var(--muted); margin-bottom:3px; }
+.bar-track { height:6px; background:rgba(0,0,0,0.06); border-radius:3px; overflow:hidden; }
+.bar-fill { height:100%; border-radius:3px; transition:width 1s cubic-bezier(.34,1.56,.64,1); }
+
+/* Forecast strip */
+.fc-strip { display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; scrollbar-width:none; }
+.fc-strip::-webkit-scrollbar { display:none; }
+.fc-day { flex-shrink:0; width:66px; background:rgba(255,255,255,0.5); border:1px solid var(--border); border-radius:10px; padding:8px 6px; text-align:center; }
+.fc-day-name { font-size:8px; letter-spacing:0.08em; color:var(--muted); text-transform:uppercase; }
+.fc-score { font-family:'Playfair Display',serif; font-size:20px; margin:4px 0 2px; }
+.fc-rain { font-size:9px; color:var(--teal); }
+
+/* Model comparison */
+.mc-row { display:grid; grid-template-columns:50px 1fr 1fr 30px; gap:8px; align-items:center; padding:9px 0; border-bottom:1px solid rgba(0,0,0,0.05); font-size:10px; }
+.mc-row:last-child { border-bottom:none; }
+.mc-day { font-size:9px; color:var(--muted); letter-spacing:0.08em; text-transform:uppercase; }
+.mc-val { font-family:'Playfair Display',serif; }
+.mc-gfs { color:#0d7f7f; }
+.mc-ecmwf { color:#9b59b6; }
+.mc-flag { text-align:center; font-size:14px; }
+.mc-disagree { color:#c0392b; }
+.mc-warn { background:rgba(192,57,43,0.06); border-radius:6px; }
+.mc-summary { font-size:9px; color:var(--muted); padding:8px 0 0; line-height:1.7; }
+
+/* Watershed */
+.ws-row { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid rgba(0,0,0,0.05); font-size:10px; }
+.ws-row:last-child { border-bottom:none; }
+.ws-bar-wrap { flex:1; height:4px; background:rgba(0,0,0,0.07); border-radius:2px; }
+.ws-bar { height:100%; border-radius:2px; background:var(--teal-light); }
+.ws-val { font-family:'Playfair Display',serif; font-size:16px; color:var(--green-dark); flex-shrink:0; }
+
+/* Station cards */
+.station-card { border-radius:12px; padding:14px; margin-bottom:12px; }
+
+/* Tide chart */
+.chart-wrap { position:relative; height:80px; margin-top:8px; }
+.chart-wrap-tall { position:relative; height:160px; margin-top:8px; }
+.chart-wrap-med { position:relative; height:140px; margin-top:8px; }
+.chart-wrap-tide { position:relative; height:180px; margin-top:12px; touch-action:none; cursor:crosshair; }
+
+/* Tide scrub readout */
+.tide-readout { display:flex; justify-content:space-between; align-items:center; padding:8px 4px 4px; font-size:10px; }
+.tide-readout-time { font-family:'DM Mono',monospace; color:var(--ink); font-weight:500; }
+.tide-readout-height { font-family:'Playfair Display',serif; color:var(--green); font-size:18px; }
+.tide-readout-state { font-size:8px; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); }
+.tide-extremes { display:grid; grid-template-columns:1fr 1fr; gap:6px; padding:8px 0 0; font-size:10px; }
+.tide-extremes span { padding:6px 10px; border-radius:8px; background:rgba(45,106,79,0.06); display:flex; align-items:center; justify-content:center; font-weight:500; letter-spacing:0.04em; }
+.tide-extremes .high { color:var(--teal); background:rgba(13,127,127,0.10); }
+.tide-extremes .low  { color:#8a6020; background:rgba(212,169,106,0.18); }
+
+/* Observation form */
+.obs-form label { display:block; font-size:9px; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:4px; }
+.obs-form select, .obs-form textarea, .obs-form input { width:100%; background:rgba(255,255,255,0.6); border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-family:'DM Mono',monospace; font-size:11px; color:var(--ink); margin-bottom:10px; outline:none; }
+.obs-form textarea { resize:vertical; min-height:60px; }
+
+/* Buttons */
+.btn { padding:10px 20px; border:none; border-radius:10px; cursor:pointer; font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.12em; text-transform:uppercase; }
+.btn-green { background:var(--green); color:#fff; width:100%; }
+.btn-green:disabled { background:var(--muted); }
+
+/* Journal */
+.j-entry { display:flex; gap:14px; padding:12px 0; border-bottom:1px solid var(--border); }
+.j-entry:last-child { border-bottom:none; }
+.j-date { flex-shrink:0; width:34px; text-align:center; }
+.j-day { font-family:'Playfair Display',serif; font-size:24px; color:var(--green-dark); line-height:1; }
+.j-wd { font-size:7px; letter-spacing:0.1em; color:var(--muted); text-transform:uppercase; }
+.j-body { flex:1; }
+.j-icons { font-size:13px; margin-bottom:4px; }
+.j-text { font-size:10px; color:var(--ink); line-height:1.7; font-family:'Lora',serif; font-style:italic; }
+.j-tags { display:flex; gap:5px; flex-wrap:wrap; margin-top:6px; }
+.j-tag { font-size:7.5px; letter-spacing:0.08em; padding:2px 7px; border-radius:8px; background:rgba(45,106,79,0.08); color:var(--green); text-transform:uppercase; }
+.j-tag.rain { background:rgba(13,127,127,0.10); color:var(--teal); }
+.j-tag.wind { background:rgba(212,169,106,0.15); color:#8a6020; }
+.j-tag.sun  { background:rgba(233,168,37,0.12); color:#8a6010; }
+
+/* Flood events */
+.flood-event { display:flex; gap:12px; align-items:center; padding:10px 0; border-bottom:1px solid rgba(192,57,43,0.10); }
+.flood-event:last-child { border-bottom:none; }
+.flood-dot { width:9px; height:9px; border-radius:50%; background:#c0392b; flex-shrink:0; box-shadow:0 0 0 3px rgba(192,57,43,0.15); }
+.flood-date { font-family:'Playfair Display',serif; font-size:14px; color:#c0392b; flex-shrink:0; width:70px; line-height:1.2; }
+.flood-sub { font-size:8px; color:var(--muted); }
+.flood-note { font-size:9px; color:var(--ink); flex:1; font-family:'Lora',serif; font-style:italic; line-height:1.6; }
+.flood-badge { flex-shrink:0; font-size:7px; letter-spacing:0.1em; padding:2px 7px; border-radius:8px; background:rgba(192,57,43,0.10); color:#c0392b; text-transform:uppercase; }
+
+/* Setup banner */
+.setup-banner { background:rgba(233,168,37,0.10); border:1px solid rgba(233,168,37,0.30); border-radius:10px; padding:12px 14px; font-size:10px; color:#7a5a10; margin-bottom:14px; line-height:1.7; }
+
+/* History log */
+.log-row { display:flex; gap:10px; align-items:flex-start; padding:8px 0; border-bottom:1px solid rgba(0,0,0,0.05); font-size:9px; }
+.log-row:last-child { border-bottom:none; }
+.log-time { color:var(--muted); flex-shrink:0; width:72px; }
+.log-score { font-family:'Playfair Display',serif; font-size:14px; flex-shrink:0; width:32px; }
+.log-note { color:var(--ink); flex:1; line-height:1.5; }
+.log-tag { flex-shrink:0; padding:2px 7px; border-radius:8px; font-size:8px; background:rgba(45,106,79,0.10); color:var(--green); }
+.log-tag.manual { background:rgba(233,168,37,0.12); color:#a07010; }
+
+/* Config */
+.cfg-label { display:block; font-size:9px; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:4px; }
+.cfg-input { width:100%; background:rgba(255,255,255,0.6); border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-family:'DM Mono',monospace; font-size:10px; color:var(--ink); outline:none; margin-bottom:10px; }
+.btn-save { background:var(--teal); color:#fff; border:none; border-radius:8px; padding:8px 18px; font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.1em; text-transform:uppercase; cursor:pointer; }
+.sql-block { background:rgba(0,0,0,0.05); border-radius:8px; padding:12px; font-family:'DM Mono',monospace; font-size:8.5px; line-height:1.9; color:var(--ink); white-space:pre-wrap; overflow-x:auto; }
+
+/* Loading / error */
+.loader { width:28px; height:28px; border:3px solid rgba(0,0,0,0.08); border-top-color:var(--green); border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 10px; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.loading { text-align:center; padding:28px 0; font-size:10px; color:var(--muted); }
+.err { color:var(--red); font-size:9px; padding:4px 0; }
+.ok  { color:var(--green); font-size:9px; }
+
+/* Footer */
+.footer { text-align:center; font-size:8px; color:var(--muted); letter-spacing:0.08em; padding:8px 20px; line-height:2; }
+.dot { display:inline-block; width:5px; height:5px; border-radius:50%; background:var(--green-light); margin-right:5px; animation:pulse 2s infinite; }
 @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
 
 /* Flood override */
-.flood-banner { background:#c0392b; color:#fff; text-align:center; font-size:11px; font-weight:500; letter-spacing:0.04em; padding:10px 16px; line-height:1.5; cursor:pointer; }
 .flood-banner { position:relative; z-index:60; background:#c0392b; color:#fff; text-align:center; font-size:11px; font-weight:500; letter-spacing:0.04em; padding:10px 16px; line-height:1.5; cursor:pointer; }
 .flood-banner small { display:block; font-size:8.5px; opacity:0.88; letter-spacing:0.06em; margin-top:3px; font-weight:400; }
 .flood-report-btn { margin-top:14px; background:var(--red); border:3px solid #8c2418; color:#fff; border-radius:30px; padding:15px 32px; font-family:'DM Mono',monospace; font-weight:500; font-size:13px; letter-spacing:0.08em; text-transform:uppercase; cursor:pointer; box-shadow:0 5px 16px rgba(192,57,43,0.40); transition:background .2s,color .2s,box-shadow .2s,transform .12s; }
@@ -57,7 +229,26 @@
 /* Powered-by / River Soul credit */
 .powered-by { text-align:center; padding:8px 20px 18px; font-family:'DM Mono',monospace; font-size:8.5px; letter-spacing:0.16em; text-transform:uppercase; color:var(--muted); border-top:1px solid var(--border); margin:2px 20px 0; }
 .powered-by a { font-family:'Playfair Display',serif; font-style:italic; font-size:15px; letter-spacing:0.01em; text-transform:none; color:var(--green); text-decoration:none; border-bottom:1px solid rgba(45,106,79,0.3); padding-bottom:1px; transition:color .2s,border-color .2s; margin-left:4px; }
-@@ -208,6 +252,16 @@
+.powered-by a:hover { color:var(--green-dark); border-color:var(--green-dark); }
+
+/* Radar map */
+.radar-thumb { position:relative; width:100%; height:200px; border-radius:12px; overflow:hidden; border:1px solid var(--border); }
+.radar-thumb-frame { position:absolute; inset:0; width:100%; height:100%; border:0; pointer-events:none; }
+.radar-thumb-click { position:absolute; inset:0; cursor:pointer; display:flex; align-items:flex-end; justify-content:flex-end; background:linear-gradient(to top, rgba(26,42,32,0.16), rgba(26,42,32,0) 38%); }
+.radar-thumb-badge { margin:10px; background:rgba(26,42,32,0.78); color:#f7f2e8; font-size:9px; letter-spacing:0.1em; text-transform:uppercase; padding:6px 12px; border-radius:20px; }
+.radar-modal { position:fixed; inset:0; z-index:1000; background:rgba(20,30,24,0.96); flex-direction:column; }
+.radar-modal-bar { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; color:#f7f2e8; font-size:11px; letter-spacing:0.08em; background:var(--green-dark); flex-shrink:0; }
+.radar-modal-close { background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.25); color:#fff; border-radius:8px; padding:7px 14px; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.08em; cursor:pointer; }
+.radar-modal-frame { flex:1; width:100%; border:0; }
+
+/* Sunset mini score */
+.sunset-mini { display:inline-flex; align-items:center; gap:6px; margin-top:8px; padding:5px 13px; border-radius:20px; background:rgba(233,168,37,0.08); border:1px solid rgba(233,168,37,0.22); font-size:9px; letter-spacing:0.05em; color:var(--muted); }
+.sunset-mini .sm-label { letter-spacing:0.1em; text-transform:uppercase; }
+.sunset-mini .sm-score { font-family:'Playfair Display',serif; font-size:15px; font-weight:700; line-height:1; }
+.sunset-mini .sm-note { color:var(--muted); }
+
+/* Moon canvas */
+#moon-canvas { display:block; margin:0 auto 4px; }
 </style>
 </head>
 <body>
@@ -74,16 +265,915 @@
 <div class="app">
 
 <!-- Header -->
-@@ -1108,7 +1162,7 @@ <h1>Barú Flood Index</h1>
+<div class="header">
+  <div style="font-size:9px;letter-spacing:0.2em;color:var(--muted);margin-bottom:5px">RIVER SOUL · DOMINICAL, CR</div>
+  <h1>Barú Flood Index</h1>
+  <div class="header-sub" id="htime">Loading…</div>
+  <div class="badge" id="hbadge">Loading season…</div>
+</div>
+
+<!-- Flooding alert banner (raised by the Report-flooding button) -->
+<div id="flood-banner" class="flood-banner" style="display:none" onclick="clearFloodOverride()"></div>
+
+<!-- Score -->
+<div class="ring-wrap">
+  <div class="ring-outer">
+    <svg viewBox="0 0 140 140" width="140" height="140">
+      <circle cx="70" cy="70" r="58" fill="none" stroke="rgba(0,0,0,0.07)" stroke-width="10"/>
+      <circle id="arc" cx="70" cy="70" r="58" fill="none" stroke="#1e8449" stroke-width="10"
+        stroke-linecap="round" stroke-dasharray="364.4" stroke-dashoffset="364.4"
+        style="transition:stroke-dashoffset 1s,stroke 0.5s"/>
+    </svg>
+    <div class="ring-center">
+      <div class="score-num" id="snum" style="color:#1e8449">—</div>
+      <div class="score-lbl" id="slbl" style="color:#1e8449">LOADING</div>
+    </div>
+  </div>
+  <div class="chips" id="chips"><span class="chip" style="color:#888">Fetching…</span></div>
+  <div id="sunset-mini" class="sunset-mini" style="display:none"></div>
+  <button id="flood-report-btn" class="flood-report-btn" onclick="reportFlooding()">⚠️ Report flooding now</button>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="showTab('overview',this)">Overview</button>
+  <button class="tab-btn" onclick="showTab('forecast',this)">Forecast</button>
+  <button class="tab-btn" onclick="showTab('radar',this)">Radar</button>
+  <button class="tab-btn" onclick="showTab('watershed',this)">Watershed</button>
+  <button class="tab-btn" onclick="showTab('stations',this)">Stations</button>
+  <button class="tab-btn" onclick="showTab('history',this)">History</button>
+  <button class="tab-btn" onclick="showTab('observe',this)">Log</button>
+  <button class="tab-btn" onclick="showTab('journal',this)">Journal</button>
+  <button class="tab-btn" onclick="showTab('config',this)">Config</button>
+</div>
+
+<!-- OVERVIEW -->
+<div id="tab-overview" class="tab-pane active">
+  <div id="ov-loading" class="loading"><div class="loader"></div>Fetching live conditions…</div>
+  <div id="ov-content" style="display:none">
+    <div class="card">
+      <div class="card-title">Current Conditions</div>
+      <div style="font-size:8px;color:var(--muted);margin-top:-6px;margin-bottom:10px;letter-spacing:0.05em">via Open-Meteo · ECMWF + GFS · station-corrected for Pacífico Sur</div>
+      <div class="grid2">
+        <div class="stat-box"><div class="stat-val" id="ov-r24">—</div><div class="stat-unit">mm</div><div class="stat-lbl">Rain 24h</div></div>
+        <div class="stat-box"><div class="stat-val" id="ov-r72">—</div><div class="stat-unit">mm</div><div class="stat-lbl">Rain 72h</div></div>
+        <div class="stat-box"><div class="stat-val" id="ov-tmp">—</div><div class="stat-unit">°C</div><div class="stat-lbl">Temperature</div></div>
+        <div class="stat-box"><div class="stat-val" id="ov-hum">—</div><div class="stat-unit">%</div><div class="stat-lbl">Humidity</div></div>
+        <div class="stat-box"><div class="stat-val" id="ov-wnd">—</div><div class="stat-unit">km/h</div><div class="stat-lbl">Wind</div></div>
+        <div class="stat-box"><div class="stat-val" id="ov-soi">—</div><div class="stat-unit">m³/m³</div><div class="stat-lbl">Soil Moisture</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Flood Risk Factors</div>
+      <div id="ov-bars"></div>
+      <div id="ov-formula" style="font-size:9px;color:var(--muted);margin-top:10px;line-height:1.9"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Tide · Bahía Uvita</div>
+      <div class="grid3">
+        <div class="stat-box"><div class="stat-val" id="ov-tid">—</div><div class="stat-unit">m</div><div class="stat-lbl">Now</div></div>
+        <div class="stat-box"><div class="stat-val" id="ov-tnv">—</div><div class="stat-unit" id="ov-tnt">—</div><div class="stat-lbl" id="ov-ttm">next</div></div>
+        <div class="stat-box">
+          <canvas id="moon-canvas" width="50" height="50"></canvas>
+          <div style="font-size:8px;color:var(--ink)" id="ov-mname">—</div>
+          <div style="font-size:7px;color:var(--muted)" id="ov-mpct"></div>
+        </div>
+      </div>
+      <div class="tide-readout" id="tide-readout">
+        <div>
+          <div class="tide-readout-state" id="tide-state">NOW</div>
+          <div class="tide-readout-time" id="tide-readout-time">—</div>
+        </div>
+        <div class="tide-readout-height" id="tide-readout-height">—<span style="font-size:10px;color:var(--muted);font-family:'DM Mono'">m</span></div>
+      </div>
+      <div class="chart-wrap-tide"><canvas id="tide-chart"></canvas></div>
+      <div class="tide-extremes" id="tide-extremes"></div>
+      <div style="font-size:8px;color:var(--muted);margin-top:6px;text-align:center" id="tide-source">Observed highs &amp; lows · Dominical (Bahía Uvita port) · via costarica.com · slide to read any time</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Sun &amp; Surf</div>
+      <div class="grid2">
+        <div class="stat-box"><div class="stat-val" id="ov-sunrise" style="font-size:16px">—</div><div class="stat-lbl">Sunrise</div></div>
+        <div class="stat-box"><div class="stat-val" id="ov-sunset" style="font-size:16px">—</div><div class="stat-lbl">Sunset</div></div>
+        <div class="stat-box"><div class="stat-val" id="ov-wave">—</div><div class="stat-unit">m</div><div class="stat-lbl">Wave Height</div></div>
+        <div class="stat-box"><div class="stat-val" id="ov-swell">—</div><div class="stat-unit" id="ov-swell-deg"></div><div class="stat-lbl">Swell Dir</div></div>
+      </div>
+      <div style="font-size:8px;color:var(--muted);margin-top:8px;text-align:center">Sun times · Open-Meteo · Waves · Open-Meteo Marine (off Dominical)</div>
+    </div>
+  </div>
+</div>
+
+<!-- WATERSHED -->
+<div id="tab-watershed" class="tab-pane">
+  <div class="card">
+    <div class="card-title">Watershed Rainfall · 3 Points</div>
+    <div style="font-size:9px;color:var(--muted);margin-bottom:10px;line-height:1.7">River Mouth, Platanillo mid-valley, and Tinamastes Valley upper catchment. Heavy upstream rain arrives at the crossing in 2–6 hours.</div>
+    <div id="ws-loading" class="loading" style="padding:16px"><div class="loader"></div></div>
+    <div id="ws-content" style="display:none">
+      <div id="ws-rows"></div>
+      <div style="font-size:9px;color:var(--muted);padding:8px 0;line-height:1.8" id="ws-summary"></div>
+      <div class="chart-wrap-med"><canvas id="ws-chart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- STATIONS -->
+<div id="tab-stations" class="tab-pane">
+  <div class="card">
+    <div class="card-title">3 Nearby Stations · Live</div>
+    <div style="font-size:9px;color:var(--muted);margin-bottom:10px">Quepos, Dominical, Uvita — all within 40km of the Barú crossing.</div>
+    <div id="st-loading" class="loading" style="padding:16px"><div class="loader"></div></div>
+    <div id="st-content" style="display:none"><div id="st-grid"></div></div>
+  </div>
+  <div class="card" id="tempest-card" style="display:none">
+    <div class="card-title">River Soul · Tempest Station</div>
+    <div id="tempest-content"><div style="font-size:9px;color:var(--muted)">Loading…</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Rainfall Comparison · mm</div>
+    <div class="chart-wrap-med"><canvas id="st-rain-chart"></canvas></div>
+  </div>
+</div>
+
+<!-- FORECAST -->
+<div id="tab-forecast" class="tab-pane">
+  <div class="card">
+    <div class="card-title">7-Day Risk Forecast</div>
+    <div id="fc-strip-wrap" class="loading" style="padding:16px"><div class="loader"></div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Rainfall Forecast · mm/day</div>
+    <div class="chart-wrap-med"><canvas id="fc-chart"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Model Agreement · GFS vs ECMWF</div>
+    <div style="font-size:9px;color:var(--muted);margin-bottom:10px;line-height:1.7">Two independent weather models. When they disagree, forecast confidence is lower — treat the higher number as the safety case.</div>
+    <div id="model-compare" class="loading" style="padding:16px"><div class="loader"></div></div>
+  </div>
+</div>
+
+<!-- RADAR -->
+<div id="tab-radar" class="tab-pane">
+  <div class="card">
+    <div class="card-title">Live Radar · Windy</div>
+    <div style="font-size:9px;color:var(--muted);margin-bottom:10px;line-height:1.7">Rain radar over the Barú watershed, centered on the river mouth. Tap to expand full-screen — pan, zoom, scrub the timeline, or switch layers in the menu.</div>
+    <div class="radar-thumb">
+      <iframe id="radar-thumb-frame" class="radar-thumb-frame" title="Windy radar — Barú watershed" frameborder="0"></iframe>
+      <div class="radar-thumb-click" onclick="openRadarModal()"><span class="radar-thumb-badge">⤢ Tap to expand</span></div>
+    </div>
+    <div style="font-size:8px;color:var(--muted);margin-top:8px;text-align:center">Radar © Windy.com · independent of the flood score</div>
+  </div>
+</div>
+
+<!-- HISTORY -->
+<div id="tab-history" class="tab-pane">
+  <div id="hist-banner" class="setup-banner" style="display:none">Connect Supabase in <strong>Config</strong> to log history.</div>
+  <div class="card">
+    <div class="card-title">Flood Score · Last 30 Days</div>
+    <div class="chart-wrap-med"><canvas id="hist-chart"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Recent Log</div>
+    <div id="hist-log" class="loading" style="padding:16px"><div class="loader"></div></div>
+  </div>
+</div>
+
+<!-- OBSERVE -->
+<div id="tab-observe" class="tab-pane">
+  <div id="obs-banner" class="setup-banner" style="display:none">Connect Supabase in <strong>Config</strong> to save observations.</div>
+  <div class="card">
+    <div class="card-title">Log Observation</div>
+    <div class="obs-form">
+      <label>River Condition</label>
+      <select id="obs-cond">
+        <option value="">— select —</option>
+        <option value="clear_low">Clear & Low</option>
+        <option value="normal">Normal Flow</option>
+        <option value="elevated">Elevated / Fast</option>
+        <option value="flooded">Flooded / Impassable</option>
+        <option value="blocking">Blocking Beach Access</option>
+      </select>
+      <label>Rainfall Right Now</label>
+      <select id="obs-rain">
+        <option value="">— select —</option>
+        <option value="none">None / Dry</option>
+        <option value="light">Light drizzle</option>
+        <option value="moderate">Moderate rain</option>
+        <option value="heavy">Heavy — aguacero incoming</option>
+        <option value="torrential">Torrential / Temporal</option>
+      </select>
+      <label>Water Color</label>
+      <select id="obs-color">
+        <option value="">— skip —</option>
+        <option value="clear">Clear / Blue-green</option>
+        <option value="murky">Murky / Cloudy</option>
+        <option value="brown">Brown / Muddy</option>
+        <option value="red">Reddish / Very muddy</option>
+      </select>
+      <label>Notes (optional)</label>
+      <textarea id="obs-notes" placeholder="e.g. Can hear rocks moving, smells earthy…"></textarea>
+      <label>Your name (optional)</label>
+      <input type="text" id="obs-name" placeholder="Guest, staff…">
+      <button class="btn btn-green" id="obs-btn" onclick="submitObs()">Save Observation</button>
+      <div class="err" id="obs-err"></div>
+      <div class="ok" id="obs-ok" style="display:none">✓ Saved</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Recent Observations</div>
+    <div id="obs-log"><div style="font-size:9px;color:var(--muted)">No observations yet.</div></div>
+  </div>
+</div>
+
+<!-- JOURNAL -->
+<div id="tab-journal" class="tab-pane">
+  <div class="card">
+    <div class="card-title">Flood Record · 2025</div>
+    <div style="font-size:9px;color:var(--muted);margin-bottom:10px;line-height:1.7">Confirmed flood events at the Barú crossing, River Soul. Ground truth.</div>
+    <div id="flood-record"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Field Journal · January 2026</div>
+    <div style="font-size:9px;color:var(--muted);margin-bottom:10px;line-height:1.7">Observed conditions at River Soul · Barú River mouth · Dominical.</div>
+    <div id="journal"></div>
+  </div>
+  <div class="card" style="font-size:9px;color:var(--muted);line-height:2.2">
+    <div class="card-title">Tico Weather Glossary</div>
+    <strong style="color:var(--ink)">Aguacero</strong> — arrives fast, dumps everything, gone in 20 minutes. No warning, no apology.<br>
+    <strong style="color:var(--ink)">Temporal</strong> — multi-day rain. River doesn't sleep.<br>
+    <strong style="color:var(--ink)">Veranillo</strong> — little dry season hiding inside the wet season.<br>
+    <strong style="color:var(--ink)">Las nubes en la montaña</strong> — clouds stacking on Tinamastes ridge. Watch the river.
+  </div>
+</div>
+
+<!-- CONFIG -->
+<div id="tab-config" class="tab-pane">
+  <div class="card">
+    <div class="card-title">Supabase Connection</div>
+    <div style="font-size:9px;color:var(--muted);margin-bottom:12px;line-height:1.8">Create a free project at <strong>supabase.com</strong>, run the SQL below once, then paste your keys here.</div>
+    <label class="cfg-label">Project URL</label>
+    <input class="cfg-input" id="cfg-url" placeholder="https://xxxx.supabase.co" type="url">
+    <label class="cfg-label">Publishable Key</label>
+    <input class="cfg-input" id="cfg-key" placeholder="sb_publishable_…" type="text">
+    <button class="btn-save" onclick="saveConfig()">Save & Connect</button>
+    <div class="err" id="cfg-err"></div>
+    <div class="ok" id="cfg-ok" style="display:none">✓ Connected — logging active</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Tempest Weather Station (River Soul)</div>
+    <div style="font-size:9px;color:var(--muted);margin-bottom:12px;line-height:1.8">When your Tempest arrives: get token at <strong>tempestwx.com</strong> → Settings → Data Authorizations. Station ID is in the device URL.</div>
+    <label class="cfg-label">Tempest Token</label>
+    <input class="cfg-input" id="cfg-tempest-token" placeholder="abcd1234-…" type="text">
+    <label class="cfg-label">Station ID</label>
+    <input class="cfg-input" id="cfg-tempest-id" placeholder="e.g. 12345" type="text">
+    <button class="btn-save" onclick="saveTempest()">Save Tempest</button>
+    <div class="err" id="tempest-err"></div>
+    <div class="ok" id="tempest-ok" style="display:none">✓ Tempest connected</div>
+  </div>
+  <div class="card">
+    <div class="card-title">WorldTides API (optional)</div>
+    <div style="font-size:9px;color:var(--muted);margin-bottom:12px;line-height:1.8">Optional upgrade for tides. Free tier at <strong>worldtides.info</strong>. Leave blank — the app uses the built-in Costa Rica tide table.</div>
+    <label class="cfg-label">WorldTides Key</label>
+    <input class="cfg-input" id="cfg-wt-key" placeholder="abc123…" type="text">
+    <button class="btn-save" onclick="saveWorldTides()">Save WorldTides</button>
+    <div class="ok" id="wt-ok" style="display:none">✓ Saved</div>
+  </div>
+  <div class="card">
+    <div class="card-title">SQL Setup (run once in Supabase)</div>
+    <div class="sql-block">-- Automated readings
+CREATE TABLE flood_readings (
+  id          BIGSERIAL PRIMARY KEY,
+  created_at  TIMESTAMPTZ DEFAULT NOW(),
+  score       NUMERIC(4,3),
+  risk_level  TEXT,
+  rain_24h    NUMERIC(6,1),
+  rain_72h    NUMERIC(6,1),
+  soil        NUMERIC(5,3),
+  tide_m      NUMERIC(4,2),
+  lunar_phase TEXT
+);
+
+-- Manual observations
+CREATE TABLE observations (
+  id          BIGSERIAL PRIMARY KEY,
+  created_at  TIMESTAMPTZ DEFAULT NOW(),
+  condition   TEXT,
+  rainfall    TEXT,
+  water_color TEXT,
+  notes       TEXT,
+  observer    TEXT,
+  flood_score NUMERIC(4,3)
+);
+
+ALTER TABLE flood_readings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE observations   ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "pub_read"  ON flood_readings FOR SELECT USING (true);
+CREATE POLICY "pub_write" ON flood_readings FOR INSERT WITH CHECK (true);
+CREATE POLICY "pub_read"  ON observations   FOR SELECT USING (true);
+CREATE POLICY "pub_write" ON observations   FOR INSERT WITH CHECK (true);</div>
+  </div>
+</div>
+
+<!-- Windy radar fullscreen modal -->
+<div id="radar-modal" class="radar-modal" style="display:none">
+  <div class="radar-modal-bar">
+    <span>Windy Radar · Barú Watershed</span>
+    <button class="radar-modal-close" onclick="closeRadarModal()">✕ Close</button>
+  </div>
+  <iframe id="radar-modal-frame" class="radar-modal-frame" title="Windy radar — full screen" frameborder="0"></iframe>
+</div>
+
+<div class="footer"><span class="dot"></span>LIVE · River Soul · Barú River · 9.2703°N 83.8580°W<br>OpenMeteo · GFS + ECMWF · Costa Rica Tide Tables · Supabase</div>
+<div class="powered-by">Brought to you by<a href="https://riversoulcr.com" target="_blank" rel="noopener">River Soul</a></div>
+</div>
+
+<script>
+// ═══ CONSTANTS ═══════════════════════════════════════════
+const MOUTH  = { lat:9.2703,  lon:-83.8580 };
+const COORDS = {
+  mouth:      { lat:9.2703,  lon:-83.8580, label:'River Soul (Barú River)' },
+  platanillo: { lat:9.2900,  lon:-83.8100, label:'Platanillo (Mid-Valley)' },
+  tinamastes: { lat:9.3059,  lon:-83.7779, label:'Tinamastes Valley' },
+};
+const STATIONS = [
+  { id:'quepos',    label:'Quepos',    lat:9.4319, lon:-84.1604, color:'#2d6a4f', dist:'38km N' },
+  { id:'dominical', label:'Dominical', lat:9.2528, lon:-83.8648, color:'#0d7f7f', dist:'2km SW' },
+  { id:'uvita',     label:'Uvita',     lat:9.1533, lon:-83.7347, color:'#d4a96a', dist:'15km S'  },
+];
+
+// ── Season detection: uses DAY OF YEAR for Pacífico Sur (Dominical/Uvita climate)
+// Anchored to actual local seasonal transitions, not calendar months
+// Dry: Dec-mid Apr · Transition: late Apr-mid May · Green: mid May-Sept · Peak: Oct-Nov
+function getSeasonByDate(date) {
+  const start = new Date(date.getFullYear(), 0, 0);
+  const doy = Math.floor((date - start) / 86400000);
+  if (doy >= 335 || doy < 110)  return { name:'Dry Season',   emoji:'☀️',  base:0.06 };
+  if (doy < 135)                 return { name:'Transition',   emoji:'🌤️', base:0.22 };
+  if (doy < 274)                 return { name:'Green Season', emoji:'🌿',  base:0.55 };
+  return                                { name:'Peak Wet',     emoji:'⛈️', base:0.80 };
+}
+
+const LUNAR_EPOCH = 947182440000, LUNAR_CYCLE = 29.530589*86400000;
+
+// ── TIDE MODEL · Observed high/low tide extremes for Dominical (tide port:
+// Bahía Uvita), taken from costarica.com daily tide tables — the same source the
+// scraper targets. These are real published extremes (feet, converted to metres).
+// Between extremes we cosine-interpolate, which matches the natural shape of a
+// semidiurnal tide. Covers Jun 7–21, 2026. When the clock runs past the last row,
+// TIDE_STALE flips true and the UI shows a refresh warning instead of a wrong number.
+const FT_TO_M = 0.3048;
+// [ Costa-Rica-local ISO time, height (ft), 'H' | 'L' ]
+const TIDE_RAW = [
+  ['2026-06-07T00:45:00-06:00',1.28,'L'],['2026-06-07T07:08:00-06:00',7.84,'H'],['2026-06-07T13:15:00-06:00',1.87,'L'],['2026-06-07T19:21:00-06:00',7.38,'H'],
+  ['2026-06-08T01:30:00-06:00',1.48,'L'],['2026-06-08T07:54:00-06:00',7.91,'H'],['2026-06-08T14:07:00-06:00',1.80,'L'],['2026-06-08T20:13:00-06:00',7.22,'H'],
+  ['2026-06-09T02:18:00-06:00',1.57,'L'],['2026-06-09T08:44:00-06:00',8.04,'H'],['2026-06-09T15:02:00-06:00',1.67,'L'],['2026-06-09T21:09:00-06:00',7.19,'H'],
+  ['2026-06-10T03:11:00-06:00',1.57,'L'],['2026-06-10T09:37:00-06:00',8.27,'H'],['2026-06-10T15:59:00-06:00',1.44,'L'],['2026-06-10T22:08:00-06:00',7.32,'H'],
+  ['2026-06-11T04:07:00-06:00',1.48,'L'],['2026-06-11T10:33:00-06:00',8.60,'H'],['2026-06-11T16:57:00-06:00',1.08,'L'],['2026-06-11T23:07:00-06:00',7.58,'H'],
+  ['2026-06-12T05:05:00-06:00',1.25,'L'],['2026-06-12T11:29:00-06:00',8.96,'H'],['2026-06-12T17:54:00-06:00',0.62,'L'],
+  ['2026-06-13T00:05:00-06:00',7.94,'H'],['2026-06-13T06:03:00-06:00',0.98,'L'],['2026-06-13T12:24:00-06:00',9.35,'H'],['2026-06-13T18:50:00-06:00',0.20,'L'],
+  ['2026-06-14T01:02:00-06:00',8.40,'H'],['2026-06-14T07:01:00-06:00',0.66,'L'],['2026-06-14T13:19:00-06:00',9.71,'H'],['2026-06-14T19:44:00-06:00',-0.23,'L'],
+  ['2026-06-15T01:57:00-06:00',8.83,'H'],['2026-06-15T07:58:00-06:00',0.36,'L'],['2026-06-15T14:14:00-06:00',9.94,'H'],['2026-06-15T20:37:00-06:00',-0.56,'L'],
+  ['2026-06-16T02:51:00-06:00',9.22,'H'],['2026-06-16T08:54:00-06:00',0.13,'L'],['2026-06-16T15:07:00-06:00',10.04,'H'],['2026-06-16T21:29:00-06:00',-0.72,'L'],
+  ['2026-06-17T03:44:00-06:00',9.48,'H'],['2026-06-17T09:49:00-06:00',0.07,'L'],['2026-06-17T16:01:00-06:00',9.94,'H'],['2026-06-17T22:21:00-06:00',-0.69,'L'],
+  ['2026-06-18T04:37:00-06:00',9.61,'H'],['2026-06-18T10:44:00-06:00',0.13,'L'],['2026-06-18T16:54:00-06:00',9.68,'H'],['2026-06-18T23:12:00-06:00',-0.49,'L'],
+  ['2026-06-19T05:30:00-06:00',9.58,'H'],['2026-06-19T11:40:00-06:00',0.33,'L'],['2026-06-19T17:48:00-06:00',9.25,'H'],
+  ['2026-06-20T00:04:00-06:00',-0.16,'L'],['2026-06-20T06:24:00-06:00',9.38,'H'],['2026-06-20T12:36:00-06:00',0.62,'L'],['2026-06-20T18:43:00-06:00',8.76,'H'],
+  ['2026-06-21T00:56:00-06:00',0.30,'L'],['2026-06-21T07:18:00-06:00',9.12,'H'],['2026-06-21T13:33:00-06:00',0.98,'L'],['2026-06-21T19:40:00-06:00',8.23,'H'],
+];
+const TIDE_TABLE = TIDE_RAW.map(r => ({ ms:new Date(r[0]).getTime(), h:r[1]*FT_TO_M, type:r[2] }))
+                           .sort((a,b) => a.ms - b.ms);
+const TIDE_T0 = TIDE_TABLE[0].ms;
+const TIDE_T1 = TIDE_TABLE[TIDE_TABLE.length - 1].ms;
+let TIDE_STALE = false;
+const DAYNAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+// Throttle Supabase auto-logging to once every 3 hours
+const LOG_INTERVAL_MS = 3 * 3600 * 1000;
+
+// ═══ HELPERS ═════════════════════════════════════════════
+function lunarAge(d)  { return ((d-LUNAR_EPOCH)%LUNAR_CYCLE+LUNAR_CYCLE)%LUNAR_CYCLE; }
+function lunarPhase(age) {
+  const p=age/LUNAR_CYCLE;
+  // Boundaries calibrated against authoritative astronomical sources for 2026
+  // (Catalina Sky Survey, moongiant). The LUNAR_EPOCH constant has small drift,
+  // and these p-thresholds are tuned to match observatory phase names within ±1 day.
+  if(p<0.04||p>0.96) return {name:'New Moon',       emoji:'🌑',risk:0.90};
+  if(p<0.21)         return {name:'Waxing Crescent', emoji:'🌒',risk:0.45};
+  if(p<0.27)         return {name:'First Quarter',   emoji:'🌓',risk:0.65};
+  if(p<0.48)         return {name:'Waxing Gibbous',  emoji:'🌔',risk:0.55};
+  if(p<0.52)         return {name:'Full Moon',       emoji:'🌕',risk:0.95};
+  if(p<0.75)         return {name:'Waning Gibbous',  emoji:'🌖',risk:0.55};
+  if(p<0.79)         return {name:'Last Quarter',    emoji:'🌗',risk:0.65};
+  return              {name:'Waning Crescent',       emoji:'🌘',risk:0.40};
+}
+// Cosine interpolation between the two bracketing observed extremes. Returns
+// metres. Name kept as harmonicTide() so existing call sites are unchanged.
+// Outside the table range it clamps to the nearest known extreme (never NaN);
+// staleness is surfaced separately via TIDE_STALE so we never show wrong data quietly.
+function harmonicTide(date) {
+  const ms = date.getTime();
+  if (ms <= TIDE_T0) return TIDE_TABLE[0].h;
+  if (ms >= TIDE_T1) return TIDE_TABLE[TIDE_TABLE.length - 1].h;
+  let lo = 0;
+  for (let i = 0; i < TIDE_TABLE.length - 1; i++) {
+    if (ms >= TIDE_TABLE[i].ms && ms <= TIDE_TABLE[i + 1].ms) { lo = i; break; }
+  }
+  const a = TIDE_TABLE[lo], b = TIDE_TABLE[lo + 1];
+  const frac = (ms - a.ms) / (b.ms - a.ms);
+  return a.h + (b.h - a.h) * (1 - Math.cos(frac * Math.PI)) / 2;
+}
+function nextTideExtreme(now) {
+  let prev = harmonicTide(new Date(now.getTime()-15*60000));
+  let curr = harmonicTide(now);
+  for (let m=15; m<=720; m+=15) {
+    const d = new Date(now.getTime() + m*60000);
+    const next = harmonicTide(d);
+    if ((curr>prev && curr>next) || (curr<prev && curr<next)) {
+      return { time:new Date(now.getTime()+(m-15)*60000), height:curr, type:curr>prev?'HIGH':'LOW' };
+    }
+    prev = curr;
+    curr = next;
+  }
+  return null;
+}
+function scoreRain(r24,r72) {
+  const s24=r24<5?0:r24<20?0.2:r24<50?0.5:r24<100?0.75:1.0;
+  const s72=r72<10?0:r72<40?0.2:r72<100?0.5:r72<200?0.75:1.0;
+  return Math.min(s24*0.6+s72*0.4,1);
+}
+// Soil moisture U-curve: BOTH bone-dry AND saturated soils elevate flood risk.
+// Bone-dry tropical soils become hydrophobic — water sheets off rather than infiltrating.
+// Saturated soils have no remaining capacity — incoming water becomes runoff.
+// Safe band: 35-65% of saturation (per Nate's choice — narrower, more conservative).
+// v is m³/m³ from OpenMeteo; ~0.42 is field-saturation for tropical Pacífico Sur soils.
+function scoreSoil(v) {
+  if (v == null) return 0.25;
+  const vn = Math.max(0, Math.min(v / 0.42, 1.2));
+  if (vn < 0.20) return 0.85 - (vn / 0.20) * 0.40;            // 0.85 → 0.45 (bone dry)
+  if (vn < 0.35) return 0.45 - ((vn - 0.20) / 0.15) * 0.30;   // 0.45 → 0.15
+  if (vn < 0.65) return 0.10 + Math.abs(vn - 0.50) * 0.10;    // safe band, gentle U
+  if (vn < 0.85) return 0.15 + ((vn - 0.65) / 0.20) * 0.40;   // 0.15 → 0.55
+  if (vn < 1.00) return 0.55 + ((vn - 0.85) / 0.15) * 0.40;   // 0.55 → 0.95
+  return 0.95;                                                 // saturated, capped
+}
+function scoreTide(m) {
+  if(m>=2.2)return 1.0; if(m>=1.8)return 0.80;
+  if(m>=1.3)return 0.55; if(m>=0.8)return 0.30; return 0.12;
+}
+// Weights: Rainfall 40% · Lunar 20% · Soil 18% · Tide 14% · Season 8% = 100%
+function calcRisk(rR,lR,sR,tR,seaB) { return Math.min(rR*0.40+lR*0.20+sR*0.18+tR*0.14+seaB*0.08,1); }
+function riskLevel(s) {
+  if(s>=0.70) return {label:'HIGH',    color:'#c0392b'};
+  if(s>=0.40) return {label:'MODERATE',color:'#d68910'};
+  return             {label:'LOW',     color:'#1e8449'};
+}
+function degToCompass(d) {
+  if(d==null)return '';
+  return ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'][Math.round(d/22.5)%16];
+}
+async function fetchJSON(url, timeoutMs=10000) {
+  const ctrl=new AbortController();
+  const t=setTimeout(()=>ctrl.abort(),timeoutMs);
+  try {
+    const r=await fetch(url,{signal:ctrl.signal});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return await r.json();
+  } finally { clearTimeout(t); }
+}
+// Format date as "Wed, Apr 29 · 3:42 PM" in Costa Rica time, regardless of device timezone
+function formatHeaderTime(now) {
+  return now.toLocaleString('en-US', {
+    weekday:'short', month:'short', day:'numeric',
+    hour:'numeric', minute:'2-digit',
+    timeZone:'America/Costa_Rica'
+  });
+}
+// Get hour 0-23 in Costa Rica time (for chart x-axis labels)
+function getCRHour(date) {
+  const s = date.toLocaleString('en-US', { hour:'2-digit', hour12:false, timeZone:'America/Costa_Rica' });
+  return parseInt(s, 10) % 24;
+}
+function getCRMinute(date) {
+  const s = date.toLocaleString('en-US', { minute:'2-digit', timeZone:'America/Costa_Rica' });
+  return parseInt(s, 10);
+}
+
+// ═══ SUPABASE ════════════════════════════════════════════
+let SB_URL = localStorage.getItem('sb_url') || '';
+let SB_KEY = localStorage.getItem('sb_key') || '';
+let sbClient = null;
+let lastLogTime = parseInt(localStorage.getItem('last_log_time')||'0', 10);
+
+function initSB() {
+  if (!SB_URL || !SB_KEY) return false;
+  try {
+    sbClient = supabase.createClient(SB_URL, SB_KEY, { auth:{ persistSession:true } });
+    return true;
+  } catch(e) {
+    console.warn('Supabase init failed:', e);
+    return false;
+  }
+}
+initSB();
+document.getElementById('cfg-url').value = SB_URL;
+document.getElementById('cfg-key').value = SB_KEY;
+
+async function saveConfig() {
+  SB_URL = document.getElementById('cfg-url').value.trim();
+  SB_KEY = document.getElementById('cfg-key').value.trim();
+  localStorage.setItem('sb_url', SB_URL);
+  localStorage.setItem('sb_key', SB_KEY);
+  document.getElementById('cfg-ok').style.display = 'none';
+  document.getElementById('cfg-err').textContent = '';
+  if (!initSB()) {
+    document.getElementById('cfg-err').textContent = 'Could not connect — check keys';
+    return;
+  }
+  try {
+    const { error } = await sbClient.from('flood_readings').select('id').limit(1);
+    if (error) throw error;
+    document.getElementById('cfg-ok').style.display = 'block';
+    loadHistory();
+    loadObsLog();
+    // Force a log immediately on first connect, bypassing throttle
+    if (G.score) {
+      lastLogTime = 0;
+      logReading();
+    }
+  } catch(e) {
+    document.getElementById('cfg-err').textContent = 'Error: ' + e.message;
+  }
+}
+
+// ═══ TEMPEST (River Soul personal weather station) ═══════
+let TEMPEST_TOKEN = localStorage.getItem('tempest_token') || '';
+let TEMPEST_ID = localStorage.getItem('tempest_id') || '';
+document.getElementById('cfg-tempest-token').value = TEMPEST_TOKEN;
+document.getElementById('cfg-tempest-id').value = TEMPEST_ID;
+
+function saveTempest() {
+  TEMPEST_TOKEN = document.getElementById('cfg-tempest-token').value.trim();
+  TEMPEST_ID = document.getElementById('cfg-tempest-id').value.trim();
+  localStorage.setItem('tempest_token', TEMPEST_TOKEN);
+  localStorage.setItem('tempest_id', TEMPEST_ID);
+  document.getElementById('tempest-err').textContent = '';
+  document.getElementById('tempest-ok').style.display = 'block';
+  loadTempest();
+}
+
+async function loadTempest() {
+  if (!TEMPEST_TOKEN || !TEMPEST_ID) {
+    document.getElementById('tempest-card').style.display = 'none';
+    return;
+  }
+  document.getElementById('tempest-card').style.display = 'block';
+  try {
+    const data = await fetchJSON(`https://swd.weatherflow.com/swd/rest/observations/station/${TEMPEST_ID}?token=${TEMPEST_TOKEN}`, 8000);
+    const obs = data?.obs?.[0];
+    if (!obs) throw new Error('No data');
+    const html = `
+      <div class="grid3" style="margin-bottom:8px">
+        <div style="text-align:center"><div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--green-dark)">${(obs.air_temperature??'—').toFixed?.(1) || obs.air_temperature || '—'}</div><div style="font-size:8px;color:var(--muted)">°C River Soul</div></div>
+        <div style="text-align:center"><div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--teal)">${obs.precip_accum_local_day?.toFixed?.(1) ?? '0.0'}</div><div style="font-size:8px;color:var(--muted)">mm today</div></div>
+        <div style="text-align:center"><div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--green-dark)">${obs.wind_avg?.toFixed?.(1) ?? '—'}</div><div style="font-size:8px;color:var(--muted)">m/s wind</div></div>
+      </div>
+      <div style="font-size:8px;color:var(--muted);text-align:center">Humidity ${obs.relative_humidity ?? '—'}% · Pressure ${obs.station_pressure?.toFixed?.(1) ?? '—'} mb</div>`;
+    document.getElementById('tempest-content').innerHTML = html;
+  } catch(e) {
+    document.getElementById('tempest-content').innerHTML = `<div class="err">Tempest unavailable: ${e.message}</div>`;
+  }
+}
+
+// ═══ WORLDTIDES (optional) ════════════════════════════════
+let WT_KEY = localStorage.getItem('wt_key') || '';
+document.getElementById('cfg-wt-key').value = WT_KEY;
+function saveWorldTides() {
+  WT_KEY = document.getElementById('cfg-wt-key').value.trim();
+  localStorage.setItem('wt_key', WT_KEY);
+  document.getElementById('wt-ok').style.display = 'block';
+  // Reload to use new tide source
+  if (G.score) loadAll();
+}
+
+// ═══ TABS ════════════════════════════════════════════════
+function showTab(name, btn) {
+  document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'watershed') loadWatershed();
+  if (name === 'stations')  { loadStations(); loadTempest(); }
+  if (name === 'history')   loadHistory();
+  if (name === 'observe')   { loadObsLog(); checkObsBanner(); }
+  if (name === 'journal')   buildJournal();
+  if (name === 'radar')     loadRadar();
+}
+
+// ═══ GLOBAL STATE ════════════════════════════════════════
+let G = {};
+let tideChartInst=null, wsChartInst=null, stRainChartInst=null, fcChartInst=null, histChartInst=null;
+
+// ═══ MOON DRAW ═══════════════════════════════════════════
+// Draws an accurate moon disc on the canvas based on lunar age in milliseconds.
+// Geometry verified at all 8 major phases — full moon renders as a complete bright disc.
+function drawMoon(phase, ageMs) {
+  const canvas = document.getElementById('moon-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const cx = W/2, cy = H/2, r = Math.min(W, H)/2 - 2;
+  ctx.clearRect(0, 0, W, H);
+
+  // cycle position p ∈ [0,1): 0=new, 0.25=first quarter, 0.5=full, 0.75=last quarter
+  const p = (ageMs % LUNAR_CYCLE) / LUNAR_CYCLE;
+  // illumination ∈ [0,1]: fraction of disc visibly lit
+  const illum = 0.5 * (1 - Math.cos(2 * Math.PI * p));
+  const waxing = p < 0.5;
+
+  const lit  = '#f5ead8';
+  const dark = '#0e1a14';
+
+  // Step 1: dark base disc
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+  ctx.fillStyle = dark; ctx.fill();
+
+  // Step 2: clip to circle for clean terminator
+  ctx.save();
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+  ctx.clip();
+
+  // Step 3: paint the lit half (right if waxing, left if waning)
+  ctx.beginPath();
+  if (waxing) {
+    ctx.arc(cx, cy, r, -Math.PI/2, Math.PI/2, false);
+  } else {
+    ctx.arc(cx, cy, r, Math.PI/2, -Math.PI/2, false);
+  }
+  ctx.closePath();
+  ctx.fillStyle = lit; ctx.fill();
+
+  // Step 4: terminator ellipse
+  // Half-width ex shrinks to 0 at quarter phases, grows to r at new/full
+  // < 50% lit: ellipse fills DARK over part of the lit half  → crescent
+  // ≥ 50% lit: ellipse fills LIT  over part of the dark half → gibbous/full
+  const ex = r * Math.abs(1 - 2 * illum);
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, ex, r, 0, 0, 2 * Math.PI);
+  ctx.closePath();
+  ctx.fillStyle = illum < 0.5 ? dark : lit;
+  ctx.fill();
+
+  ctx.restore();
+
+  // Subtle rim
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+  ctx.strokeStyle = 'rgba(245,234,216,0.25)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  document.getElementById('ov-mname').textContent = phase.name;
+  document.getElementById('ov-mpct').textContent = Math.round(illum * 100) + '% lit';
+}
+
+// ═══ TIDE CHART (interactive scrub) ══════════════════════
+let tideSeries = [], tideExtremes = [], tideNowIdx = 0;
+
+function buildTideChart(now) {
+  // 24-hour window: 2h back (context), 22h forward — cleaner than the old 36h view
+  const start = new Date(now.getTime() - 2*3600000);
+  const end = new Date(now.getTime() + 22*3600000);
+  tideSeries = [];
+  const t = new Date(start);
+  while (t <= end) {
+    tideSeries.push({ time: new Date(t), h: harmonicTide(t) });
+    t.setMinutes(t.getMinutes() + 10);
+  }
+
+  // Find all extremes in the window
+  tideExtremes = [];
+  for (let i=1; i<tideSeries.length-1; i++) {
+    if (tideSeries[i].h > tideSeries[i-1].h && tideSeries[i].h > tideSeries[i+1].h)
+      tideExtremes.push({ type:'HIGH', time:tideSeries[i].time, height:tideSeries[i].h, idx:i });
+    if (tideSeries[i].h < tideSeries[i-1].h && tideSeries[i].h < tideSeries[i+1].h)
+      tideExtremes.push({ type:'LOW', time:tideSeries[i].time, height:tideSeries[i].h, idx:i });
+  }
+
+  // Next-tide stat box
+  const nextE = tideExtremes.filter(e => e.time > now).sort((a,b) => a.time - b.time)[0];
+  if (nextE) {
+    const diff = nextE.time - now;
+    const dh = Math.floor(diff / 3600000);
+    const dm = Math.floor((diff % 3600000) / 60000);
+    document.getElementById('ov-tnv').textContent = nextE.height.toFixed(2);
+    document.getElementById('ov-tnt').textContent = nextE.type;
+    document.getElementById('ov-ttm').textContent = dh > 0 ? `in ${dh}h ${dm}m` : `in ${dm}m`;
+  }
+
+  // Show next 4 tide events — clean low/high/low/high preview
+  const futureExtremes = tideExtremes.filter(e => e.time >= now).slice(0, 4);
+  document.getElementById('tide-extremes').innerHTML = futureExtremes.map(e => {
+    const t = e.time.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', timeZone:'America/Costa_Rica' });
+    const cls = e.type === 'HIGH' ? 'high' : 'low';
+    const arrow = e.type === 'HIGH' ? '▲' : '▼';
+    return `<span class="${cls}">${arrow} ${e.type} ${t} · ${e.height.toFixed(2)}m</span>`;
+  }).join('');
+
+  tideNowIdx = tideSeries.findIndex(p => p.time >= now);
+
+  // Initialize readout to "now"
+  updateTideReadout(tideNowIdx, true);
+
+  // Hourly labels in CR time, only on the hour
+  const labels = tideSeries.map(p => {
+    const crHour = getCRHour(p.time);
+    const crMin = getCRMinute(p.time);
+    return crMin === 0 ? `${crHour}:00` : '';
+  });
+
+  if (tideChartInst) tideChartInst.destroy();
+  const ctx = document.getElementById('tide-chart').getContext('2d');
+  tideChartInst = new Chart(ctx, {
+    type:'line',
+    data:{
+      labels,
+      datasets:[{
+        data: tideSeries.map(p => p.h),
+        borderColor: '#2d6a4f',
+        backgroundColor: tideSeries.map((_,i) => i <= tideNowIdx ? 'rgba(45,106,79,0.20)' : 'rgba(72,202,228,0.18)'),
+        borderWidth: 2,
+        pointRadius: 0,
+        fill: true,
+        tension: 0.4
+      }]
+    },
+    options:{
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      interaction: { mode:'index', intersect:false },
+      plugins:{ legend:{display:false}, tooltip:{enabled:false}, scrubLine:{} },
+      scales:{
+        x: {
+          grid:{display:false},
+          ticks:{ font:{family:'DM Mono',size:7}, color:'#5a7a6a', autoSkip:false, callback:(v,i) => labels[i] || null, maxRotation:0 }
+        },
+        y: {
+          min: -1.0,
+          max: 3.5,
+          grid:{ color:'rgba(0,0,0,0.05)' },
+          ticks:{ font:{family:'DM Mono',size:8}, color:'#5a7a6a', stepSize:0.5 }
+        }
+      }
+    },
+    plugins: [{
+      id: 'scrubLine',
+      afterDraw(chart) {
+        const meta = chart.getDatasetMeta(0);
+        const ctx2 = chart.ctx;
+        const area = chart.chartArea;
+
+        // Draw NOW line (red dashed, always)
+        if (meta.data[tideNowIdx]) {
+          const x = meta.data[tideNowIdx].x;
+          ctx2.save();
+          ctx2.beginPath();
+          ctx2.moveTo(x, area.top);
+          ctx2.lineTo(x, area.bottom);
+          ctx2.strokeStyle = 'rgba(192,57,43,0.55)';
+          ctx2.lineWidth = 1.5;
+          ctx2.setLineDash([3,3]);
+          ctx2.stroke();
+          // "NOW" label
+          ctx2.font = '8px "DM Mono", monospace';
+          ctx2.fillStyle = 'rgba(192,57,43,0.7)';
+          ctx2.fillText('NOW', x+3, area.top+9);
+          ctx2.restore();
+        }
+
+        // Draw scrub line (solid green) at current scrub position
+        const scrubIdx = chart._scrubIdx;
+        if (scrubIdx != null && scrubIdx !== tideNowIdx && meta.data[scrubIdx]) {
+          const xs = meta.data[scrubIdx].x;
+          const ys = meta.data[scrubIdx].y;
+          ctx2.save();
+          ctx2.beginPath();
+          ctx2.moveTo(xs, area.top);
+          ctx2.lineTo(xs, area.bottom);
+          ctx2.strokeStyle = '#2d6a4f';
+          ctx2.lineWidth = 1.2;
+          ctx2.setLineDash([]);
+          ctx2.stroke();
+          // Filled dot at the curve
+          ctx2.beginPath();
+          ctx2.arc(xs, ys, 4, 0, 2*Math.PI);
+          ctx2.fillStyle = '#2d6a4f';
+          ctx2.fill();
+          ctx2.beginPath();
+          ctx2.arc(xs, ys, 2, 0, 2*Math.PI);
+          ctx2.fillStyle = '#fff';
+          ctx2.fill();
+          ctx2.restore();
+        }
+
+        // Draw markers at extremes
+        tideExtremes.forEach(e => {
+          if (!meta.data[e.idx]) return;
+          const xe = meta.data[e.idx].x;
+          const ye = meta.data[e.idx].y;
+          ctx2.save();
+          ctx2.beginPath();
+          ctx2.arc(xe, ye, 3, 0, 2*Math.PI);
+          ctx2.fillStyle = e.type === 'HIGH' ? '#0d7f7f' : '#d4a96a';
+          ctx2.fill();
+          ctx2.restore();
+        });
+      }
+    }]
+  });
+
+  // Hook up pointer/touch events for scrubbing
+  attachTideScrub();
+}
+
+function attachTideScrub() {
+  const canvas = document.getElementById('tide-chart');
+  if (!canvas || !tideChartInst) return;
+  // Avoid double-binding by replacing the node's listeners via a flag
+  if (canvas._scrubBound) return;
+  canvas._scrubBound = true;
+
+  const handleMove = (clientX) => {
+    const rect = canvas.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const meta = tideChartInst.getDatasetMeta(0);
+    if (!meta.data.length) return;
+    // Find nearest point
+    let nearestIdx = 0, minDist = Infinity;
+    for (let i=0; i<meta.data.length; i++) {
+      const d = Math.abs(meta.data[i].x - x);
+      if (d < minDist) { minDist = d; nearestIdx = i; }
+    }
+    tideChartInst._scrubIdx = nearestIdx;
+    tideChartInst.draw();
+    updateTideReadout(nearestIdx, false);
+  };
+
+  const handleEnd = () => {
+    tideChartInst._scrubIdx = null;
+    tideChartInst.draw();
+    updateTideReadout(tideNowIdx, true);
+  };
+
+  canvas.addEventListener('mousemove', e => handleMove(e.clientX));
+  canvas.addEventListener('mouseleave', handleEnd);
+  canvas.addEventListener('touchstart', e => {
+    if (e.touches[0]) { e.preventDefault(); handleMove(e.touches[0].clientX); }
+  }, { passive:false });
+  canvas.addEventListener('touchmove', e => {
+    if (e.touches[0]) { e.preventDefault(); handleMove(e.touches[0].clientX); }
+  }, { passive:false });
+  canvas.addEventListener('touchend', handleEnd);
+}
+
+function updateTideReadout(idx, isNow) {
+  if (!tideSeries[idx]) return;
+  const p = tideSeries[idx];
+  const timeStr = p.time.toLocaleString('en-US', {
+    weekday: 'short', hour:'numeric', minute:'2-digit',
+    timeZone:'America/Costa_Rica'
+  });
+  // Determine state (rising/falling/peaking)
+  let state = isNow ? 'NOW' : 'AT';
+  if (idx > 0 && idx < tideSeries.length-1) {
+    const prev = tideSeries[idx-1].h, next = tideSeries[idx+1].h;
+    if (p.h > prev && p.h > next) state = isNow ? 'NOW · HIGH' : 'HIGH';
+    else if (p.h < prev && p.h < next) state = isNow ? 'NOW · LOW' : 'LOW';
+    else if (next > p.h) state = isNow ? 'NOW · RISING' : 'RISING';
+    else state = isNow ? 'NOW · FALLING' : 'FALLING';
+  }
+  document.getElementById('tide-state').textContent = state;
+  document.getElementById('tide-readout-time').textContent = timeStr;
+  document.getElementById('tide-readout-height').innerHTML = `${p.h.toFixed(2)}<span style="font-size:10px;color:var(--muted);font-family:'DM Mono'">m</span>`;
+}
+
+// ═══ FLOOD OVERRIDE · manual "it's flooding right now" report ════════════
+// Anyone can raise the alarm. For a life-safety tool a false alarm (people are
+// extra cautious) is the SAFE direction of error, so we don't gate raising it.
 // A report forces the index to HIGH / 100%, shows a red banner, logs to Supabase
 // if connected (so other guests see it too), and auto-expires after 6h so a stale
 // report clears itself. A true "only the owner can set it" would need a login.
-const OVERRIDE_WINDOW_MS = 6 * 3600 * 1000;
 const OVERRIDE_WINDOW_MS = 4 * 3600 * 1000;
 
 function getLocalOverride() {
-try {
-@@ -1123,13 +1177,39 @@ <h1>Barú Flood Index</h1>
+  try {
+    const raw = localStorage.getItem('flood_override');
+    if (!raw) return null;
+    const o = JSON.parse(raw);
+    if (!o || !o.ts) return null;
+    if (Date.now() - o.ts > OVERRIDE_WINDOW_MS) { localStorage.removeItem('flood_override'); return null; }
+    return o;
+  } catch(e) { return null; }
+}
 
 function floodOverrideActive() { return !!getLocalOverride(); }
 
@@ -113,32 +1203,765 @@ function clearFloodWater() {
 }
 
 function applyFloodOverride() {
-const o = getLocalOverride();
-const banner = document.getElementById('flood-banner');
-const btn = document.getElementById('flood-report-btn');
-if (!o) {
-if (banner) banner.style.display = 'none';
-if (btn) { btn.classList.remove('active'); btn.textContent = '⚠️ Report flooding now'; }
+  const o = getLocalOverride();
+  const banner = document.getElementById('flood-banner');
+  const btn = document.getElementById('flood-report-btn');
+  if (!o) {
+    if (banner) banner.style.display = 'none';
+    if (btn) { btn.classList.remove('active'); btn.textContent = '⚠️ Report flooding now'; }
     clearFloodWater();
-return;
-}
-// Force the score + ring to HIGH / 100%, overriding the calculated value
-@@ -1145,14 +1225,16 @@ <h1>Barú Flood Index</h1>
-const when = new Date(o.ts).toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', timeZone:'America/Costa_Rica' });
-if (banner) {
-banner.style.display = 'block';
-    banner.innerHTML = `⚠️ FLOODING REPORTED · index forced to HIGH<small>Reported ${when} · clears automatically after 6h · tap here if the river is NOT flooding</small>`;
+    return;
+  }
+  // Force the score + ring to HIGH / 100%, overriding the calculated value
+  G.score = 1; G.level = riskLevel(1);
+  const arc = document.getElementById('arc');
+  if (arc) { arc.style.strokeDashoffset = 0; arc.setAttribute('stroke', '#c0392b'); }
+  const snum = document.getElementById('snum');
+  if (snum) { snum.textContent = '100%'; snum.style.color = '#c0392b'; }
+  const slbl = document.getElementById('slbl');
+  if (slbl) { slbl.textContent = 'FLOODING'; slbl.style.color = '#c0392b'; }
+  const chips = document.getElementById('chips');
+  if (chips) chips.innerHTML = '<span class="chip" style="color:#c0392b">⚠️ FLOODING REPORTED</span>';
+  const when = new Date(o.ts).toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', timeZone:'America/Costa_Rica' });
+  if (banner) {
+    banner.style.display = 'block';
     banner.innerHTML = `⚠️ FLOODING REPORTED · index forced to HIGH<small>Reported ${when} · clears automatically after 4h · tap here if the river is NOT flooding</small>`;
-}
-if (btn) { btn.classList.add('active'); btn.textContent = '✓ Flooding reported — tap to clear'; }
+  }
+  if (btn) { btn.classList.add('active'); btn.textContent = '✓ Flooding reported — tap to clear'; }
   const water = document.getElementById('flood-water');
   if (water) { water.classList.add('on'); spawnFloodBubbles(); }
 }
 
 function reportFlooding() {
-if (floodOverrideActive()) { clearFloodOverride(); return; }
-  if (!confirm('Report that the Barú is flooding RIGHT NOW?\n\nThis forces the index to HIGH (100%) and logs it. It clears itself after 6 hours.')) return;
+  if (floodOverrideActive()) { clearFloodOverride(); return; }
   if (!confirm('Report that the Barú is flooding RIGHT NOW?\n\nThis forces the index to HIGH (100%) and logs it. It clears itself after 4 hours.')) return;
-try { localStorage.setItem('flood_override', JSON.stringify({ ts: Date.now() })); } catch(e) {}
-// Share it via the existing observations table (proven insert path) so other guests see HIGH too
-if (sbClient) {
+  try { localStorage.setItem('flood_override', JSON.stringify({ ts: Date.now() })); } catch(e) {}
+  // Share it via the existing observations table (proven insert path) so other guests see HIGH too
+  if (sbClient) {
+    sbClient.from('observations').insert({
+      condition: 'flooded',
+      rainfall: '',
+      water_color: '',
+      notes: 'Flooding reported via the Report-flooding button',
+      observer: '',
+      flood_score: 1
+    }).then(({ error }) => { if (error) console.warn('flood report log failed:', error.message); });
+  }
+  applyFloodOverride();
+}
+
+function clearFloodOverride() {
+  if (!confirm('Clear the flooding report and go back to the calculated index?')) return;
+  try { localStorage.removeItem('flood_override'); } catch(e) {}
+  loadAll();
+}
+
+// Cross-device mirror: if anyone logged a flooded/blocking observation in the last
+// 6h, reflect it as an override here too. Non-blocking; failures are ignored.
+async function checkSharedFloodReports() {
+  if (!sbClient || floodOverrideActive()) return;
+  try {
+    const since = new Date(Date.now() - OVERRIDE_WINDOW_MS).toISOString();
+    const { data, error } = await sbClient.from('observations')
+      .select('condition,created_at')
+      .gte('created_at', since)
+      .order('created_at', { ascending:false })
+      .limit(5);
+    if (error || !data) return;
+    if (data.some(o => o.condition === 'flooded' || o.condition === 'blocking')) {
+      localStorage.setItem('flood_override', JSON.stringify({ ts: new Date(data[0].created_at).getTime() }));
+      applyFloodOverride();
+    }
+  } catch(e) { /* ignore */ }
+}
+
+// ═══ MAIN LOAD ═══════════════════════════════════════════
+async function loadAll() {
+  const now = new Date();
+  const season = getSeasonByDate(now);
+  const phase = lunarPhase(lunarAge(now));
+
+  // Header — always shows Costa Rica local time
+  document.getElementById('htime').textContent = formatHeaderTime(now);
+  // Use Costa Rica time for month name in badge
+  const crMonth = now.toLocaleString('en-US', { month:'long', timeZone:'America/Costa_Rica' });
+  document.getElementById('hbadge').textContent = `${season.emoji} ${season.name} · ${crMonth}`;
+
+  // Tide
+  TIDE_STALE = (now.getTime() > TIDE_T1) || (now.getTime() < TIDE_T0);
+  const tideM = harmonicTide(now);
+  document.getElementById('ov-tid').textContent = tideM.toFixed(2);
+  drawMoon(phase, lunarAge(now));
+  buildTideChart(now);
+  const tideSrcEl = document.getElementById('tide-source');
+  if (tideSrcEl) {
+    const lastDay = new Date(TIDE_T1).toLocaleDateString('en-US', { month:'short', day:'numeric', timeZone:'America/Costa_Rica' });
+    tideSrcEl.innerHTML = TIDE_STALE
+      ? `⚠️ Tide table needs refresh — data ends ${lastDay}. Values shown are estimates until updated.`
+      : `Observed highs &amp; lows · Dominical (Bahía Uvita port) · via costarica.com · slide to read any time`;
+    tideSrcEl.style.color = TIDE_STALE ? '#c0392b' : 'var(--muted)';
+  }
+
+  // Kick off the independent sunset estimate right away so its network request
+  // runs in parallel with the main weather fetch below — not queued behind it.
+  // It writes only to #sunset-mini and never touches the flood score.
+  loadSunsetMini();
+
+  // Weather data
+  let weather = {};
+  const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${MOUTH.lat}&longitude=${MOUTH.lon}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&hourly=soil_moisture_0_to_1cm&daily=precipitation_sum,uv_index_max,sunrise,sunset&past_days=3&forecast_days=7&timezone=America%2FCosta_Rica`;
+  try {
+    weather = await fetchJSON(weatherUrl, 10000);
+  } catch(e) {
+    console.warn('OpenMeteo failed:', e.message);
+  }
+
+  const cur = weather?.current || {};
+  const daily = weather?.daily || {};
+  const hourly = weather?.hourly || {};
+  const rain24 = daily.precipitation_sum?.[3] ?? 0;
+  const rain72 = [1,2,3].reduce((a,i) => a + (daily.precipitation_sum?.[i] ?? 0), 0);
+  const soilArr = hourly.soil_moisture_0_to_1cm || [];
+  const soilVal = soilArr.length ? soilArr[soilArr.length-1] : null;
+
+  const rainR = scoreRain(rain24, rain72);
+  const soilR = scoreSoil(soilVal);
+  const tideR = scoreTide(tideM);
+  // Soil status label — explains where on the U-curve we are
+  let soilLabel = '';
+  if (soilVal != null) {
+    const vn = soilVal / 0.42;
+    if (vn < 0.20)      soilLabel = '· bone dry · hydrophobic';
+    else if (vn < 0.35) soilLabel = '· rewetting';
+    else if (vn < 0.65) soilLabel = '· absorbing well';
+    else if (vn < 0.85) soilLabel = '· filling up';
+    else                soilLabel = '· SATURATED';
+  }
+  const score = calcRisk(rainR, phase.risk, soilR, tideR, season.base);
+  const level = riskLevel(score);
+  const pct = Math.round(score * 100);
+
+  G = { score, level, rain24, rain72, soilVal, tideM, phase, season, rainR, soilR, tideR, daily, now };
+
+  // Ring
+  const circ = 364.4;
+  document.getElementById('arc').style.strokeDashoffset = circ - circ*score;
+  document.getElementById('arc').setAttribute('stroke', level.color);
+  document.getElementById('snum').textContent = pct + '%';
+  document.getElementById('snum').style.color = level.color;
+  document.getElementById('slbl').textContent = level.label;
+  document.getElementById('slbl').style.color = level.color;
+  document.getElementById('chips').innerHTML =
+    `<span class="chip" style="color:${level.color}">${level.label}</span>
+     <span class="chip" style="color:var(--teal)">${phase.emoji} ${phase.name}</span>
+     <span class="chip" style="color:var(--muted)">${season.emoji} ${season.name}</span>`;
+
+  // Stats
+  document.getElementById('ov-r24').textContent = rain24.toFixed(1);
+  document.getElementById('ov-r72').textContent = rain72.toFixed(1);
+  document.getElementById('ov-tmp').textContent = cur.temperature_2m?.toFixed(1) ?? '—';
+  document.getElementById('ov-hum').textContent = cur.relative_humidity_2m ?? '—';
+  document.getElementById('ov-wnd').textContent = cur.wind_speed_10m?.toFixed(0) ?? '—';
+  document.getElementById('ov-soi').textContent = soilVal?.toFixed(3) ?? '—';
+
+  // Sun times (today) from the daily block — index 3 = today (past_days=3)
+  const srEl = document.getElementById('ov-sunrise'); if (srEl) srEl.textContent = daily.sunrise?.[3] ? fmtSunsetTime(daily.sunrise[3]) : '—';
+  const ssEl = document.getElementById('ov-sunset');  if (ssEl) ssEl.textContent  = daily.sunset?.[3]  ? fmtSunsetTime(daily.sunset[3])  : '—';
+
+  // Factor bars
+  const factors = [
+    { label:`Rainfall 24h:${rain24.toFixed(1)}mm 72h:${rain72.toFixed(1)}mm`, val:rainR,    w:'40%', color:'var(--teal)' },
+    { label:`Lunar — ${phase.name}`,                                          val:phase.risk, w:'20%', color:'#9b59b6' },
+    { label:`Soil ${soilVal?.toFixed(3) ?? '—'} m³/m³ ${soilLabel}`,          val:soilR,    w:'18%', color:'var(--sand)' },
+    { label:`Tide ${tideM.toFixed(2)}m`,                                      val:tideR,    w:'14%', color:'var(--teal-light)' },
+    { label:`Season — ${season.name}`,                                        val:season.base, w:'8%', color:'var(--green)' },
+  ];
+  document.getElementById('ov-bars').innerHTML = factors.map(f => `
+    <div class="bar-row">
+      <div class="bar-meta"><span>${f.label}</span><span>${(f.val*100).toFixed(0)}% ×${f.w}</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${f.val*100}%;background:${f.color}"></div></div>
+    </div>`).join('');
+  document.getElementById('ov-formula').innerHTML =
+    `Rain×0.40 + Lunar×0.20 + Soil×0.18 + Tide×0.14 + Season×0.08<br>= <span style="color:${level.color}">${score.toFixed(3)} → ${level.label}</span>`;
+
+  document.getElementById('ov-loading').style.display = 'none';
+  document.getElementById('ov-content').style.display = 'block';
+
+  // A manual flood report (tapped button) forces HIGH regardless of the calculation
+  applyFloodOverride();
+  checkSharedFloodReports();
+
+  buildForecast();
+  loadSurf();
+  // Auto-log every 3 hours if Supabase connected
+  if (sbClient && (Date.now() - lastLogTime) >= LOG_INTERVAL_MS) {
+    logReading();
+  }
+}
+
+// ═══ FORECAST ════════════════════════════════════════════
+function buildForecast() {
+  const daily = G.daily;
+  if (!daily?.time) return;
+  const todayIdx = 3;
+  const days = daily.time.slice(todayIdx, todayIdx+7);
+  const rains = daily.precipitation_sum?.slice(todayIdx, todayIdx+7) || [];
+  const labels = ['Today','Tomorrow'];
+  const strip = days.map((date, i) => {
+    const d = new Date(date + 'T12:00:00-06:00');
+    const r = rains[i] || 0;
+    const ph = lunarPhase(lunarAge(d));
+    const dSeason = getSeasonByDate(d);
+    const rR = scoreRain(r, r*2);
+    const s = calcRisk(rR, ph.risk, G.soilR, 0.3, dSeason.base);
+    const lv = riskLevel(s);
+    const name = i<2 ? labels[i] : DAYNAMES[d.getDay()];
+    return `<div class="fc-day"><div class="fc-day-name">${name}</div><div class="fc-score" style="color:${lv.color}">${Math.round(s*100)}%</div><div class="fc-rain">💧${r.toFixed(0)}mm</div></div>`;
+  }).join('');
+  document.getElementById('fc-strip-wrap').innerHTML = `<div class="fc-strip">${strip}</div>`;
+
+  if (fcChartInst) fcChartInst.destroy();
+  const ctx = document.getElementById('fc-chart').getContext('2d');
+  fcChartInst = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels: days.map((d,i) => i===0?'Today' : i===1?'Tmrw' : DAYNAMES[new Date(d+'T12:00:00').getDay()]),
+      datasets:[{ label:'Rain mm', data:rains, backgroundColor:'rgba(72,202,228,0.5)', borderColor:'#48cae4', borderWidth:1, borderRadius:4 }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false} },
+      scales:{
+        x:{ grid:{display:false}, ticks:{ font:{family:'DM Mono',size:9}, color:'#5a7a6a' } },
+        y:{ grid:{color:'rgba(0,0,0,0.05)'}, ticks:{ font:{family:'DM Mono',size:9}, color:'#5a7a6a' } }
+      }
+    }
+  });
+
+  // Fire ECMWF comparison independently — never let it block forecast rendering
+  buildModelComparison(days, rains);
+}
+
+// ═══ MODEL COMPARISON · GFS vs ECMWF ═════════════════════
+async function buildModelComparison(gfsDays, gfsRains) {
+  const wrap = document.getElementById('model-compare');
+  if (!wrap) return;
+  // Default GFS rains come from the main fetch (best-match, GFS-dominant in this region).
+  // Fetch ECMWF separately. If it fails, show GFS-only with a note.
+  const ecmwfUrl = `https://api.open-meteo.com/v1/forecast?latitude=${MOUTH.lat}&longitude=${MOUTH.lon}&daily=precipitation_sum&forecast_days=7&timezone=America%2FCosta_Rica&models=ecmwf_ifs025`;
+  let ecmwfRains = null;
+  try {
+    const d = await fetchJSON(ecmwfUrl, 9000);
+    ecmwfRains = d?.daily?.precipitation_sum || [];
+  } catch(e) {
+    console.warn('ECMWF fetch failed:', e.message);
+  }
+
+  if (!ecmwfRains || ecmwfRains.length === 0) {
+    wrap.innerHTML = '<div class="err" style="padding:6px 0">ECMWF model unavailable right now — showing GFS only. Try again later.</div>';
+    return;
+  }
+
+  // Align lengths — show min(7, both)
+  const n = Math.min(gfsRains.length, ecmwfRains.length, 7);
+  let disagreeCount = 0;
+  let maxDisagree = 0;
+  const rows = [];
+  for (let i = 0; i < n; i++) {
+    const g = gfsRains[i] || 0;
+    const e = ecmwfRains[i] || 0;
+    const diff = Math.abs(g - e);
+    // Disagreement threshold: 15mm/day OR (one model >25mm and other <5mm)
+    const disagree = diff >= 15 || (Math.max(g,e) >= 25 && Math.min(g,e) < 5);
+    if (disagree) { disagreeCount++; if (diff > maxDisagree) maxDisagree = diff; }
+    const dateStr = gfsDays[i];
+    const d = new Date(dateStr + 'T12:00:00-06:00');
+    const dayName = i === 0 ? 'TODAY' : i === 1 ? 'TMRW' : DAYNAMES[d.getDay()].toUpperCase();
+    rows.push(`<div class="mc-row ${disagree ? 'mc-warn' : ''}">
+      <div class="mc-day">${dayName}</div>
+      <div><span class="mc-val mc-gfs">${g.toFixed(1)}</span><span style="font-size:8px;color:var(--muted)"> mm GFS</span></div>
+      <div><span class="mc-val mc-ecmwf">${e.toFixed(1)}</span><span style="font-size:8px;color:var(--muted)"> mm ECMWF</span></div>
+      <div class="mc-flag ${disagree ? 'mc-disagree' : ''}">${disagree ? '⚠️' : '✓'}</div>
+    </div>`);
+  }
+  const summary = disagreeCount === 0
+    ? `<span style="color:var(--green)">✓ Models agree on all ${n} days.</span> Forecast confidence is high.`
+    : `<span style="color:#c0392b">⚠️ Disagreement on ${disagreeCount} of ${n} days</span> (max ${maxDisagree.toFixed(1)}mm). Lower confidence — plan for the higher number.`;
+  wrap.innerHTML = rows.join('') + `<div class="mc-summary">${summary}</div>`;
+}
+
+// ═══ WATERSHED ═══════════════════════════════════════════
+let wsLoaded = false;
+async function loadWatershed() {
+  if (wsLoaded) return;
+  // Resilient fetch: use Promise.allSettled instead of Promise.all so one failure doesn't crash everything
+  const settled = await Promise.allSettled(Object.entries(COORDS).map(async ([key, c]) => {
+    const d = await fetchJSON(`https://api.open-meteo.com/v1/forecast?latitude=${c.lat}&longitude=${c.lon}&daily=precipitation_sum&past_days=3&forecast_days=1&timezone=America%2FCosta_Rica`, 10000);
+    const today = d.daily?.precipitation_sum?.[3] ?? 0;
+    const prev3 = (d.daily?.precipitation_sum?.slice(0,3) || []).reduce((a,b) => a + (b||0), 0);
+    return { key, label:c.label, today, prev3 };
+  }));
+  const results = settled.map((s, i) => {
+    const [key, c] = Object.entries(COORDS)[i];
+    return s.status === 'fulfilled' ? s.value : { key, label:c.label, today:0, prev3:0 };
+  });
+
+  const maxToday = Math.max(...results.map(r => r.today));
+  const avg24 = results.reduce((a, r) => a + r.today, 0) / results.length;
+  const avg72 = results.reduce((a, r) => a + r.prev3, 0) / results.length;
+  const mouthToday = results.find(r => r.key === 'mouth')?.today ?? 0;
+  const upstream = results.filter(r => r.key !== 'mouth');
+  const upAvg = upstream.length ? upstream.reduce((a, r) => a + r.today, 0) / upstream.length : 0;
+  const delta = upAvg - mouthToday;
+  const deltaText = delta > 5 ? `⚠️ Upstream <strong>${delta.toFixed(1)}mm heavier</strong> — surge possible in 2–6h`
+                  : delta < -5 ? `✅ More rain at mouth than upstream`
+                  : `≈ Uniform rainfall across watershed`;
+
+  document.getElementById('ws-rows').innerHTML = results.map(r => `
+    <div class="ws-row">
+      <div style="flex:1"><div style="font-size:10px">${r.label}</div><div style="font-size:8px;color:var(--muted)">72h: ${r.prev3.toFixed(1)}mm</div></div>
+      <div class="ws-bar-wrap"><div class="ws-bar" style="width:${maxToday>0 ? (r.today/maxToday*100) : 0}%"></div></div>
+      <div class="ws-val">${r.today.toFixed(1)}<span style="font-size:9px;color:var(--muted)">mm</span></div>
+    </div>`).join('');
+  document.getElementById('ws-summary').innerHTML = `<strong>Avg 24h: ${avg24.toFixed(1)}mm · 72h: ${avg72.toFixed(1)}mm</strong><br>${deltaText}`;
+
+  if (wsChartInst) wsChartInst.destroy();
+  const ctx = document.getElementById('ws-chart').getContext('2d');
+  wsChartInst = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels: results.map(r => r.label.split(' ')[0]),
+      datasets:[
+        { label:'Today', data:results.map(r => r.today), backgroundColor:'rgba(72,202,228,0.55)', borderRadius:4 },
+        { label:'72h',   data:results.map(r => r.prev3), backgroundColor:'rgba(45,106,79,0.25)',  borderRadius:4 }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ labels:{ font:{family:'DM Mono',size:8}, color:'#5a7a6a' } } },
+      scales:{
+        x:{ grid:{display:false}, ticks:{ font:{family:'DM Mono',size:8}, color:'#5a7a6a' } },
+        y:{ grid:{color:'rgba(0,0,0,0.05)'}, ticks:{ font:{family:'DM Mono',size:8}, color:'#5a7a6a' } }
+      }
+    }
+  });
+
+  document.getElementById('ws-loading').style.display = 'none';
+  document.getElementById('ws-content').style.display = 'block';
+  wsLoaded = true;
+}
+
+// ═══ STATIONS ════════════════════════════════════════════
+let stLoaded = false;
+async function loadStations() {
+  if (stLoaded) return;
+  document.getElementById('st-loading').style.display = 'block';
+  document.getElementById('st-loading').innerHTML = '<div class="loader"></div>';
+  document.getElementById('st-content').style.display = 'none';
+
+  const settled = await Promise.allSettled(STATIONS.map(async s => {
+    const d = await fetchJSON(`https://api.open-meteo.com/v1/forecast?latitude=${s.lat}&longitude=${s.lon}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,wind_direction_10m&daily=precipitation_sum,temperature_2m_max,temperature_2m_min&forecast_days=3&timezone=America%2FCosta_Rica`, 10000);
+    return { ...s, data:d, ok:true };
+  }));
+  const results = settled.map((s, i) => s.status === 'fulfilled' ? s.value : { ...STATIONS[i], data:{}, ok:false });
+
+  if (!results.some(r => r.ok)) {
+    document.getElementById('st-loading').innerHTML = '<div class="err">Could not load station data — check connection and try again</div>';
+    return;
+  }
+
+  document.getElementById('st-grid').innerHTML = results.map(s => {
+    const c = s.data?.current || {};
+    const day = s.data?.daily || {};
+    const rain24 = day.precipitation_sum?.[0] ?? 0;
+    const tmax = day.temperature_2m_max?.[0]?.toFixed(1) ?? '—';
+    const tmin = day.temperature_2m_min?.[0]?.toFixed(1) ?? '—';
+    const windDir = degToCompass(c.wind_direction_10m);
+    if (!s.ok) return `<div class="station-card" style="border:1px solid ${s.color}33;background:rgba(255,255,255,0.5)"><div style="font-size:11px;color:${s.color};letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px">${s.label}</div><div class="err">Unavailable</div></div>`;
+    return `
+      <div class="station-card" style="border:1px solid ${s.color}33;background:rgba(255,255,255,0.55)">
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px">
+          <div style="font-size:11px;font-weight:500;color:${s.color};letter-spacing:0.12em;text-transform:uppercase">${s.label}</div>
+          <div style="font-size:8px;color:var(--muted)">${s.dist}</div>
+        </div>
+        <div class="grid3" style="margin-bottom:10px">
+          <div style="text-align:center"><div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--green-dark)">${c.temperature_2m?.toFixed(1) ?? '—'}</div><div style="font-size:8px;color:var(--muted)">°C temp</div></div>
+          <div style="text-align:center"><div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--teal)">${rain24.toFixed(1)}</div><div style="font-size:8px;color:var(--muted)">mm rain</div></div>
+          <div style="text-align:center"><div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--green-dark)">${c.wind_speed_10m?.toFixed(0) ?? '—'}</div><div style="font-size:8px;color:var(--muted)">km/h ${windDir}</div></div>
+        </div>
+        <div style="margin-bottom:6px">
+          <div style="display:flex;justify-content:space-between;font-size:8px;color:var(--muted);margin-bottom:3px"><span>Humidity</span><span>${c.relative_humidity_2m ?? '—'}%</span></div>
+          <div style="height:5px;background:rgba(0,0,0,0.07);border-radius:3px"><div style="height:100%;width:${c.relative_humidity_2m ?? 0}%;background:var(--green-light);border-radius:3px"></div></div>
+        </div>
+        <div style="font-size:8px;color:var(--muted)">High ${tmax}° · Low ${tmin}°</div>
+      </div>`;
+  }).join('');
+
+  if (stRainChartInst) stRainChartInst.destroy();
+  const ctx = document.getElementById('st-rain-chart').getContext('2d');
+  stRainChartInst = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels: results.map(s => s.label),
+      datasets:[{
+        data: results.map(s => s.data?.daily?.precipitation_sum?.[0] ?? 0),
+        backgroundColor: results.map(s => s.color + 'aa'),
+        borderColor: results.map(s => s.color),
+        borderWidth:1, borderRadius:6
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false} },
+      scales:{
+        x:{ grid:{display:false}, ticks:{ font:{family:'DM Mono',size:10}, color:'#5a7a6a' } },
+        y:{ grid:{color:'rgba(0,0,0,0.05)'}, ticks:{ font:{family:'DM Mono',size:9}, color:'#5a7a6a' } }
+      }
+    }
+  });
+
+  document.getElementById('st-loading').style.display = 'none';
+  document.getElementById('st-content').style.display = 'block';
+  stLoaded = true;
+}
+
+// ═══ SUPABASE LOGGING (throttled) ════════════════════════
+async function logReading() {
+  if (!sbClient || !G.score) return;
+  try {
+    const { error } = await sbClient.from('flood_readings').insert({
+      score: G.score,
+      risk_level: G.level.label,
+      rain_24h: G.rain24,
+      rain_72h: G.rain72,
+      soil: G.soilVal,
+      tide_m: G.tideM,
+      lunar_phase: G.phase.name,
+    });
+    if (error) throw error;
+    lastLogTime = Date.now();
+    localStorage.setItem('last_log_time', String(lastLogTime));
+    console.log('Reading logged to Supabase');
+  } catch(e) {
+    console.warn('Supabase log failed:', e.message || e);
+  }
+}
+
+// ═══ HISTORY ═════════════════════════════════════════════
+async function loadHistory() {
+  if (!sbClient) {
+    document.getElementById('hist-banner').style.display = 'block';
+    document.getElementById('hist-log').innerHTML = '<div style="font-size:9px;color:var(--muted)">Connect Supabase in Config to see history.</div>';
+    return;
+  }
+  document.getElementById('hist-banner').style.display = 'none';
+  try {
+    const { data, error } = await sbClient.from('flood_readings').select('*').order('created_at', { ascending:false }).limit(200);
+    if (error) throw error;
+    if (!data?.length) {
+      document.getElementById('hist-log').innerHTML = '<div style="font-size:9px;color:var(--muted)">No readings yet. The app auto-logs once every 3 hours when open.</div>';
+      return;
+    }
+    const recent = [...data].reverse().slice(-60);
+    if (histChartInst) histChartInst.destroy();
+    const ctx = document.getElementById('hist-chart').getContext('2d');
+    histChartInst = new Chart(ctx, {
+      type:'line',
+      data:{
+        labels: recent.map(r => {
+          const d = new Date(r.created_at);
+          return d.toLocaleDateString('en-US', { month:'numeric', day:'numeric', timeZone:'America/Costa_Rica' });
+        }),
+        datasets:[{ label:'Score', data:recent.map(r => Math.round(r.score*100)), borderColor:'#2d6a4f', backgroundColor:'rgba(45,106,79,0.08)', borderWidth:2, pointRadius:2, fill:true, tension:0.4 }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false} },
+        scales:{
+          x:{ grid:{display:false}, ticks:{ font:{family:'DM Mono',size:7}, color:'#5a7a6a', maxTicksLimit:8 } },
+          y:{ min:0, max:100, grid:{color:'rgba(0,0,0,0.05)'}, ticks:{ font:{family:'DM Mono',size:8}, color:'#5a7a6a' } }
+        }
+      }
+    });
+    document.getElementById('hist-log').innerHTML = data.slice(0, 30).map(r => {
+      const d = new Date(r.created_at);
+      const lv = riskLevel(r.score);
+      const dateStr = d.toLocaleDateString('en-US', { month:'short', day:'numeric', timeZone:'America/Costa_Rica' });
+      const timeStr = d.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', timeZone:'America/Costa_Rica' });
+      return `<div class="log-row"><div class="log-time">${dateStr}<br>${timeStr}</div><div class="log-score" style="color:${lv.color}">${Math.round(r.score*100)}%</div><div class="log-note">Rain ${r.rain_24h?.toFixed(0) ?? '—'}mm · ${r.lunar_phase ?? ''}</div><div class="log-tag">auto</div></div>`;
+    }).join('');
+  } catch(e) {
+    document.getElementById('hist-log').innerHTML = `<div class="err">Could not load: ${e.message}</div>`;
+  }
+}
+
+// ═══ OBSERVATIONS ════════════════════════════════════════
+function checkObsBanner() {
+  document.getElementById('obs-banner').style.display = sbClient ? 'none' : 'block';
+}
+async function loadObsLog() {
+  if (!sbClient) return;
+  try {
+    const { data, error } = await sbClient.from('observations').select('*').order('created_at', { ascending:false }).limit(20);
+    if (error) throw error;
+    if (!data?.length) return;
+    const condMap = { clear_low:'🏞 Clear & Low', normal:'🌊 Normal', elevated:'⚠️ Elevated', flooded:'🚨 Flooded', blocking:'⛔ Blocking' };
+    document.getElementById('obs-log').innerHTML = data.map(o => {
+      const d = new Date(o.created_at);
+      const dateStr = d.toLocaleDateString('en-US', { month:'short', day:'numeric', timeZone:'America/Costa_Rica' });
+      const timeStr = d.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', timeZone:'America/Costa_Rica' });
+      return `<div class="log-row"><div class="log-time">${dateStr}<br>${timeStr}</div><div class="log-note">${condMap[o.condition] || o.condition || ''}${o.notes ? `<br><span style="color:var(--muted)">${o.notes}</span>` : ''}</div><div class="log-tag manual">field</div></div>`;
+    }).join('');
+  } catch(e) {
+    console.warn('loadObsLog:', e.message);
+  }
+}
+async function submitObs() {
+  const btn = document.getElementById('obs-btn');
+  document.getElementById('obs-err').textContent = '';
+  document.getElementById('obs-ok').style.display = 'none';
+  if (!sbClient) {
+    document.getElementById('obs-err').textContent = 'Connect Supabase in Config first';
+    return;
+  }
+  const condition = document.getElementById('obs-cond').value;
+  if (!condition) {
+    document.getElementById('obs-err').textContent = 'Please select a river condition';
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  try {
+    const { error } = await sbClient.from('observations').insert({
+      condition,
+      rainfall: document.getElementById('obs-rain').value,
+      water_color: document.getElementById('obs-color').value,
+      notes: document.getElementById('obs-notes').value.trim(),
+      observer: document.getElementById('obs-name').value.trim(),
+      flood_score: G.score || null,
+    });
+    if (error) throw error;
+    document.getElementById('obs-ok').style.display = 'block';
+    document.getElementById('obs-cond').value = '';
+    document.getElementById('obs-rain').value = '';
+    document.getElementById('obs-color').value = '';
+    document.getElementById('obs-notes').value = '';
+    document.getElementById('obs-name').value = '';
+    loadObsLog();
+  } catch(e) {
+    document.getElementById('obs-err').textContent = 'Save failed: ' + e.message;
+  }
+  btn.disabled = false;
+  btn.textContent = 'Save Observation';
+}
+
+// ═══ JOURNAL ═════════════════════════════════════════════
+const FLOOD_RECORD = [
+  { date:'May 14', year:2025, day:'Wed', note:'Major flood. River impassable at the crossing.' },
+  { date:'May 23', year:2025, day:'Fri', note:'Flooded. Second event in 10 days — ground already saturated.' },
+  { date:'Jun 3',  year:2025, day:'Tue', note:'Flooded. Green season establishing, river surging regularly.' },
+  { date:'Jun 16', year:2025, day:'Mon', note:'Flooded. Mid-June surge — peak wet season building.' },
+  { date:'Jul 26', year:2025, day:'Sat', note:'Flooded. Late July event, full wet season conditions.' },
+  { date:'Aug 14', year:2025, day:'Thu', note:'Flooded. August surge — historically the most active month.' },
+];
+const JOURNAL_DATA = [
+  { day:1, wd:'Thu', icons:'⛅🌤️', text:'Partly cloudy, sun in and out all day.', tags:['partly cloudy'] },
+  { day:2, wd:'Fri', icons:'☀️🌬️🌧️', text:'Beautiful sunshine day, just a few clouds. Little windy in the afternoon. Rain at night.', tags:['sun','wind','rain at night'] },
+  { day:3, wd:'Sat', icons:'☁️🌅', text:'Overcast, cloudy all day. Cleared beautifully for sunset.', tags:['overcast','sunset clear'] },
+  { day:4, wd:'Sun', icons:'☀️', text:'Beautiful summer day start to finish.', tags:['sun','perfect'] },
+  { day:5, wd:'Mon', icons:'⛅🌦️', text:'Partly cloudy, partly sunny. Rain clouds around.', tags:['partly cloudy','rain clouds'] },
+  { day:6, wd:'Tue', icons:'🌬️⛅🌧️', text:'Partly cloudy, windy. Aguaceros and rain after sunset.', tags:['wind','aguaceros','rain at night'] },
+  { day:7, wd:'Wed', icons:'☀️🌩️💦🌅', text:'Sunshine with some random dark cloud patches. A little steamy, nice at sunset. Rain showers in the night.', tags:['sun','steamy','rain at night'] },
+  { day:8, wd:'Thu', icons:'☁️🌤️🌧️', text:'Cloudy and overcast. Sun pops through mid-day. Rains at night.', tags:['overcast','rain at night'] },
+  { day:9, wd:'Fri', icons:'☀️', text:'Sunny, beautiful summer day.', tags:['sun','perfect'] },
+  { day:10, wd:'Sat', icons:'☀️🌫️', text:'Sunny all day. Misted around sunset.', tags:['sun','mist at sunset'] },
+  { day:11, wd:'Sun', icons:'☀️🌅🌩️', text:'Sunny all day. Yellow skies at sunset. Aguaceros in the evening into the night.', tags:['sun','aguaceros','rain at night'] },
+  { day:12, wd:'Mon', icons:'☀️🌬️⛰️🌌', text:'Sunny all day. Dark clouds in the mountains, windy — thought it would storm but never did. Super clear skies at night.', tags:['sun','wind','mountain clouds','clear night'] },
+];
+function tagClass(t) {
+  if (t.includes('rain') || t.includes('aguacero')) return 'rain';
+  if (t.includes('wind')) return 'wind';
+  if (t.includes('sun') || t.includes('perfect')) return 'sun';
+  return '';
+}
+let journalBuilt = false;
+function buildJournal() {
+  if (journalBuilt) return;
+  const months = {};
+  FLOOD_RECORD.forEach(e => { const m = e.date.split(' ')[0]; months[m] = (months[m]||0) + 1; });
+  document.getElementById('flood-record').innerHTML =
+    `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">${
+      Object.entries(months).map(([m,c]) => `<div style="background:rgba(192,57,43,0.08);border:1px solid rgba(192,57,43,0.15);border-radius:8px;padding:6px 12px;text-align:center"><div style="font-family:'Playfair Display',serif;font-size:18px;color:#c0392b">${c}</div><div style="font-size:8px;letter-spacing:0.1em;color:var(--muted)">${m.toUpperCase()}</div></div>`).join('')
+    }<div style="background:rgba(192,57,43,0.05);border:1px solid rgba(192,57,43,0.10);border-radius:8px;padding:6px 12px;text-align:center"><div style="font-family:'Playfair Display',serif;font-size:18px;color:#c0392b">${FLOOD_RECORD.length}</div><div style="font-size:8px;letter-spacing:0.1em;color:var(--muted)">TOTAL</div></div></div>` +
+    FLOOD_RECORD.map(e => `<div class="flood-event"><div class="flood-dot"></div><div class="flood-date">${e.date}<div class="flood-sub">${e.day} · ${e.year}</div></div><div class="flood-note">${e.note}</div><div class="flood-badge">flooded</div></div>`).join('');
+  document.getElementById('journal').innerHTML = JOURNAL_DATA.map(e => `
+    <div class="j-entry">
+      <div class="j-date"><div class="j-day">${e.day}</div><div class="j-wd">${e.wd}</div></div>
+      <div class="j-body">
+        <div class="j-icons">${e.icons}</div>
+        <div class="j-text">${e.text}</div>
+        <div class="j-tags">${e.tags.map(t => `<span class="j-tag ${tagClass(t)}">${t}</span>`).join('')}</div>
+      </div>
+    </div>`).join('');
+  journalBuilt = true;
+}
+
+// ═══ SUNSET MINI · tonight's sunset quality (1–10) ══════════
+// Inverse of the flood model, for sky color — cross-referenced against how
+// SunsetWx / Alpenglow score it. High & mid clouds are the canvas that catches
+// low-angle light; low cloud on the western (ocean) horizon blocks the light
+// path; drier, cleaner air = punchier color; a MODERATE aerosol/dust load
+// enriches reds while a heavy load mutes them. Built on Open-Meteo cloud-by-
+// altitude + humidity + visibility, with the Air Quality API for dust. Fully
+// independent of the flood index — if it fails, the flood tool is untouched.
+//
+// MODEL STRUCTURE (revised): a "color potential" (the canvas of high/mid cloud
+// plus dry, clean air) is MULTIPLIED by a "visibility gate" (how much sunset
+// light actually reaches the eye). Low cloud on the ocean horizon and full
+// overcast both collapse the gate toward ~0.1, so a blocked sky bottoms out at
+// 1–2 no matter how good the high clouds are — you can't score what you can't see.
+function ssHighCloud(ch){ if(ch<15)return 0.20; if(ch<40)return 0.20+(ch-15)/25*0.70; if(ch<70)return 0.90+(ch-40)/30*0.10; return Math.max(0.55,1.00-(ch-70)/30*0.45); }
+function ssMidCloud(cm){ if(cm<15)return 0.25; if(cm<45)return 0.25+(cm-15)/30*0.70; if(cm<75)return 0.95-(cm-45)/30*0.35; return Math.max(0.30,0.60-(cm-75)/25*0.30); }
+function ssHumidity(rh){ if(rh==null)return 0.5; if(rh<60)return 1.00; if(rh<75)return 1.00-(rh-60)/15*0.30; if(rh<88)return 0.70-(rh-75)/13*0.35; return Math.max(0.15,0.35-(rh-88)/12*0.20); }
+function ssAir(visM,aod,dust){
+  const km=(visM==null?24000:visM)/1000;
+  let v; if(km>=20)v=1.0; else if(km>=10)v=0.7+(km-10)/10*0.3; else if(km>=5)v=0.4+(km-5)/5*0.3; else v=Math.max(0.15,km/5*0.4);
+  let a=0.75; if(aod!=null){ if(aod<0.10)a=0.80; else if(aod<0.40)a=0.80+(aod-0.10)/0.30*0.20; else if(aod<0.80)a=1.00-(aod-0.40)/0.40*0.45; else a=Math.max(0.25,0.55-(aod-0.80)/0.80*0.30); }
+  let dpen=1.0; if(dust!=null&&dust>40)dpen=Math.max(0.6,1-(dust-40)/160*0.4);
+  return Math.min(1,(v*0.5+a*0.5)*dpen);
+}
+// VISIBILITY GATE — multiplicative. Low cloud on the western horizon blocks the
+// light path; total overcast leaves no gap for color to come through. Either one
+// near 100% drives the whole score to the floor.
+function ssLowGate(cl){
+  if(cl<10) return 1.00;
+  if(cl<30) return 1.00-(cl-10)/20*0.30;            // 1.00 → 0.70
+  if(cl<55) return 0.70-(cl-30)/25*0.40;            // 0.70 → 0.30
+  if(cl<80) return 0.30-(cl-55)/25*0.18;            // 0.30 → 0.12
+  return Math.max(0.06,0.12-(cl-80)/20*0.06);       // 0.12 → 0.06
+}
+function ssGapGate(tot){
+  if(tot<70) return 1.00;
+  if(tot<88) return 1.00-(tot-70)/18*0.45;          // 1.00 → 0.55
+  if(tot<96) return 0.55-(tot-88)/8*0.35;           // 0.55 → 0.20
+  return Math.max(0.10,0.20-(tot-96)/4*0.10);       // 0.20 → 0.10
+}
+function ssNum(x){ return (x==null||isNaN(x))?0:x; }
+function sunsetHourKey(iso){ const m=iso&&iso.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})/); if(!m)return null; let h=parseInt(m[2],10); if(parseInt(m[3],10)>=30)h=(h+1)%24; return `${m[1]}T${String(h).padStart(2,'0')}:00`; }
+function fmtSunsetTime(iso){ const m=iso&&iso.match(/T(\d{2}):(\d{2})/); if(!m)return ''; let h=parseInt(m[1],10); const mn=m[2]; const ap=h>=12?'PM':'AM'; let h12=h%12; if(h12===0)h12=12; return `${h12}:${mn} ${ap}`; }
+function sunsetMiniColor(t){ if(t>=8)return '#e8590c'; if(t>=6)return '#e9a825'; if(t>=4)return '#9b8a3a'; return '#6a8a9a'; }
+function sunsetMiniNote(d){
+  if(d.cl>=55) return 'low cloud may block it';
+  if(d.tot>=88) return 'overcast — flat light';
+  if(d.tot<15 && d.ch<15) return 'clear but bare';
+  if(d.ch>=30||d.cm>=30) return d.cl<25?'high clouds, clear horizon':'good clouds aloft';
+  return 'mixed sky';
+}
+
+let sunMiniDone = false;
+async function loadSunsetMini(){
+  const el = document.getElementById('sunset-mini');
+  if(!el || sunMiniDone) return;
+  // Fire both requests at once — the air-quality call is optional, so it should
+  // never add its latency on top of the cloud fetch. Worst case is max(9s,8s).
+  const wUrl  = `https://api.open-meteo.com/v1/forecast?latitude=${MOUTH.lat}&longitude=${MOUTH.lon}&hourly=cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,relative_humidity_2m,visibility&daily=sunset&forecast_days=2&timezone=America%2FCosta_Rica`;
+  const aqUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${MOUTH.lat}&longitude=${MOUTH.lon}&hourly=aerosol_optical_depth,dust&forecast_days=2&timezone=America%2FCosta_Rica`;
+  const [wRes, aqRes] = await Promise.allSettled([ fetchJSON(wUrl, 9000), fetchJSON(aqUrl, 8000) ]);
+  if (wRes.status !== 'fulfilled') { console.warn('sunset mini fetch failed:', wRes.reason?.message); return; }
+  const w = wRes.value;
+  const aq = aqRes.status === 'fulfilled' ? aqRes.value : null;
+
+  const H = w.hourly || {};
+  const times = H.time || [];
+  const sunsets = w.daily?.sunset || [];
+  if(!times.length || !sunsets.length) return;
+
+  // Tonight's sunset — or tomorrow's if tonight's has already passed
+  const nowCR = getCRHour(new Date()) + getCRMinute(new Date())/60;
+  const sunsetHourOf = iso => { const m = iso.match(/T(\d{2}):(\d{2})/); return m ? parseInt(m[1],10)+parseInt(m[2],10)/60 : 18; };
+  let di = 0, label = 'Sunset tonight';
+  if(sunsets.length > 1 && nowCR > sunsetHourOf(sunsets[0]) + 0.5){ di = 1; label = 'Sunset tomorrow'; }
+  const iso = sunsets[di];
+
+  const key = sunsetHourKey(iso);
+  let idx = key ? times.indexOf(key) : -1;
+  if(idx < 0) idx = 0;
+  const ch=ssNum(H.cloud_cover_high?.[idx]), cm=ssNum(H.cloud_cover_mid?.[idx]), cl=ssNum(H.cloud_cover_low?.[idx]), tot=ssNum(H.cloud_cover?.[idx]);
+  const rh=H.relative_humidity_2m?.[idx], vis=H.visibility?.[idx];
+  let aod=null, dust=null;
+  if(aq?.hourly?.time){ const ai = aq.hourly.time.indexOf(key); if(ai>=0){ aod=aq.hourly.aerosol_optical_depth?.[ai]; dust=aq.hourly.dust?.[ai]; } }
+
+  // Color potential — the canvas (high+mid cloud) plus dry, clean air. ~0.2 … 1.0
+  const canvas = ssHighCloud(ch)*0.6 + ssMidCloud(cm)*0.4;
+  const colorPotential = canvas*0.70 + ssHumidity(rh==null?null:rh)*0.18 + ssAir(vis,aod,dust)*0.12;
+  // Visibility gate — multiplicative; collapses on low-cloud horizon or overcast
+  const gate = ssLowGate(cl) * ssGapGate(tot);
+  const score01 = Math.min(1, colorPotential * gate);
+  const ten = Math.max(1, Math.min(10, Math.round(score01*10)));
+  const color = sunsetMiniColor(ten);
+  const note = sunsetMiniNote({ ch, cm, cl, tot });
+
+  el.innerHTML = `🌅 <span class="sm-label">${label}</span> <span class="sm-score" style="color:${color}">${ten}</span><span>/10</span> <span class="sm-note">· ${note} · ${fmtSunsetTime(iso)}</span>`;
+  el.style.display = 'inline-flex';
+  sunMiniDone = true;
+}
+
+// ═══ SURF · wave height + swell direction (Open-Meteo Marine) ═══════
+// Marine API needs an ocean point, so this samples just off Dominical beach
+// (MOUTH is now on land). Independent + non-blocking — failure leaves the
+// Sun & Surf wave fields as "—" and never affects the flood path.
+const SURF = { lat:9.25, lon:-83.90 };
+async function loadSurf(){
+  try {
+    const d = await fetchJSON(`https://marine-api.open-meteo.com/v1/marine?latitude=${SURF.lat}&longitude=${SURF.lon}&current=wave_height,swell_wave_height,swell_wave_direction,swell_wave_period&timezone=America%2FCosta_Rica`, 9000);
+    const c = d?.current || {};
+    const waveEl = document.getElementById('ov-wave');
+    if (waveEl && c.wave_height != null) waveEl.textContent = c.wave_height.toFixed(1);
+    const swEl = document.getElementById('ov-swell');
+    const degEl = document.getElementById('ov-swell-deg');
+    if (swEl) swEl.textContent = c.swell_wave_direction != null ? degToCompass(c.swell_wave_direction) : '—';
+    if (degEl) degEl.textContent = c.swell_wave_direction != null ? Math.round(c.swell_wave_direction) + '°' : '';
+  } catch(e) {
+    console.warn('marine fetch failed:', e.message);
+  }
+}
+
+// ═══ WINDY RADAR ═════════════════════════════════════════
+// Free keyless Windy embed. Lazy-loaded only when the Radar tab is first opened,
+// so it adds zero weight to the flood load. Thumbnail is non-interactive (a click
+// overlay sits on top); tapping expands a full-screen modal with the live,
+// interactive radar. Fully independent of the flood score — if Windy is down,
+// only this tab is affected.
+const RADAR_THUMB_SRC = 'https://embed.windy.com/embed2.html?lat=9.2703&lon=-83.8580&detailLat=9.2703&detailLon=-83.8580&zoom=10&overlay=radar&product=radar&menu=&message=&marker=true&calendar=now&type=map&location=coordinates&metricWind=default&metricTemp=default&radarRange=-1';
+const RADAR_FULL_SRC  = 'https://embed.windy.com/embed2.html?lat=9.2703&lon=-83.8580&detailLat=9.2703&detailLon=-83.8580&zoom=10&overlay=radar&product=radar&message=true&marker=true&calendar=now&type=map&location=coordinates&metricWind=default&metricTemp=default&radarRange=-1';
+let radarLoaded = false;
+function loadRadar() {
+  if (radarLoaded) return;
+  const thumb = document.getElementById('radar-thumb-frame');
+  if (thumb) thumb.src = RADAR_THUMB_SRC;
+  radarLoaded = true;
+}
+function openRadarModal() {
+  const modal = document.getElementById('radar-modal');
+  const frame = document.getElementById('radar-modal-frame');
+  if (!modal || !frame) return;
+  if (!frame.dataset.loaded) { frame.src = RADAR_FULL_SRC; frame.dataset.loaded = '1'; }
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function closeRadarModal() {
+  const modal = document.getElementById('radar-modal');
+  if (modal) modal.style.display = 'none';
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeRadarModal(); });
+
+// ═══ BOOT ════════════════════════════════════════════════
+loadAll();
+setTimeout(() => {
+  const el = document.getElementById('ov-loading');
+  if (el && el.style.display !== 'none') el.innerHTML = '<div class="err">⚠️ Could not load data. Check internet and refresh.</div>';
+}, 12000);
+</script>
+</body>
+</html>
