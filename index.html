@@ -243,6 +243,9 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 .radar-thumb-frame { position:absolute; inset:0; width:100%; height:100%; border:0; pointer-events:none; }
 .radar-thumb-click { position:absolute; inset:0; cursor:pointer; display:flex; align-items:flex-end; justify-content:flex-end; background:linear-gradient(to top, rgba(26,42,32,0.16), rgba(26,42,32,0) 38%); }
 .radar-thumb-badge { margin:10px; background:rgba(26,42,32,0.78); color:#f7f2e8; font-size:9px; letter-spacing:0.1em; text-transform:uppercase; padding:6px 12px; border-radius:20px; }
+.radar-grid { display:flex; gap:12px; flex-wrap:wrap; }
+.radar-panel { flex:1 1 100%; min-width:0; }
+.radar-panel-label { font-size:9px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
 .radar-modal { position:fixed; inset:0; z-index:1000; background:rgba(20,30,24,0.96); flex-direction:column; }
 .radar-modal-bar { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; color:#f7f2e8; font-size:11px; letter-spacing:0.08em; background:var(--green-dark); flex-shrink:0; }
 .radar-modal-close { background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.25); color:#fff; border-radius:8px; padding:7px 14px; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:0.08em; cursor:pointer; }
@@ -423,13 +426,25 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 <!-- RADAR -->
 <div id="tab-radar" class="tab-pane">
   <div class="card">
-    <div class="card-title">Live Radar · Windy</div>
-    <div style="font-size:9px;color:var(--muted);margin-bottom:10px;line-height:1.7">Rain radar over the Barú watershed, centered on the river mouth. Tap to expand full-screen — pan, zoom, scrub the timeline, or switch layers in the menu.</div>
-    <div class="radar-thumb">
-      <iframe id="radar-thumb-frame" class="radar-thumb-frame" title="Windy radar — Barú watershed" frameborder="0"></iframe>
-      <div class="radar-thumb-click" onclick="openRadarModal()"><span class="radar-thumb-badge">⤢ Tap to expand</span></div>
+    <div class="card-title">Live Radar</div>
+    <div style="font-size:9px;color:var(--muted);margin-bottom:10px;line-height:1.7">Two views over the Barú watershed. <b>RainViewer</b> (top) = satellite nowcast, which often catches Pacific cells Windy misses. <b>Windy</b> (below) = ground radar + model. Tap either to expand — pan, zoom, scrub the timeline.</div>
+    <div class="radar-grid">
+      <div class="radar-panel">
+        <div class="radar-panel-label">RainViewer · satellite</div>
+        <div class="radar-thumb">
+          <iframe id="radar-thumb-frame2" class="radar-thumb-frame" title="RainViewer radar — Barú watershed" frameborder="0"></iframe>
+          <div class="radar-thumb-click" onclick="openRadarModal('rain')"><span class="radar-thumb-badge">⤢ Expand</span></div>
+        </div>
+      </div>
+      <div class="radar-panel">
+        <div class="radar-panel-label">Windy</div>
+        <div class="radar-thumb">
+          <iframe id="radar-thumb-frame" class="radar-thumb-frame" title="Windy radar — Barú watershed" frameborder="0"></iframe>
+          <div class="radar-thumb-click" onclick="openRadarModal('windy')"><span class="radar-thumb-badge">⤢ Expand</span></div>
+        </div>
+      </div>
     </div>
-    <div style="font-size:8px;color:var(--muted);margin-top:8px;text-align:center">Radar © Windy.com · independent of the flood score</div>
+    <div style="font-size:8px;color:var(--muted);margin-top:8px;text-align:center">Radar © Windy.com &amp; © RainViewer · independent of the flood score</div>
   </div>
 </div>
 
@@ -585,7 +600,7 @@ CREATE POLICY "pub_write" ON observations   FOR INSERT WITH CHECK (true);</div>
 <!-- Windy radar fullscreen modal -->
 <div id="radar-modal" class="radar-modal" style="display:none">
   <div class="radar-modal-bar">
-    <span>Windy Radar · Barú Watershed</span>
+    <span id="radar-modal-title">Windy Radar · Barú Watershed</span>
     <button class="radar-modal-close" onclick="closeRadarModal()">✕ Close</button>
   </div>
   <iframe id="radar-modal-frame" class="radar-modal-frame" title="Windy radar — full screen" frameborder="0"></iframe>
@@ -1932,18 +1947,26 @@ async function loadSurf(){
 // only this tab is affected.
 const RADAR_THUMB_SRC = 'https://embed.windy.com/embed2.html?lat=9.2703&lon=-83.8580&detailLat=9.2703&detailLon=-83.8580&zoom=10&overlay=radar&product=radar&menu=&message=&marker=true&calendar=now&type=map&location=coordinates&metricWind=default&metricTemp=default&radarRange=-1';
 const RADAR_FULL_SRC  = 'https://embed.windy.com/embed2.html?lat=9.2703&lon=-83.8580&detailLat=9.2703&detailLon=-83.8580&zoom=10&overlay=radar&product=radar&message=true&marker=true&calendar=now&type=map&location=coordinates&metricWind=default&metricTemp=default&radarRange=-1';
+const RADAR2_THUMB_SRC = 'https://www.rainviewer.com/map.html?loc=9.2703,-83.858,8&oFa=0&oC=0&oU=0&oCS=1&oF=0&oAP=1&c=3&o=83&lm=1&sm=1&sn=1';
+const RADAR2_FULL_SRC  = 'https://www.rainviewer.com/map.html?loc=9.2703,-83.858,9&oFa=0&oC=0&oU=0&oCS=1&oF=0&oAP=1&c=3&o=83&lm=1&sm=1&sn=1';
 let radarLoaded = false;
 function loadRadar() {
   if (radarLoaded) return;
   const thumb = document.getElementById('radar-thumb-frame');
   if (thumb) thumb.src = RADAR_THUMB_SRC;
+  const thumb2 = document.getElementById('radar-thumb-frame2');
+  if (thumb2) thumb2.src = RADAR2_THUMB_SRC;
   radarLoaded = true;
 }
-function openRadarModal() {
+function openRadarModal(which) {
   const modal = document.getElementById('radar-modal');
   const frame = document.getElementById('radar-modal-frame');
   if (!modal || !frame) return;
-  if (!frame.dataset.loaded) { frame.src = RADAR_FULL_SRC; frame.dataset.loaded = '1'; }
+  const src = which === 'rain' ? RADAR2_FULL_SRC : RADAR_FULL_SRC;
+  const title = which === 'rain' ? 'RainViewer · Barú Watershed' : 'Windy Radar · Barú Watershed';
+  if (frame.dataset.src !== src) { frame.src = src; frame.dataset.src = src; }
+  const t = document.getElementById('radar-modal-title');
+  if (t) t.textContent = title;
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
