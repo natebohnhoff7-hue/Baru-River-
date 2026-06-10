@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Barú Flood Index · River Soul</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Mono:wght@400;500&family=Lora:ital@0;1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Mono:wght@400;500&family=Lora:ital@0;1&family=Fraunces:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
@@ -22,6 +22,8 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 .header { text-align:center; padding:24px 20px 14px; border-bottom:1px solid var(--border); }
 .header h1 { font-family:'Playfair Display',serif; font-size:26px; color:var(--green-dark); }
 .header-sub { font-size:10px; color:var(--muted); margin-top:4px; letter-spacing:0.08em; }
+.site-brand { font-family:'Fraunces',serif; font-style:italic; font-weight:600; font-size:25px; color:var(--green-dark); line-height:1.05; letter-spacing:0.01em; margin-bottom:3px; }
+.brand-logo { display:block; margin:0 auto 8px; width:150px; max-width:52%; height:auto; }
 .badge { display:inline-block; margin-top:8px; padding:3px 12px; border-radius:20px; font-size:10px; background:rgba(45,106,79,0.10); color:var(--green); border:1px solid rgba(45,106,79,0.20); }
 
 /* Score ring */
@@ -192,6 +194,10 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
   transition:background .2s,border-color .2s;
 }
 .wa-alerts-btn:hover { background:rgba(37,211,102,0.18); border-color:rgba(37,211,102,0.7); }
+.safety-note { margin-top:16px; max-width:340px; background:rgba(192,57,43,0.06); border:1px solid rgba(192,57,43,0.28); border-radius:14px; padding:11px 15px; text-align:center; }
+.safety-text { font-size:9.5px; line-height:1.65; color:var(--ink); opacity:0.78; margin-bottom:10px; }
+.call-911-btn { display:inline-block; background:var(--red); color:#fff; font-family:'DM Mono',monospace; font-weight:500; font-size:12px; letter-spacing:0.06em; padding:9px 24px; border-radius:20px; text-decoration:none; box-shadow:0 3px 10px rgba(192,57,43,0.30); }
+.call-911-btn:hover { background:#a93226; }
 
 /* ── Flooding water immersion ─────────────────────────────
    Only visible while a flood report is live. A translucent water body rises to
@@ -276,7 +282,7 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 
 <!-- Header -->
 <div class="header">
-  <div style="font-size:9px;letter-spacing:0.2em;color:var(--muted);margin-bottom:5px">RIVER SOUL · DOMINICAL, CR</div>
+  <img class="brand-logo" src="riversoul.png" alt="River Soul · Dominical, Costa Rica" />
   <h1>Barú Flood Index</h1>
   <div class="header-sub" id="htime">Loading…</div>
   <div class="badge" id="hbadge">Loading season…</div>
@@ -606,8 +612,13 @@ CREATE POLICY "pub_write" ON observations   FOR INSERT WITH CHECK (true);</div>
   <iframe id="radar-modal-frame" class="radar-modal-frame" title="Windy radar — full screen" frameborder="0"></iframe>
 </div>
 
+<div class="safety-note" style="margin:18px auto 4px">
+  <div class="safety-text">⚠️ This is an informational tool, not an official warning system. Conditions can change fast — never cross moving water. In a life-threatening emergency, call 911.</div>
+  <a class="call-911-btn" href="tel:911">📞 Call 911</a>
+</div>
 <div class="footer"><span class="dot"></span>LIVE · River Soul · Barú River · 9.2703°N 83.8580°W<br>OpenMeteo · GFS + ECMWF · Costa Rica Tide Tables · Supabase</div>
 <div class="powered-by">Brought to you by<a href="https://riversoulcr.com" target="_blank" rel="noopener">River Soul</a></div>
+<div style="text-align:center;padding:0 20px 18px;font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted)">Free community tool · <a href="https://paypal.me/elbaru22" target="_blank" rel="noopener" style="color:var(--teal);text-decoration:none;border-bottom:1px solid rgba(15,118,110,0.3)">support its upkeep ♥</a></div>
 </div>
 
 <script>
