@@ -1843,31 +1843,33 @@ function ssAir(visM,aod,dust){
   let dpen=1.0; if(dust!=null&&dust>40)dpen=Math.max(0.6,1-(dust-40)/160*0.4);
   return Math.min(1,(v*0.5+a*0.5)*dpen);
 }
-// VISIBILITY GATE — multiplicative. Low cloud on the western horizon blocks the
-// light path; total overcast leaves no gap for color to come through. Either one
-// near 100% drives the whole score to the floor.
+// VISIBILITY GATE — multiplicative. Low cloud blocks the horizon light path; a solid
+// LOW/MID deck (not thin high cirrus) leaves no gap for color to come through. High
+// cloud is the canvas, so it must NOT trip this gate. Either factor near 100% floors it.
 function ssLowGate(cl){
-  if(cl<10) return 1.00;
-  if(cl<30) return 1.00-(cl-10)/20*0.30;            // 1.00 → 0.70
-  if(cl<55) return 0.70-(cl-30)/25*0.40;            // 0.70 → 0.30
-  if(cl<80) return 0.30-(cl-55)/25*0.18;            // 0.30 → 0.12
-  return Math.max(0.06,0.12-(cl-80)/20*0.06);       // 0.12 → 0.06
+  if(cl<15) return 1.00;
+  if(cl<40) return 1.00-(cl-15)/25*0.20;            // 1.00 → 0.80  scattered low cloud: mild
+  if(cl<65) return 0.80-(cl-40)/25*0.35;            // 0.80 → 0.45  broken: moderate
+  if(cl<85) return 0.45-(cl-65)/20*0.27;            // 0.45 → 0.18  mostly low overcast: heavy
+  return Math.max(0.08,0.18-(cl-85)/15*0.10);       // 0.18 → 0.08  solid bank: floored
 }
-function ssGapGate(tot){
-  if(tot<70) return 1.00;
-  if(tot<88) return 1.00-(tot-70)/18*0.45;          // 1.00 → 0.55
-  if(tot<96) return 0.55-(tot-88)/8*0.35;           // 0.55 → 0.20
-  return Math.max(0.10,0.20-(tot-96)/4*0.10);       // 0.20 → 0.10
+function ssGapGate(deck){
+  if(deck<70) return 1.00;
+  if(deck<88) return 1.00-(deck-70)/18*0.45;        // 1.00 → 0.55
+  if(deck<96) return 0.55-(deck-88)/8*0.35;         // 0.55 → 0.20
+  return Math.max(0.10,0.20-(deck-96)/4*0.10);      // 0.20 → 0.10
 }
 function ssNum(x){ return (x==null||isNaN(x))?0:x; }
 function sunsetHourKey(iso){ const m=iso&&iso.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})/); if(!m)return null; let h=parseInt(m[2],10); if(parseInt(m[3],10)>=30)h=(h+1)%24; return `${m[1]}T${String(h).padStart(2,'0')}:00`; }
 function fmtSunsetTime(iso){ const m=iso&&iso.match(/T(\d{2}):(\d{2})/); if(!m)return ''; let h=parseInt(m[1],10); const mn=m[2]; const ap=h>=12?'PM':'AM'; let h12=h%12; if(h12===0)h12=12; return `${h12}:${mn} ${ap}`; }
 function sunsetMiniColor(t){ if(t>=8)return '#e8590c'; if(t>=6)return '#e9a825'; if(t>=4)return '#9b8a3a'; return '#6a8a9a'; }
 function sunsetMiniNote(d){
-  if(d.cl>=55) return 'low cloud may block it';
-  if(d.tot>=88) return 'overcast — flat light';
+  const deck = Math.max(d.cl, d.cm);              // opaque blocking layer (high cirrus excluded)
+  if(d.cl>=60) return 'low cloud may block it';
+  if(deck>=85) return 'overcast — flat light';
+  if(d.ch>=40 && d.cl<25) return 'high clouds, clear horizon';
+  if(d.ch>=25 || d.cm>=30) return d.cl<25?'good clouds aloft':'cloudy but workable';
   if(d.tot<15 && d.ch<15) return 'clear but bare';
-  if(d.ch>=30||d.cm>=30) return d.cl<25?'high clouds, clear horizon':'good clouds aloft';
   return 'mixed sky';
 }
 
@@ -1907,8 +1909,9 @@ async function loadSunsetMini(){
   // Color potential — the canvas (high+mid cloud) plus dry, clean air. ~0.2 … 1.0
   const canvas = ssHighCloud(ch)*0.6 + ssMidCloud(cm)*0.4;
   const colorPotential = canvas*0.70 + ssHumidity(rh==null?null:rh)*0.18 + ssAir(vis,aod,dust)*0.12;
-  // Visibility gate — multiplicative; collapses on low-cloud horizon or overcast
-  const gate = ssLowGate(cl) * ssGapGate(tot);
+  // Visibility gate — multiplicative; collapses on a low-cloud horizon or a solid
+  // low/mid deck. Fed by max(low,mid) — NOT total — so high cirrus stays the canvas.
+  const gate = ssLowGate(cl) * ssGapGate(Math.max(cl, cm));
   const score01 = Math.min(1, colorPotential * gate);
   const ten = Math.max(1, Math.min(10, Math.round(score01*10)));
   const color = sunsetMiniColor(ten);
