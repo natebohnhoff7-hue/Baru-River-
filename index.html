@@ -312,7 +312,7 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
   <button class="tab-btn" onclick="showTab('history',this)">History</button>
   <button class="tab-btn" onclick="showTab('observe',this)">Log</button>
   <button class="tab-btn" onclick="showTab('journal',this)">Journal</button>
-  <button class="tab-btn" onclick="showTab('config',this)">Config</button>
+  <button class="tab-btn" id="config-tab-btn" style="display:none" onclick="showTab('config',this)">Config</button>
 </div>
 
 <!-- OVERVIEW -->
@@ -796,6 +796,11 @@ document.getElementById('cfg-key').value = SB_KEY;
 if (sbClient) {
   var _ok = document.getElementById('cfg-ok');
   if (_ok) _ok.style.display = 'block';
+}
+// Config is admin-only: hidden from guests, revealed only via secret URL (elbaru.com/?admin)
+if (location.search.indexOf('admin') >= 0 || location.hash.indexOf('admin') >= 0) {
+  var _cfgBtn = document.getElementById('config-tab-btn');
+  if (_cfgBtn) _cfgBtn.style.display = '';
 }
 
 async function saveConfig() {
