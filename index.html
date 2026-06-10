@@ -176,9 +176,11 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 /* Flood override */
 .flood-banner { background:#c0392b; color:#fff; text-align:center; font-size:11px; font-weight:500; letter-spacing:0.04em; padding:10px 16px; line-height:1.5; cursor:pointer; }
 .flood-banner small { display:block; font-size:8.5px; opacity:0.88; letter-spacing:0.06em; margin-top:3px; font-weight:400; }
-.flood-report-btn { margin-top:10px; background:none; border:1px solid rgba(192,57,43,0.4); color:var(--red); border-radius:20px; padding:7px 18px; font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.1em; text-transform:uppercase; cursor:pointer; transition:background .2s,color .2s; }
-.flood-report-btn:hover { background:rgba(192,57,43,0.08); }
-.flood-report-btn.active { background:var(--red); color:#fff; border-color:var(--red); }
+.flood-report-btn { margin-top:14px; background:var(--red); border:3px solid #8c2418; color:#fff; border-radius:30px; padding:15px 32px; font-family:'DM Mono',monospace; font-weight:500; font-size:13px; letter-spacing:0.08em; text-transform:uppercase; cursor:pointer; box-shadow:0 5px 16px rgba(192,57,43,0.40); transition:background .2s,color .2s,box-shadow .2s,transform .12s; }
+.flood-report-btn:hover { background:#a93226; box-shadow:0 7px 20px rgba(192,57,43,0.50); transform:translateY(-1px); }
+.flood-report-btn:active { transform:translateY(1px); }
+/* When a report is live, invert to white-on-red so the two states stay distinct */
+.flood-report-btn.active { background:#fff; color:var(--red); border-color:var(--red); box-shadow:0 4px 12px rgba(192,57,43,0.25); }
 
 /* Powered-by / River Soul credit */
 .powered-by { text-align:center; padding:8px 20px 18px; font-family:'DM Mono',monospace; font-size:8.5px; letter-spacing:0.16em; text-transform:uppercase; color:var(--muted); border-top:1px solid var(--border); margin:2px 20px 0; }
@@ -1218,6 +1220,11 @@ async function loadAll() {
     tideSrcEl.style.color = TIDE_STALE ? '#c0392b' : 'var(--muted)';
   }
 
+  // Kick off the independent sunset estimate right away so its network request
+  // runs in parallel with the main weather fetch below — not queued behind it.
+  // It writes only to #sunset-mini and never touches the flood score.
+  loadSunsetMini();
+
   // Weather data
   let weather = {};
   const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${MOUTH.lat}&longitude=${MOUTH.lon}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&hourly=soil_moisture_0_to_1cm&daily=precipitation_sum,uv_index_max,sunrise,sunset&past_days=3&forecast_days=7&timezone=America%2FCosta_Rica`;
@@ -1303,7 +1310,6 @@ async function loadAll() {
   checkSharedFloodReports();
 
   buildForecast();
-  loadSunsetMini();
   loadSurf();
   // Auto-log every 3 hours if Supabase connected
   if (sbClient && (Date.now() - lastLogTime) >= LOG_INTERVAL_MS) {
@@ -1726,11 +1732,14 @@ function buildJournal() {
 // enriches reds while a heavy load mutes them. Built on Open-Meteo cloud-by-
 // altitude + humidity + visibility, with the Air Quality API for dust. Fully
 // independent of the flood index — if it fails, the flood tool is untouched.
-// Weights: canvas 35% · sky gaps 25% · clear horizon 20% · humidity 12% · air 8%
-function ssHighCloud(ch){ if(ch<10)return 0.30; if(ch<35)return 0.30+(ch-10)/25*0.50; if(ch<70)return 0.80+(ch-35)/35*0.20; return 1.00-(ch-70)/30*0.25; }
-function ssMidCloud(cm){ if(cm<15)return 0.55; if(cm<45)return 0.55+(cm-15)/30*0.45; if(cm<75)return 1.00-(cm-45)/30*0.45; return Math.max(0.20,0.55-(cm-75)/25*0.35); }
-function ssLowCloud(cl){ if(cl<15)return 1.00; if(cl<40)return 1.00-(cl-15)/25*0.45; if(cl<70)return 0.55-(cl-40)/30*0.35; return Math.max(0.05,0.20-(cl-70)/30*0.15); }
-function ssGap(tot){ if(tot<20)return 0.65; if(tot<70)return 1.00; if(tot<90)return 1.00-(tot-70)/20*0.45; return Math.max(0.15,0.55-(tot-90)/10*0.40); }
+//
+// MODEL STRUCTURE (revised): a "color potential" (the canvas of high/mid cloud
+// plus dry, clean air) is MULTIPLIED by a "visibility gate" (how much sunset
+// light actually reaches the eye). Low cloud on the ocean horizon and full
+// overcast both collapse the gate toward ~0.1, so a blocked sky bottoms out at
+// 1–2 no matter how good the high clouds are — you can't score what you can't see.
+function ssHighCloud(ch){ if(ch<15)return 0.20; if(ch<40)return 0.20+(ch-15)/25*0.70; if(ch<70)return 0.90+(ch-40)/30*0.10; return Math.max(0.55,1.00-(ch-70)/30*0.45); }
+function ssMidCloud(cm){ if(cm<15)return 0.25; if(cm<45)return 0.25+(cm-15)/30*0.70; if(cm<75)return 0.95-(cm-45)/30*0.35; return Math.max(0.30,0.60-(cm-75)/25*0.30); }
 function ssHumidity(rh){ if(rh==null)return 0.5; if(rh<60)return 1.00; if(rh<75)return 1.00-(rh-60)/15*0.30; if(rh<88)return 0.70-(rh-75)/13*0.35; return Math.max(0.15,0.35-(rh-88)/12*0.20); }
 function ssAir(visM,aod,dust){
   const km=(visM==null?24000:visM)/1000;
@@ -1739,12 +1748,28 @@ function ssAir(visM,aod,dust){
   let dpen=1.0; if(dust!=null&&dust>40)dpen=Math.max(0.6,1-(dust-40)/160*0.4);
   return Math.min(1,(v*0.5+a*0.5)*dpen);
 }
+// VISIBILITY GATE — multiplicative. Low cloud on the western horizon blocks the
+// light path; total overcast leaves no gap for color to come through. Either one
+// near 100% drives the whole score to the floor.
+function ssLowGate(cl){
+  if(cl<10) return 1.00;
+  if(cl<30) return 1.00-(cl-10)/20*0.30;            // 1.00 → 0.70
+  if(cl<55) return 0.70-(cl-30)/25*0.40;            // 0.70 → 0.30
+  if(cl<80) return 0.30-(cl-55)/25*0.18;            // 0.30 → 0.12
+  return Math.max(0.06,0.12-(cl-80)/20*0.06);       // 0.12 → 0.06
+}
+function ssGapGate(tot){
+  if(tot<70) return 1.00;
+  if(tot<88) return 1.00-(tot-70)/18*0.45;          // 1.00 → 0.55
+  if(tot<96) return 0.55-(tot-88)/8*0.35;           // 0.55 → 0.20
+  return Math.max(0.10,0.20-(tot-96)/4*0.10);       // 0.20 → 0.10
+}
 function ssNum(x){ return (x==null||isNaN(x))?0:x; }
 function sunsetHourKey(iso){ const m=iso&&iso.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})/); if(!m)return null; let h=parseInt(m[2],10); if(parseInt(m[3],10)>=30)h=(h+1)%24; return `${m[1]}T${String(h).padStart(2,'0')}:00`; }
 function fmtSunsetTime(iso){ const m=iso&&iso.match(/T(\d{2}):(\d{2})/); if(!m)return ''; let h=parseInt(m[1],10); const mn=m[2]; const ap=h>=12?'PM':'AM'; let h12=h%12; if(h12===0)h12=12; return `${h12}:${mn} ${ap}`; }
 function sunsetMiniColor(t){ if(t>=8)return '#e8590c'; if(t>=6)return '#e9a825'; if(t>=4)return '#9b8a3a'; return '#6a8a9a'; }
 function sunsetMiniNote(d){
-  if(d.cl>=60) return 'low cloud may block it';
+  if(d.cl>=55) return 'low cloud may block it';
   if(d.tot>=88) return 'overcast — flat light';
   if(d.tot<15 && d.ch<15) return 'clear but bare';
   if(d.ch>=30||d.cm>=30) return d.cl<25?'high clouds, clear horizon':'good clouds aloft';
@@ -1755,14 +1780,14 @@ let sunMiniDone = false;
 async function loadSunsetMini(){
   const el = document.getElementById('sunset-mini');
   if(!el || sunMiniDone) return;
-  let w;
-  try {
-    w = await fetchJSON(`https://api.open-meteo.com/v1/forecast?latitude=${MOUTH.lat}&longitude=${MOUTH.lon}&hourly=cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,relative_humidity_2m,visibility&daily=sunset&forecast_days=2&timezone=America%2FCosta_Rica`, 9000);
-  } catch(e){ console.warn('sunset mini fetch failed:', e.message); return; }
-  let aq = null;
-  try {
-    aq = await fetchJSON(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${MOUTH.lat}&longitude=${MOUTH.lon}&hourly=aerosol_optical_depth,dust&forecast_days=2&timezone=America%2FCosta_Rica`, 8000);
-  } catch(e){ /* optional — neutral air if missing */ }
+  // Fire both requests at once — the air-quality call is optional, so it should
+  // never add its latency on top of the cloud fetch. Worst case is max(9s,8s).
+  const wUrl  = `https://api.open-meteo.com/v1/forecast?latitude=${MOUTH.lat}&longitude=${MOUTH.lon}&hourly=cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,relative_humidity_2m,visibility&daily=sunset&forecast_days=2&timezone=America%2FCosta_Rica`;
+  const aqUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${MOUTH.lat}&longitude=${MOUTH.lon}&hourly=aerosol_optical_depth,dust&forecast_days=2&timezone=America%2FCosta_Rica`;
+  const [wRes, aqRes] = await Promise.allSettled([ fetchJSON(wUrl, 9000), fetchJSON(aqUrl, 8000) ]);
+  if (wRes.status !== 'fulfilled') { console.warn('sunset mini fetch failed:', wRes.reason?.message); return; }
+  const w = wRes.value;
+  const aq = aqRes.status === 'fulfilled' ? aqRes.value : null;
 
   const H = w.hourly || {};
   const times = H.time || [];
@@ -1784,8 +1809,12 @@ async function loadSunsetMini(){
   let aod=null, dust=null;
   if(aq?.hourly?.time){ const ai = aq.hourly.time.indexOf(key); if(ai>=0){ aod=aq.hourly.aerosol_optical_depth?.[ai]; dust=aq.hourly.dust?.[ai]; } }
 
+  // Color potential — the canvas (high+mid cloud) plus dry, clean air. ~0.2 … 1.0
   const canvas = ssHighCloud(ch)*0.6 + ssMidCloud(cm)*0.4;
-  const score01 = Math.min(1, canvas*0.35 + ssGap(tot)*0.25 + ssLowCloud(cl)*0.20 + ssHumidity(rh==null?null:rh)*0.12 + ssAir(vis,aod,dust)*0.08);
+  const colorPotential = canvas*0.70 + ssHumidity(rh==null?null:rh)*0.18 + ssAir(vis,aod,dust)*0.12;
+  // Visibility gate — multiplicative; collapses on low-cloud horizon or overcast
+  const gate = ssLowGate(cl) * ssGapGate(tot);
+  const score01 = Math.min(1, colorPotential * gate);
   const ten = Math.max(1, Math.min(10, Math.round(score01*10)));
   const color = sunsetMiniColor(ten);
   const note = sunsetMiniNote({ ch, cm, cl, tot });
