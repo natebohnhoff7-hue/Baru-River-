@@ -190,17 +190,13 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 #flood-water { position:fixed; inset:0; z-index:50; pointer-events:none; overflow:hidden; display:none; }
 #flood-water.on { display:block; }
 .fw-body {
-  position:absolute; left:0; right:0; bottom:0; height:0;
+  position:absolute; left:0; right:0; bottom:0; height:102vh;
+  transform:translateY(102vh);
   background:linear-gradient(to bottom, rgba(11,94,109,0.20) 0%, rgba(9,74,92,0.30) 45%, rgba(5,44,57,0.38) 100%);
-  transition:height 2.4s cubic-bezier(.42,0,.25,1);
-  will-change:height;
+  transition:transform 2.2s cubic-bezier(.42,0,.25,1);
+  will-change:transform;
 }
-#flood-water.on .fw-body { height:102vh; }
-.fw-body::after {
-  content:''; position:absolute; inset:0;
-  background:repeating-linear-gradient(115deg, rgba(255,255,255,0.05) 0 2px, transparent 2px 22px);
-  mix-blend-mode:screen; opacity:0.5;
-}
+#flood-water.on .fw-body { transform:translateY(0); }
 .fw-wave { position:absolute; left:0; top:-26px; width:200%; height:46px; }
 .fw-wave svg { width:100%; height:100%; display:block; }
 .fw-wave-back path { fill:rgba(11,94,109,0.32); }
@@ -1183,7 +1179,7 @@ function spawnFloodBubbles() {
   const c = document.querySelector('#flood-water .fw-bubbles');
   if (!c || floodBubblesSpawned) return;
   let h = '';
-  for (let i = 0; i < 14; i++) {
+  for (let i = 0; i < 9; i++) {
     const size  = (6 + Math.random() * 16).toFixed(1);
     const left  = (Math.random() * 100).toFixed(1);
     const dur   = (5 + Math.random() * 6).toFixed(1);
@@ -1234,46 +1230,20 @@ function applyFloodOverride() {
 
 function reportFlooding() {
   if (floodOverrideActive()) { clearFloodOverride(); return; }
-  if (!confirm('Report that the Barú is flooding RIGHT NOW?\n\nThis forces the index to HIGH (100%) and logs it. It clears itself after 4 hours.')) return;
+  if (!confirm('Report that the Barú is flooding RIGHT NOW?\n\nThis forces the index to HIGH (100%). It clears when you tap it off, or automatically after 4 hours.')) return;
   try { localStorage.setItem('flood_override', JSON.stringify({ ts: Date.now() })); } catch(e) {}
-  // Share it via the existing observations table (proven insert path) so other guests see HIGH too
-  if (sbClient) {
-    sbClient.from('observations').insert({
-      condition: 'flooded',
-      rainfall: '',
-      water_color: '',
-      notes: 'Flooding reported via the Report-flooding button',
-      observer: '',
-      flood_score: 1
-    }).then(({ error }) => { if (error) console.warn('flood report log failed:', error.message); });
-  }
   applyFloodOverride();
 }
 
-function clearFloodOverride() {
+async function clearFloodOverride() {
   if (!confirm('Clear the flooding report and go back to the calculated index?')) return;
   try { localStorage.removeItem('flood_override'); } catch(e) {}
   loadAll();
 }
 
-// Cross-device mirror: if anyone logged a flooded/blocking observation in the last
-// 6h, reflect it as an override here too. Non-blocking; failures are ignored.
-async function checkSharedFloodReports() {
-  if (!sbClient || floodOverrideActive()) return;
-  try {
-    const since = new Date(Date.now() - OVERRIDE_WINDOW_MS).toISOString();
-    const { data, error } = await sbClient.from('observations')
-      .select('condition,created_at')
-      .gte('created_at', since)
-      .order('created_at', { ascending:false })
-      .limit(5);
-    if (error || !data) return;
-    if (data.some(o => o.condition === 'flooded' || o.condition === 'blocking')) {
-      localStorage.setItem('flood_override', JSON.stringify({ ts: new Date(data[0].created_at).getTime() }));
-      applyFloodOverride();
-    }
-  } catch(e) { /* ignore */ }
-}
+// The "Report flooding" button is a LOCAL toggle only: it sets a flag on this
+// device, forces HIGH, and clears when tapped off or after 4h. No database writes
+// and no cross-device mirror — so it can never get re-raised or stuck on.
 
 // ═══ MAIN LOAD ═══════════════════════════════════════════
 async function loadAll() {
@@ -1389,7 +1359,6 @@ async function loadAll() {
 
   // A manual flood report (tapped button) forces HIGH regardless of the calculation
   applyFloodOverride();
-  checkSharedFloodReports();
 
   buildForecast();
   loadSurf();
@@ -1705,7 +1674,7 @@ async function loadObsLog() {
     const { data, error } = await sbClient.from('observations').select('*').order('created_at', { ascending:false }).limit(20);
     if (error) throw error;
     if (!data?.length) return;
-    const condMap = { clear_low:'🏞 Clear & Low', normal:'🌊 Normal', elevated:'⚠️ Elevated', flooded:'🚨 Flooded', blocking:'⛔ Blocking' };
+    const condMap = { clear_low:'🏞 Clear & Low', normal:'🌊 Normal', elevated:'⚠️ Elevated', flooded:'🚨 Flooded', blocking:'⛔ Blocking', cleared:'✓ All clear' };
     document.getElementById('obs-log').innerHTML = data.map(o => {
       const d = new Date(o.created_at);
       const dateStr = d.toLocaleDateString('en-US', { month:'short', day:'numeric', timeZone:'America/Costa_Rica' });
