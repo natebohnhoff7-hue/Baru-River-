@@ -351,10 +351,10 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
       <div class="grid2">
         <div class="stat-box"><div class="stat-val" id="ov-sunrise" style="font-size:16px">—</div><div class="stat-lbl">Sunrise</div></div>
         <div class="stat-box"><div class="stat-val" id="ov-sunset" style="font-size:16px">—</div><div class="stat-lbl">Sunset</div></div>
-        <div class="stat-box"><div class="stat-val" id="ov-wave">—</div><div class="stat-unit">m</div><div class="stat-lbl">Wave Height</div></div>
-        <div class="stat-box"><div class="stat-val" id="ov-swell">—</div><div class="stat-unit" id="ov-swell-deg"></div><div class="stat-lbl">Swell Dir</div></div>
+        <div class="stat-box"><div class="stat-val" id="ov-wave">—</div><div class="stat-unit">ft</div><div class="stat-lbl">Surf · est</div></div>
+        <div class="stat-box"><div class="stat-val" id="ov-swell">—</div><div class="stat-unit" id="ov-swell-deg"></div><div class="stat-lbl">Swell</div></div>
       </div>
-      <div style="font-size:8px;color:var(--muted);margin-top:8px;text-align:center">Sun times · Open-Meteo · Waves · Open-Meteo Marine (off Dominical)</div>
+      <div style="font-size:8px;color:var(--muted);margin-top:8px;text-align:center">Sun times · Open-Meteo · Surf est. from swell height + period · Open-Meteo Marine (off Dominical)</div>
     </div>
   </div>
 </div>
@@ -1880,16 +1880,34 @@ async function loadSunsetMini(){
 // (MOUTH is now on land). Independent + non-blocking — failure leaves the
 // Sun & Surf wave fields as "—" and never affects the flood path.
 const SURF = { lat:9.25, lon:-83.90 };
+// Convert modelled significant wave height (Hs, metres) into an approximate
+// breaking surf-FACE range in feet. Hs is the open-ocean average of the biggest
+// third of swells; the face you actually ride is larger and grows with swell
+// period (long-period groundswell jacks up more on the sandbar). Rough surf-
+// forecaster heuristic, NOT an exact figure — shown as "est" in the UI.
+function surfFaceFt(hsM, periodS){
+  if (hsM == null) return null;
+  const baseFt = hsM * 3.281;
+  let mult;
+  if (periodS == null)    mult = 1.25;
+  else if (periodS >= 16) mult = 1.35;
+  else if (periodS >= 13) mult = 1.30;
+  else if (periodS >= 10) mult = 1.20;
+  else                    mult = 1.05;
+  const face = baseFt * mult;
+  return { lo: Math.max(1, Math.round(face - 1)), hi: Math.round(face + 1) };
+}
 async function loadSurf(){
   try {
     const d = await fetchJSON(`https://marine-api.open-meteo.com/v1/marine?latitude=${SURF.lat}&longitude=${SURF.lon}&current=wave_height,swell_wave_height,swell_wave_direction,swell_wave_period&timezone=America%2FCosta_Rica`, 9000);
     const c = d?.current || {};
     const waveEl = document.getElementById('ov-wave');
-    if (waveEl && c.wave_height != null) waveEl.textContent = c.wave_height.toFixed(1);
+    const range = surfFaceFt(c.wave_height, c.swell_wave_period);
+    if (waveEl) waveEl.textContent = range ? (range.lo === range.hi ? `${range.lo}` : `${range.lo}\u2013${range.hi}`) : '—';
     const swEl = document.getElementById('ov-swell');
-    const degEl = document.getElementById('ov-swell-deg');
+    const perEl = document.getElementById('ov-swell-deg');
     if (swEl) swEl.textContent = c.swell_wave_direction != null ? degToCompass(c.swell_wave_direction) : '—';
-    if (degEl) degEl.textContent = c.swell_wave_direction != null ? Math.round(c.swell_wave_direction) + '°' : '';
+    if (perEl) perEl.textContent = c.swell_wave_period != null ? Math.round(c.swell_wave_period) + 's' : '';
   } catch(e) {
     console.warn('marine fetch failed:', e.message);
   }
