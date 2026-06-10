@@ -174,13 +174,57 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
 
 /* Flood override */
-.flood-banner { background:#c0392b; color:#fff; text-align:center; font-size:11px; font-weight:500; letter-spacing:0.04em; padding:10px 16px; line-height:1.5; cursor:pointer; }
+.flood-banner { position:relative; z-index:60; background:#c0392b; color:#fff; text-align:center; font-size:11px; font-weight:500; letter-spacing:0.04em; padding:10px 16px; line-height:1.5; cursor:pointer; }
 .flood-banner small { display:block; font-size:8.5px; opacity:0.88; letter-spacing:0.06em; margin-top:3px; font-weight:400; }
 .flood-report-btn { margin-top:14px; background:var(--red); border:3px solid #8c2418; color:#fff; border-radius:30px; padding:15px 32px; font-family:'DM Mono',monospace; font-weight:500; font-size:13px; letter-spacing:0.08em; text-transform:uppercase; cursor:pointer; box-shadow:0 5px 16px rgba(192,57,43,0.40); transition:background .2s,color .2s,box-shadow .2s,transform .12s; }
 .flood-report-btn:hover { background:#a93226; box-shadow:0 7px 20px rgba(192,57,43,0.50); transform:translateY(-1px); }
 .flood-report-btn:active { transform:translateY(1px); }
 /* When a report is live, invert to white-on-red so the two states stay distinct */
 .flood-report-btn.active { background:#fff; color:var(--red); border-color:var(--red); box-shadow:0 4px 12px rgba(192,57,43,0.25); }
+
+/* ── Flooding water immersion ─────────────────────────────
+   Only visible while a flood report is live. A translucent water body rises to
+   fill the viewport with a moving wavy surface, caustic shimmer and rising
+   bubbles. pointer-events:none so it never blocks the clear button/banner, and
+   kept light enough that the score + data stay readable underneath. */
+#flood-water { position:fixed; inset:0; z-index:50; pointer-events:none; overflow:hidden; display:none; }
+#flood-water.on { display:block; }
+.fw-body {
+  position:absolute; left:0; right:0; bottom:0; height:0;
+  background:linear-gradient(to bottom, rgba(11,94,109,0.20) 0%, rgba(9,74,92,0.30) 45%, rgba(5,44,57,0.38) 100%);
+  transition:height 2.4s cubic-bezier(.42,0,.25,1);
+  will-change:height;
+}
+#flood-water.on .fw-body { height:102vh; }
+.fw-body::after {
+  content:''; position:absolute; inset:0;
+  background:repeating-linear-gradient(115deg, rgba(255,255,255,0.05) 0 2px, transparent 2px 22px);
+  mix-blend-mode:screen; opacity:0.5;
+}
+.fw-wave { position:absolute; left:0; top:-26px; width:200%; height:46px; }
+.fw-wave svg { width:100%; height:100%; display:block; }
+.fw-wave-back path { fill:rgba(11,94,109,0.32); }
+.fw-wave-front { top:-20px; height:38px; }
+.fw-wave-front path { fill:rgba(13,127,127,0.40); }
+.fw-bubbles { position:absolute; inset:0; }
+.fw-bubbles span {
+  position:absolute; bottom:-24px; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, rgba(255,255,255,0.55), rgba(255,255,255,0.10) 55%, transparent 72%);
+  border:1px solid rgba(255,255,255,0.16);
+}
+@keyframes fwDrift { from { transform:translateX(0); } to { transform:translateX(-50%); } }
+@keyframes fwRise {
+  0%   { transform:translateY(0) translateX(0); opacity:0; }
+  12%  { opacity:0.75; }
+  85%  { opacity:0.45; }
+  100% { transform:translateY(-102vh) translateX(var(--drift,0)); opacity:0; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .fw-wave-back  { animation:fwDrift 7s linear infinite; }
+  .fw-wave-front { animation:fwDrift 4.6s linear infinite reverse; }
+  .fw-bubbles span { animation:fwRise linear infinite; }
+}
+@media (prefers-reduced-motion: reduce) { .fw-bubbles { display:none; } }
 
 /* Powered-by / River Soul credit */
 .powered-by { text-align:center; padding:8px 20px 18px; font-family:'DM Mono',monospace; font-size:8.5px; letter-spacing:0.16em; text-transform:uppercase; color:var(--muted); border-top:1px solid var(--border); margin:2px 20px 0; }
@@ -208,6 +252,16 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 </style>
 </head>
 <body>
+
+<!-- Flooding water immersion overlay (shown only during a live flood report) -->
+<div id="flood-water" aria-hidden="true">
+  <div class="fw-body">
+    <div class="fw-wave fw-wave-back"><svg viewBox="0 0 2880 46" preserveAspectRatio="none"><path d="M0,23 C 240,7 480,7 720,23 C 960,39 1200,39 1440,23 C 1680,7 1920,7 2160,23 C 2400,39 2640,39 2880,23 L2880,46 L0,46 Z"/></svg></div>
+    <div class="fw-wave fw-wave-front"><svg viewBox="0 0 2880 46" preserveAspectRatio="none"><path d="M0,23 C 240,7 480,7 720,23 C 960,39 1200,39 1440,23 C 1680,7 1920,7 2160,23 C 2400,39 2640,39 2880,23 L2880,46 L0,46 Z"/></svg></div>
+    <div class="fw-bubbles"></div>
+  </div>
+</div>
+
 <div class="app">
 
 <!-- Header -->
@@ -1108,7 +1162,7 @@ function updateTideReadout(idx, isNow) {
 // A report forces the index to HIGH / 100%, shows a red banner, logs to Supabase
 // if connected (so other guests see it too), and auto-expires after 6h so a stale
 // report clears itself. A true "only the owner can set it" would need a login.
-const OVERRIDE_WINDOW_MS = 6 * 3600 * 1000;
+const OVERRIDE_WINDOW_MS = 4 * 3600 * 1000;
 
 function getLocalOverride() {
   try {
@@ -1123,6 +1177,31 @@ function getLocalOverride() {
 
 function floodOverrideActive() { return !!getLocalOverride(); }
 
+// Spawn / tear down the rising water overlay used during a live flood report.
+let floodBubblesSpawned = false;
+function spawnFloodBubbles() {
+  const c = document.querySelector('#flood-water .fw-bubbles');
+  if (!c || floodBubblesSpawned) return;
+  let h = '';
+  for (let i = 0; i < 14; i++) {
+    const size  = (6 + Math.random() * 16).toFixed(1);
+    const left  = (Math.random() * 100).toFixed(1);
+    const dur   = (5 + Math.random() * 6).toFixed(1);
+    const delay = (Math.random() * 6).toFixed(1);
+    const drift = (Math.random() * 60 - 30).toFixed(0) + 'px';
+    h += `<span style="left:${left}%;width:${size}px;height:${size}px;--drift:${drift};animation-duration:${dur}s;animation-delay:${delay}s"></span>`;
+  }
+  c.innerHTML = h;
+  floodBubblesSpawned = true;
+}
+function clearFloodWater() {
+  const w = document.getElementById('flood-water');
+  if (w) w.classList.remove('on');
+  const c = document.querySelector('#flood-water .fw-bubbles');
+  if (c) c.innerHTML = '';
+  floodBubblesSpawned = false;
+}
+
 function applyFloodOverride() {
   const o = getLocalOverride();
   const banner = document.getElementById('flood-banner');
@@ -1130,6 +1209,7 @@ function applyFloodOverride() {
   if (!o) {
     if (banner) banner.style.display = 'none';
     if (btn) { btn.classList.remove('active'); btn.textContent = '⚠️ Report flooding now'; }
+    clearFloodWater();
     return;
   }
   // Force the score + ring to HIGH / 100%, overriding the calculated value
@@ -1145,14 +1225,16 @@ function applyFloodOverride() {
   const when = new Date(o.ts).toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', timeZone:'America/Costa_Rica' });
   if (banner) {
     banner.style.display = 'block';
-    banner.innerHTML = `⚠️ FLOODING REPORTED · index forced to HIGH<small>Reported ${when} · clears automatically after 6h · tap here if the river is NOT flooding</small>`;
+    banner.innerHTML = `⚠️ FLOODING REPORTED · index forced to HIGH<small>Reported ${when} · clears automatically after 4h · tap here if the river is NOT flooding</small>`;
   }
   if (btn) { btn.classList.add('active'); btn.textContent = '✓ Flooding reported — tap to clear'; }
+  const water = document.getElementById('flood-water');
+  if (water) { water.classList.add('on'); spawnFloodBubbles(); }
 }
 
 function reportFlooding() {
   if (floodOverrideActive()) { clearFloodOverride(); return; }
-  if (!confirm('Report that the Barú is flooding RIGHT NOW?\n\nThis forces the index to HIGH (100%) and logs it. It clears itself after 6 hours.')) return;
+  if (!confirm('Report that the Barú is flooding RIGHT NOW?\n\nThis forces the index to HIGH (100%) and logs it. It clears itself after 4 hours.')) return;
   try { localStorage.setItem('flood_override', JSON.stringify({ ts: Date.now() })); } catch(e) {}
   // Share it via the existing observations table (proven insert path) so other guests see HIGH too
   if (sbClient) {
