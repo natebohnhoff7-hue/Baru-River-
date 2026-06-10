@@ -427,24 +427,24 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 <div id="tab-radar" class="tab-pane">
   <div class="card">
     <div class="card-title">Live Radar</div>
-    <div style="font-size:9px;color:var(--muted);margin-bottom:10px;line-height:1.7">Two views over the Barú watershed. <b>RainViewer</b> (top) = satellite nowcast, which often catches Pacific cells Windy misses. <b>Windy</b> (below) = ground radar + model. Tap either to expand — pan, zoom, scrub the timeline.</div>
+    <div style="font-size:9px;color:var(--muted);margin-bottom:10px;line-height:1.7"><b>IMN national radar</b> (top) — Costa Rica's official weather-radar mosaic, refreshed every few minutes. <b>Windy</b> (below) — ground radar + model; tap to expand and scrub the timeline. Note: the Talamanca range can partly shadow radar over the zona sur, so cross-check both.</div>
     <div class="radar-grid">
       <div class="radar-panel">
-        <div class="radar-panel-label">RainViewer · satellite</div>
-        <div class="radar-thumb">
-          <iframe id="radar-thumb-frame2" class="radar-thumb-frame" title="RainViewer radar — Barú watershed" frameborder="0"></iframe>
-          <div class="radar-thumb-click" onclick="openRadarModal('rain')"><span class="radar-thumb-badge">⤢ Expand</span></div>
-        </div>
+        <div class="radar-panel-label">IMN · national radar (animated)</div>
+        <a href="https://www.imn.ac.cr/imagenes-sat/radar3m-animada.gif" target="_blank" rel="noopener" class="radar-thumb" style="display:block;height:340px">
+          <img id="imn-radar-img" class="radar-thumb-frame" style="object-fit:contain;background:#0a1410" alt="IMN national radar — Costa Rica" />
+          <div class="radar-thumb-click"><span class="radar-thumb-badge">⤢ Open full</span></div>
+        </a>
       </div>
       <div class="radar-panel">
         <div class="radar-panel-label">Windy</div>
         <div class="radar-thumb">
           <iframe id="radar-thumb-frame" class="radar-thumb-frame" title="Windy radar — Barú watershed" frameborder="0"></iframe>
-          <div class="radar-thumb-click" onclick="openRadarModal('windy')"><span class="radar-thumb-badge">⤢ Expand</span></div>
+          <div class="radar-thumb-click" onclick="openRadarModal()"><span class="radar-thumb-badge">⤢ Expand</span></div>
         </div>
       </div>
     </div>
-    <div style="font-size:8px;color:var(--muted);margin-top:8px;text-align:center">Radar © Windy.com &amp; © RainViewer · independent of the flood score</div>
+    <div style="font-size:8px;color:var(--muted);margin-top:8px;text-align:center">Radar © IMN (imn.ac.cr) &amp; © Windy.com · independent of the flood score</div>
   </div>
 </div>
 
@@ -1947,26 +1947,21 @@ async function loadSurf(){
 // only this tab is affected.
 const RADAR_THUMB_SRC = 'https://embed.windy.com/embed2.html?lat=9.2703&lon=-83.8580&detailLat=9.2703&detailLon=-83.8580&zoom=10&overlay=radar&product=radar&menu=&message=&marker=true&calendar=now&type=map&location=coordinates&metricWind=default&metricTemp=default&radarRange=-1';
 const RADAR_FULL_SRC  = 'https://embed.windy.com/embed2.html?lat=9.2703&lon=-83.8580&detailLat=9.2703&detailLon=-83.8580&zoom=10&overlay=radar&product=radar&message=true&marker=true&calendar=now&type=map&location=coordinates&metricWind=default&metricTemp=default&radarRange=-1';
-const RADAR2_THUMB_SRC = 'https://www.rainviewer.com/map.html?loc=9.2703,-83.858,8&oFa=0&oC=0&oU=0&oCS=1&oF=0&oAP=1&c=3&o=83&lm=1&sm=1&sn=1';
-const RADAR2_FULL_SRC  = 'https://www.rainviewer.com/map.html?loc=9.2703,-83.858,9&oFa=0&oC=0&oU=0&oCS=1&oF=0&oAP=1&c=3&o=83&lm=1&sm=1&sn=1';
+const IMN_RADAR_IMG = 'https://www.imn.ac.cr/imagenes-sat/radar3m-animada.gif';
 let radarLoaded = false;
 function loadRadar() {
   if (radarLoaded) return;
   const thumb = document.getElementById('radar-thumb-frame');
   if (thumb) thumb.src = RADAR_THUMB_SRC;
-  const thumb2 = document.getElementById('radar-thumb-frame2');
-  if (thumb2) thumb2.src = RADAR2_THUMB_SRC;
+  const imn = document.getElementById('imn-radar-img');
+  if (imn) imn.src = IMN_RADAR_IMG + '?t=' + Date.now();
   radarLoaded = true;
 }
-function openRadarModal(which) {
+function openRadarModal() {
   const modal = document.getElementById('radar-modal');
   const frame = document.getElementById('radar-modal-frame');
   if (!modal || !frame) return;
-  const src = which === 'rain' ? RADAR2_FULL_SRC : RADAR_FULL_SRC;
-  const title = which === 'rain' ? 'RainViewer · Barú Watershed' : 'Windy Radar · Barú Watershed';
-  if (frame.dataset.src !== src) { frame.src = src; frame.dataset.src = src; }
-  const t = document.getElementById('radar-modal-title');
-  if (t) t.textContent = title;
+  if (frame.dataset.src !== RADAR_FULL_SRC) { frame.src = RADAR_FULL_SRC; frame.dataset.src = RADAR_FULL_SRC; }
   modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
