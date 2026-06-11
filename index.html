@@ -296,7 +296,7 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 <!-- Header -->
 <div class="header">
   <div style="font-size:9px;letter-spacing:0.2em;color:var(--muted);margin-bottom:5px">DOMINICAL, COSTA RICA</div>
-  <h1>Barú Flood Index</h1>
+  <h1 data-i18n="app_title">Barú Flood Index</h1>
   <div class="header-sub" id="htime">Loading…</div>
   <div class="badge" id="hbadge">Loading season…</div>
 </div>
@@ -381,12 +381,12 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
       <div style="font-size:8px;color:var(--muted);margin-top:6px;text-align:center" id="tide-source">Observed highs &amp; lows · Dominical (Bahía Uvita port) · via costarica.com · slide to read any time</div>
     </div>
     <div class="card">
-      <div class="card-title">Sun &amp; Surf</div>
+      <div class="card-title" data-i18n="ct_sunsurf">Sun &amp; Surf</div>
       <div class="grid2">
-        <div class="stat-box"><div class="stat-val" id="ov-sunrise" style="font-size:16px">—</div><div class="stat-lbl">Sunrise</div></div>
-        <div class="stat-box"><div class="stat-val" id="ov-sunset" style="font-size:16px">—</div><div class="stat-lbl">Sunset</div></div>
-        <div class="stat-box"><div class="stat-val" id="ov-wave">—</div><div class="stat-unit">m</div><div class="stat-lbl">Wave Height</div></div>
-        <div class="stat-box"><div class="stat-val" id="ov-swell">—</div><div class="stat-unit" id="ov-swell-deg"></div><div class="stat-lbl">Swell Dir</div></div>
+        <div class="stat-box"><div class="stat-val" id="ov-sunrise" style="font-size:16px">—</div><div class="stat-lbl" data-i18n="lbl_sunrise">Sunrise</div></div>
+        <div class="stat-box"><div class="stat-val" id="ov-sunset" style="font-size:16px">—</div><div class="stat-lbl" data-i18n="lbl_sunset">Sunset</div></div>
+        <div class="stat-box"><div class="stat-val" id="ov-wave">—</div><div class="stat-unit">m</div><div class="stat-lbl" data-i18n="lbl_wave">Wave Height</div></div>
+        <div class="stat-box"><div class="stat-val" id="ov-swell">—</div><div class="stat-unit" id="ov-swell-deg"></div><div class="stat-lbl" data-i18n="lbl_swell">Swell Dir</div></div>
       </div>
       <div style="font-size:8px;color:var(--muted);margin-top:8px;text-align:center">Sun times · Open-Meteo · Waves · Open-Meteo Marine (off Dominical)</div>
     </div>
@@ -396,7 +396,7 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 <!-- WATERSHED -->
 <div id="tab-watershed" class="tab-pane">
   <div class="card">
-    <div class="card-title">Watershed Rainfall · 3 Points</div>
+    <div class="card-title" data-i18n="ct_wshed">Watershed Rainfall · 3 Points</div>
     <div style="font-size:9px;color:var(--muted);margin-bottom:10px;line-height:1.7">River Mouth, Platanillo mid-valley, and Tinamastes Valley upper catchment. Heavy upstream rain arrives at the crossing in 2–6 hours.</div>
     <div id="ws-loading" class="loading" style="padding:16px"><div class="loader"></div></div>
     <div id="ws-content" style="display:none">
@@ -410,17 +410,17 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 <!-- STATIONS -->
 <div id="tab-stations" class="tab-pane">
   <div class="card">
-    <div class="card-title">3 Nearby Stations · Live</div>
+    <div class="card-title" data-i18n="ct_stations">3 Nearby Stations · Live</div>
     <div style="font-size:9px;color:var(--muted);margin-bottom:10px">Quepos, Dominical, Uvita — all within 40km of the Barú crossing.</div>
     <div id="st-loading" class="loading" style="padding:16px"><div class="loader"></div></div>
     <div id="st-content" style="display:none"><div id="st-grid"></div></div>
   </div>
   <div class="card" id="tempest-card" style="display:none">
-    <div class="card-title">River Soul · Tempest Station</div>
+    <div class="card-title" data-i18n="ct_tempest">River Soul · Tempest Station</div>
     <div id="tempest-content"><div style="font-size:9px;color:var(--muted)">Loading…</div></div>
   </div>
   <div class="card">
-    <div class="card-title">Rainfall Comparison · mm</div>
+    <div class="card-title" data-i18n="ct_raincmp">Rainfall Comparison · mm</div>
     <div class="chart-wrap-med"><canvas id="st-rain-chart"></canvas></div>
   </div>
 </div>
@@ -428,15 +428,15 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 <!-- FORECAST -->
 <div id="tab-forecast" class="tab-pane">
   <div class="card">
-    <div class="card-title">7-Day Risk Forecast</div>
+    <div class="card-title" data-i18n="ct_forecast7">7-Day Risk Forecast</div>
     <div id="fc-strip-wrap" class="loading" style="padding:16px"><div class="loader"></div></div>
   </div>
   <div class="card">
-    <div class="card-title">Rainfall Forecast · mm/day</div>
+    <div class="card-title" data-i18n="ct_rainfc">Rainfall Forecast · mm/day</div>
     <div class="chart-wrap-med"><canvas id="fc-chart"></canvas></div>
   </div>
   <div class="card">
-    <div class="card-title">Model Agreement · GFS vs ECMWF</div>
+    <div class="card-title" data-i18n="ct_modelagree">Model Agreement · GFS vs ECMWF</div>
     <div style="font-size:9px;color:var(--muted);margin-bottom:10px;line-height:1.7">Two independent weather models. When they disagree, forecast confidence is lower — treat the higher number as the safety case.</div>
     <div id="model-compare" class="loading" style="padding:16px"><div class="loader"></div></div>
   </div>
@@ -445,7 +445,7 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 <!-- RADAR -->
 <div id="tab-radar" class="tab-pane">
   <div class="card">
-    <div class="card-title">Live Radar</div>
+    <div class="card-title" data-i18n="ct_radar">Live Radar</div>
     <div style="font-size:9px;color:var(--muted);margin-bottom:10px;line-height:1.7"><b>IMN national radar</b> (top) — Costa Rica's official weather-radar mosaic, refreshed every few minutes. <b>Windy</b> (below) — ground radar + model; tap to expand and scrub the timeline. Note: the Talamanca range can partly shadow radar over the zona sur, so cross-check both.</div>
     <div class="radar-grid">
       <div class="radar-panel">
@@ -471,11 +471,11 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 <div id="tab-history" class="tab-pane">
   <div id="hist-banner" class="setup-banner" style="display:none">Connect Supabase in <strong>Config</strong> to log history.</div>
   <div class="card">
-    <div class="card-title">Flood Score · Last 30 Days</div>
+    <div class="card-title" data-i18n="ct_score30">Flood Score · Last 30 Days</div>
     <div class="chart-wrap-med"><canvas id="hist-chart"></canvas></div>
   </div>
   <div class="card">
-    <div class="card-title">Recent Log</div>
+    <div class="card-title" data-i18n="ct_recentlog">Recent Log</div>
     <div id="hist-log" class="loading" style="padding:16px"><div class="loader"></div></div>
   </div>
 </div>
@@ -484,7 +484,7 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 <div id="tab-observe" class="tab-pane">
   <div id="obs-banner" class="setup-banner" style="display:none">Connect Supabase in <strong>Config</strong> to save observations.</div>
   <div class="card">
-    <div class="card-title">Log Observation</div>
+    <div class="card-title" data-i18n="ct_logobs">Log Observation</div>
     <div class="obs-form">
       <label>River Condition</label>
       <select id="obs-cond">
@@ -522,7 +522,7 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
     </div>
   </div>
   <div class="card">
-    <div class="card-title">Recent Observations</div>
+    <div class="card-title" data-i18n="ct_recentobs">Recent Observations</div>
     <div id="obs-log"><div style="font-size:9px;color:var(--muted)">No observations yet.</div></div>
   </div>
 </div>
@@ -530,17 +530,17 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 <!-- JOURNAL -->
 <div id="tab-journal" class="tab-pane">
   <div class="card">
-    <div class="card-title">Flood Record · 2025</div>
+    <div class="card-title" data-i18n="ct_floodrec">Flood Record · 2025</div>
     <div style="font-size:9px;color:var(--muted);margin-bottom:10px;line-height:1.7">Confirmed flood events at the Barú crossing, River Soul. Ground truth.</div>
     <div id="flood-record"></div>
   </div>
   <div class="card">
-    <div class="card-title">Field Journal · January 2026</div>
+    <div class="card-title" data-i18n="ct_journal">Field Journal · January 2026</div>
     <div style="font-size:9px;color:var(--muted);margin-bottom:10px;line-height:1.7">Observed conditions at River Soul · Barú River mouth · Dominical.</div>
     <div id="journal"></div>
   </div>
   <div class="card" style="font-size:9px;color:var(--muted);line-height:2.2">
-    <div class="card-title">Tico Weather Glossary</div>
+    <div class="card-title" data-i18n="ct_glossary">Tico Weather Glossary</div>
     <strong style="color:var(--ink)">Aguacero</strong> — arrives fast, dumps everything, gone in 20 minutes. No warning, no apology.<br>
     <strong style="color:var(--ink)">Temporal</strong> — multi-day rain. River doesn't sleep.<br>
     <strong style="color:var(--ink)">Veranillo</strong> — little dry season hiding inside the wet season.<br>
@@ -650,6 +650,18 @@ const I18N = {
     wa_btn:"🔔 Join flood alerts on WhatsApp",
     call911:"📞 Call 911",
     cne_link:"🛡️ Official alerts · CNE Costa Rica",
+    app_title:"Barú Flood Index",
+    ct_sunsurf:"Sun & Surf", ct_wshed:"Watershed Rainfall · 3 Points", ct_stations:"3 Nearby Stations · Live",
+    ct_tempest:"River Soul · Tempest Station", ct_raincmp:"Rainfall Comparison · mm", ct_forecast7:"7-Day Risk Forecast",
+    ct_rainfc:"Rainfall Forecast · mm/day", ct_modelagree:"Model Agreement · GFS vs ECMWF", ct_radar:"Live Radar",
+    ct_score30:"Flood Score · Last 30 Days", ct_recentlog:"Recent Log", ct_logobs:"Log Observation",
+    ct_recentobs:"Recent Observations", ct_floodrec:"Flood Record · 2025", ct_journal:"Field Journal · January 2026",
+    ct_glossary:"Tico Weather Glossary",
+    lbl_sunrise:"Sunrise", lbl_sunset:"Sunset", lbl_wave:"Wave Height", lbl_swell:"Swell Dir",
+    rf_rain:"Rainfall", rf_lunar:"Lunar", rf_soil:"Soil", rf_tide:"Tide", rf_season:"Season",
+    soil_bonedry:"· bone dry · hydrophobic", soil_rewet:"· rewetting", soil_absorb:"· absorbing well", soil_filling:"· filling up", soil_sat:"· SATURATED",
+    tide_now:"NOW", tide_at:"AT", tide_high:"HIGH", tide_low:"LOW", tide_rising:"RISING", tide_falling:"FALLING",
+    sun_tonight:"Sunset tonight", sun_tomorrow:"Sunset tomorrow",
     disclaimer:"⚠️ This is an informational tool, not an official warning system. Conditions can change fast — never cross moving water. In a life-threatening emergency, call 911.",
     rep_main:"⚠️ FLOODING REPORTED · index forced to HIGH",
     rep_sub_a:"Reported", rep_sub_b:"clears automatically after 4h · tap here if the river is NOT flooding",
@@ -668,6 +680,25 @@ const I18N = {
     wa_btn:"🔔 Unirse a las alertas por WhatsApp",
     call911:"📞 Llamar al 911",
     cne_link:"🛡️ Alertas oficiales · CNE Costa Rica",
+    app_title:"Índice de Inundación del Barú",
+    ct_sunsurf:"Sol y olas", ct_wshed:"Lluvia en la cuenca · 3 puntos", ct_stations:"3 estaciones cercanas · en vivo",
+    ct_tempest:"River Soul · Estación Tempest", ct_raincmp:"Comparación de lluvia · mm", ct_forecast7:"Pronóstico de riesgo · 7 días",
+    ct_rainfc:"Pronóstico de lluvia · mm/día", ct_modelagree:"Acuerdo de modelos · GFS vs ECMWF", ct_radar:"Radar en vivo",
+    ct_score30:"Índice de inundación · últimos 30 días", ct_recentlog:"Registro reciente", ct_logobs:"Registrar observación",
+    ct_recentobs:"Observaciones recientes", ct_floodrec:"Registro de inundaciones · 2025", ct_journal:"Diario de campo · enero 2026",
+    ct_glossary:"Glosario del clima tico",
+    lbl_sunrise:"Amanecer", lbl_sunset:"Atardecer", lbl_wave:"Altura de ola", lbl_swell:"Dir. del oleaje",
+    rf_rain:"Lluvia", rf_lunar:"Lunar", rf_soil:"Suelo", rf_tide:"Marea", rf_season:"Temporada",
+    soil_bonedry:"· muy seco · hidrofóbico", soil_rewet:"· rehumedeciéndose", soil_absorb:"· absorbiendo bien", soil_filling:"· llenándose", soil_sat:"· SATURADO",
+    tide_now:"AHORA", tide_at:"A LAS", tide_high:"ALTA", tide_low:"BAJA", tide_rising:"SUBIENDO", tide_falling:"BAJANDO",
+    sun_tonight:"Atardecer hoy", sun_tomorrow:"Atardecer mañana",
+    "low cloud may block it":"nube baja puede taparlo",
+    "overcast — flat light":"nublado — luz plana",
+    "high clouds, clear horizon":"nubes altas, horizonte despejado",
+    "good clouds aloft":"buenas nubes en altura",
+    "cloudy but workable":"nublado pero aprovechable",
+    "clear but bare":"despejado pero sin nubes",
+    "mixed sky":"cielo mixto",
     disclaimer:"⚠️ Esta es una herramienta informativa, no un sistema oficial de alerta. Las condiciones pueden cambiar rápido — nunca cruce agua en movimiento. En una emergencia que ponga en riesgo la vida, llame al 911.",
     rep_main:"⚠️ INUNDACIÓN REPORTADA · índice forzado a ALTO",
     rep_sub_a:"Reportado", rep_sub_b:"se borra automáticamente tras 4h · toque aquí si el río NO está desbordado",
@@ -1292,13 +1323,16 @@ function updateTideReadout(idx, isNow) {
     timeZone:'America/Costa_Rica'
   });
   // Determine state (rising/falling/peaking)
-  let state = isNow ? 'NOW' : 'AT';
+  const _nw = t('tide_now');
+  let state = isNow ? _nw : t('tide_at');
   if (idx > 0 && idx < tideSeries.length-1) {
     const prev = tideSeries[idx-1].h, next = tideSeries[idx+1].h;
-    if (p.h > prev && p.h > next) state = isNow ? 'NOW · HIGH' : 'HIGH';
-    else if (p.h < prev && p.h < next) state = isNow ? 'NOW · LOW' : 'LOW';
-    else if (next > p.h) state = isNow ? 'NOW · RISING' : 'RISING';
-    else state = isNow ? 'NOW · FALLING' : 'FALLING';
+    let _k;
+    if (p.h > prev && p.h > next) _k = t('tide_high');
+    else if (p.h < prev && p.h < next) _k = t('tide_low');
+    else if (next > p.h) _k = t('tide_rising');
+    else _k = t('tide_falling');
+    state = isNow ? (_nw + ' · ' + _k) : _k;
   }
   document.getElementById('tide-state').textContent = state;
   document.getElementById('tide-readout-time').textContent = timeStr;
@@ -1454,11 +1488,11 @@ async function loadAll() {
   let soilLabel = '';
   if (soilVal != null) {
     const vn = soilVal / 0.42;
-    if (vn < 0.20)      soilLabel = '· bone dry · hydrophobic';
-    else if (vn < 0.35) soilLabel = '· rewetting';
-    else if (vn < 0.65) soilLabel = '· absorbing well';
-    else if (vn < 0.85) soilLabel = '· filling up';
-    else                soilLabel = '· SATURATED';
+    if (vn < 0.20)      soilLabel = t('soil_bonedry');
+    else if (vn < 0.35) soilLabel = t('soil_rewet');
+    else if (vn < 0.65) soilLabel = t('soil_absorb');
+    else if (vn < 0.85) soilLabel = t('soil_filling');
+    else                soilLabel = t('soil_sat');
   }
   const score = calcRisk(rainR, phase.risk, soilR, tideR, season.base);
   const level = riskLevel(score);
@@ -1493,11 +1527,11 @@ async function loadAll() {
 
   // Factor bars
   const factors = [
-    { label:`Rainfall 24h:${rain24.toFixed(1)}mm 72h:${rain72.toFixed(1)}mm`, val:rainR,    w:'40%', color:'var(--teal)' },
-    { label:`Lunar — ${phase.name}`,                                          val:phase.risk, w:'20%', color:'#9b59b6' },
-    { label:`Soil ${soilVal?.toFixed(3) ?? '—'} m³/m³ ${soilLabel}`,          val:soilR,    w:'18%', color:'var(--sand)' },
-    { label:`Tide ${tideM.toFixed(2)}m`,                                      val:tideR,    w:'14%', color:'var(--teal-light)' },
-    { label:`Season — ${season.name}`,                                        val:season.base, w:'8%', color:'var(--green)' },
+    { label:`${t('rf_rain')} 24h:${rain24.toFixed(1)}mm 72h:${rain72.toFixed(1)}mm`, val:rainR,    w:'40%', color:'var(--teal)' },
+    { label:`${t('rf_lunar')} — ${t(phase.name)}`,                                   val:phase.risk, w:'20%', color:'#9b59b6' },
+    { label:`${t('rf_soil')} ${soilVal?.toFixed(3) ?? '—'} m³/m³ ${soilLabel}`,      val:soilR,    w:'18%', color:'var(--sand)' },
+    { label:`${t('rf_tide')} ${tideM.toFixed(2)}m`,                                  val:tideR,    w:'14%', color:'var(--teal-light)' },
+    { label:`${t('rf_season')} — ${t(season.name)}`,                                 val:season.base, w:'8%', color:'var(--green)' },
   ];
   document.getElementById('ov-bars').innerHTML = factors.map(f => `
     <div class="bar-row">
@@ -1505,7 +1539,7 @@ async function loadAll() {
       <div class="bar-track"><div class="bar-fill" style="width:${f.val*100}%;background:${f.color}"></div></div>
     </div>`).join('');
   document.getElementById('ov-formula').innerHTML =
-    `Rain×0.40 + Lunar×0.20 + Soil×0.18 + Tide×0.14 + Season×0.08<br>= <span style="color:${level.color}">${score.toFixed(3)} → ${level.label}</span>`;
+    `Rain×0.40 + Lunar×0.20 + Soil×0.18 + Tide×0.14 + Season×0.08<br>= <span style="color:${level.color}">${score.toFixed(3)} → ${t(level.label)}</span>`;
 
   document.getElementById('ov-loading').style.display = 'none';
   document.getElementById('ov-content').style.display = 'block';
@@ -2003,8 +2037,8 @@ async function loadSunsetMini(){
   // Tonight's sunset — or tomorrow's if tonight's has already passed
   const nowCR = getCRHour(new Date()) + getCRMinute(new Date())/60;
   const sunsetHourOf = iso => { const m = iso.match(/T(\d{2}):(\d{2})/); return m ? parseInt(m[1],10)+parseInt(m[2],10)/60 : 18; };
-  let di = 0, label = 'Sunset tonight';
-  if(sunsets.length > 1 && nowCR > sunsetHourOf(sunsets[0]) + 0.5){ di = 1; label = 'Sunset tomorrow'; }
+  let di = 0, label = t('sun_tonight');
+  if(sunsets.length > 1 && nowCR > sunsetHourOf(sunsets[0]) + 0.5){ di = 1; label = t('sun_tomorrow'); }
   const iso = sunsets[di];
 
   const key = sunsetHourKey(iso);
@@ -2024,7 +2058,7 @@ async function loadSunsetMini(){
   const score01 = Math.min(1, colorPotential * gate);
   const ten = Math.max(1, Math.min(10, Math.round(score01*10)));
   const color = sunsetMiniColor(ten);
-  const note = sunsetMiniNote({ ch, cm, cl, tot });
+  const note = t(sunsetMiniNote({ ch, cm, cl, tot }));
 
   el.innerHTML = `🌅 <span class="sm-label">${label}</span> <span class="sm-score" style="color:${color}">${ten}</span><span>/10</span> <span class="sm-note">· ${note} · ${fmtSunsetTime(iso)}</span>`;
   el.style.display = 'inline-flex';
