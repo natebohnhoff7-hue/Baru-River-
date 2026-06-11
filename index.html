@@ -16,7 +16,10 @@
 }
 * { box-sizing:border-box; margin:0; padding:0; }
 body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink); min-height:100vh; overflow-x:hidden; }
-.app { max-width:480px; margin:0 auto; padding:0 0 80px; }
+.app { max-width:480px; margin:0 auto; padding:0 0 80px; position:relative; }
+.lang-toggle { position:absolute; top:12px; right:12px; display:flex; border:1px solid var(--border); border-radius:13px; overflow:hidden; background:rgba(255,255,255,0.7); z-index:50; }
+.lang-btn { border:none; background:transparent; color:var(--muted); font-family:'DM Mono',monospace; font-size:10px; font-weight:500; letter-spacing:0.08em; padding:4px 9px; cursor:pointer; line-height:1.4; }
+.lang-btn.active { background:var(--green); color:#fff; }
 
 /* Header */
 .header { text-align:center; padding:24px 20px 14px; border-bottom:1px solid var(--border); }
@@ -283,6 +286,11 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 
 <div class="app">
 
+<div class="lang-toggle">
+  <button id="lang-en" class="lang-btn" onclick="setLang('en')">EN</button>
+  <button id="lang-es" class="lang-btn" onclick="setLang('es')">ES</button>
+</div>
+
 <!-- Header -->
 <div class="header">
   <div style="font-size:9px;letter-spacing:0.2em;color:var(--muted);margin-bottom:5px">DOMINICAL, COSTA RICA</div>
@@ -310,21 +318,21 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
   </div>
   <div class="chips" id="chips"><span class="chip" style="color:#888">Fetching…</span></div>
   <div id="sunset-mini" class="sunset-mini" style="display:none"></div>
-  <button id="flood-report-btn" class="flood-report-btn" onclick="reportFlooding()">⚠️ Report flooding now</button>
-  <a class="wa-alerts-btn" href="https://chat.whatsapp.com/ErtsBDxSl9196eCVZ0BoPz?mode=gi_t" target="_blank" rel="noopener">🔔 Join flood alerts on WhatsApp</a>
+  <button id="flood-report-btn" class="flood-report-btn" data-i18n="report_btn" onclick="reportFlooding()">⚠️ Report flooding now</button>
+  <a class="wa-alerts-btn" href="https://chat.whatsapp.com/ErtsBDxSl9196eCVZ0BoPz?mode=gi_t" target="_blank" rel="noopener" data-i18n="wa_btn">🔔 Join flood alerts on WhatsApp</a>
 </div>
 
 <!-- Tabs -->
 <div class="tabs">
-  <button class="tab-btn active" onclick="showTab('overview',this)">Overview</button>
-  <button class="tab-btn" onclick="showTab('forecast',this)">Forecast</button>
-  <button class="tab-btn" onclick="showTab('radar',this)">Radar</button>
-  <button class="tab-btn" onclick="showTab('watershed',this)">Watershed</button>
-  <button class="tab-btn" onclick="showTab('stations',this)">Stations</button>
-  <button class="tab-btn" onclick="showTab('history',this)">History</button>
-  <button class="tab-btn" onclick="showTab('observe',this)">Log</button>
-  <button class="tab-btn" onclick="showTab('journal',this)">Journal</button>
-  <button class="tab-btn" id="config-tab-btn" style="display:none" onclick="showTab('config',this)">Config</button>
+  <button class="tab-btn active" data-i18n="tab_overview" onclick="showTab('overview',this)">Overview</button>
+  <button class="tab-btn" data-i18n="tab_forecast" onclick="showTab('forecast',this)">Forecast</button>
+  <button class="tab-btn" data-i18n="tab_radar" onclick="showTab('radar',this)">Radar</button>
+  <button class="tab-btn" data-i18n="tab_watershed" onclick="showTab('watershed',this)">Watershed</button>
+  <button class="tab-btn" data-i18n="tab_stations" onclick="showTab('stations',this)">Stations</button>
+  <button class="tab-btn" data-i18n="tab_history" onclick="showTab('history',this)">History</button>
+  <button class="tab-btn" data-i18n="tab_log" onclick="showTab('observe',this)">Log</button>
+  <button class="tab-btn" data-i18n="tab_journal" onclick="showTab('journal',this)">Journal</button>
+  <button class="tab-btn" id="config-tab-btn" data-i18n="tab_config" style="display:none" onclick="showTab('config',this)">Config</button>
 </div>
 
 <!-- OVERVIEW -->
@@ -332,26 +340,26 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
   <div id="ov-loading" class="loading"><div class="loader"></div>Fetching live conditions…</div>
   <div id="ov-content" style="display:none">
     <div class="card">
-      <div class="card-title">Current Conditions</div>
-      <div style="font-size:8px;color:var(--muted);margin-top:-6px;margin-bottom:10px;letter-spacing:0.05em">via Open-Meteo · ECMWF + GFS · station-corrected for Pacífico Sur</div>
+      <div class="card-title" data-i18n="ct_current">Current Conditions</div>
+      <div style="font-size:8px;color:var(--muted);margin-top:-6px;margin-bottom:10px;letter-spacing:0.05em" data-i18n="cc_source">via Open-Meteo · ECMWF + GFS · station-corrected for Pacífico Sur</div>
       <div class="grid2">
-        <div class="stat-box"><div class="stat-val" id="ov-r24">—</div><div class="stat-unit">mm</div><div class="stat-lbl">Rain 24h</div></div>
-        <div class="stat-box"><div class="stat-val" id="ov-r72">—</div><div class="stat-unit">mm</div><div class="stat-lbl">Rain 72h</div></div>
-        <div class="stat-box"><div class="stat-val" id="ov-tmp">—</div><div class="stat-unit">°C</div><div class="stat-lbl">Temperature</div></div>
-        <div class="stat-box"><div class="stat-val" id="ov-hum">—</div><div class="stat-unit">%</div><div class="stat-lbl">Humidity</div></div>
-        <div class="stat-box"><div class="stat-val" id="ov-wnd">—</div><div class="stat-unit">km/h</div><div class="stat-lbl">Wind</div></div>
-        <div class="stat-box"><div class="stat-val" id="ov-soi">—</div><div class="stat-unit">m³/m³</div><div class="stat-lbl">Soil Moisture</div></div>
+        <div class="stat-box"><div class="stat-val" id="ov-r24">—</div><div class="stat-unit">mm</div><div class="stat-lbl" data-i18n="lbl_rain24">Rain 24h</div></div>
+        <div class="stat-box"><div class="stat-val" id="ov-r72">—</div><div class="stat-unit">mm</div><div class="stat-lbl" data-i18n="lbl_rain72">Rain 72h</div></div>
+        <div class="stat-box"><div class="stat-val" id="ov-tmp">—</div><div class="stat-unit">°C</div><div class="stat-lbl" data-i18n="lbl_temp">Temperature</div></div>
+        <div class="stat-box"><div class="stat-val" id="ov-hum">—</div><div class="stat-unit">%</div><div class="stat-lbl" data-i18n="lbl_hum">Humidity</div></div>
+        <div class="stat-box"><div class="stat-val" id="ov-wnd">—</div><div class="stat-unit">km/h</div><div class="stat-lbl" data-i18n="lbl_wind">Wind</div></div>
+        <div class="stat-box"><div class="stat-val" id="ov-soi">—</div><div class="stat-unit">m³/m³</div><div class="stat-lbl" data-i18n="lbl_soil">Soil Moisture</div></div>
       </div>
     </div>
     <div class="card">
-      <div class="card-title">Flood Risk Factors</div>
+      <div class="card-title" data-i18n="ct_factors">Flood Risk Factors</div>
       <div id="ov-bars"></div>
       <div id="ov-formula" style="font-size:9px;color:var(--muted);margin-top:10px;line-height:1.9"></div>
     </div>
     <div class="card">
-      <div class="card-title">Tide · Bahía Uvita</div>
+      <div class="card-title" data-i18n="ct_tide">Tide · Bahía Uvita</div>
       <div class="grid3">
-        <div class="stat-box"><div class="stat-val" id="ov-tid">—</div><div class="stat-unit">m</div><div class="stat-lbl">Now</div></div>
+        <div class="stat-box"><div class="stat-val" id="ov-tid">—</div><div class="stat-unit">m</div><div class="stat-lbl" data-i18n="lbl_now">Now</div></div>
         <div class="stat-box"><div class="stat-val" id="ov-tnv">—</div><div class="stat-unit" id="ov-tnt">—</div><div class="stat-lbl" id="ov-ttm">next</div></div>
         <div class="stat-box">
           <canvas id="moon-canvas" width="50" height="50"></canvas>
@@ -616,8 +624,8 @@ CREATE POLICY "pub_write" ON observations   FOR INSERT WITH CHECK (true);</div>
 </div>
 
 <div class="safety-note" style="margin:18px auto 4px">
-  <div class="safety-text">⚠️ This is an informational tool, not an official warning system. Conditions can change fast — never cross moving water. In a life-threatening emergency, call 911.</div>
-  <a class="call-911-btn" href="tel:911">📞 Call 911</a>
+  <div class="safety-text" data-i18n="disclaimer">⚠️ This is an informational tool, not an official warning system. Conditions can change fast — never cross moving water. In a life-threatening emergency, call 911.</div>
+  <a class="call-911-btn" href="tel:911" data-i18n="call911">📞 Call 911</a>
 </div>
 <div class="footer"><span class="dot"></span>LIVE · River Soul · Barú River · 9.2703°N 83.8580°W<br>OpenMeteo · GFS + ECMWF · Costa Rica Tide Tables · Supabase</div>
 <a class="footer-logo-link" href="https://riversoulcr.com" target="_blank" rel="noopener"><img class="footer-logo" src="riversoul.png" alt="River Soul · Dominical, Costa Rica" /></a>
@@ -625,6 +633,88 @@ CREATE POLICY "pub_write" ON observations   FOR INSERT WITH CHECK (true);</div>
 </div>
 
 <script>
+// ═══ i18n · English / Spanish ════════════════════════════
+const I18N = {
+  en: {
+    ld_fetch:"Fetching live conditions…",
+    tab_overview:"Overview", tab_forecast:"Forecast", tab_radar:"Radar", tab_watershed:"Watershed",
+    tab_stations:"Stations", tab_history:"History", tab_log:"Log", tab_journal:"Journal", tab_config:"Config",
+    ct_current:"Current Conditions", ct_factors:"Flood Risk Factors", ct_tide:"Tide · Bahía Uvita",
+    cc_source:"via Open-Meteo · ECMWF + GFS · station-corrected for Pacífico Sur",
+    lbl_rain24:"Rain 24h", lbl_rain72:"Rain 72h", lbl_temp:"Temperature", lbl_hum:"Humidity",
+    lbl_wind:"Wind", lbl_soil:"Soil Moisture", lbl_now:"Now",
+    report_btn:"⚠️ Report flooding now",
+    wa_btn:"🔔 Join flood alerts on WhatsApp",
+    call911:"📞 Call 911",
+    disclaimer:"⚠️ This is an informational tool, not an official warning system. Conditions can change fast — never cross moving water. In a life-threatening emergency, call 911.",
+    rep_main:"⚠️ FLOODING REPORTED · index forced to HIGH",
+    rep_sub_a:"Reported", rep_sub_b:"clears automatically after 4h · tap here if the river is NOT flooding",
+    rep_chip:"⚠️ FLOODING REPORTED",
+    rep_confirm:"Report that the Barú is flooding RIGHT NOW?\n\nThis forces the index to HIGH (100%). It clears when you tap it off, or automatically after 4 hours."
+  },
+  es: {
+    ld_fetch:"Cargando condiciones en vivo…",
+    tab_overview:"Resumen", tab_forecast:"Pronóstico", tab_radar:"Radar", tab_watershed:"Cuenca",
+    tab_stations:"Estaciones", tab_history:"Historial", tab_log:"Registro", tab_journal:"Diario", tab_config:"Config",
+    ct_current:"Condiciones actuales", ct_factors:"Factores de riesgo de inundación", ct_tide:"Marea · Bahía Uvita",
+    cc_source:"vía Open-Meteo · ECMWF + GFS · corregido por estación para el Pacífico Sur",
+    lbl_rain24:"Lluvia 24h", lbl_rain72:"Lluvia 72h", lbl_temp:"Temperatura", lbl_hum:"Humedad",
+    lbl_wind:"Viento", lbl_soil:"Humedad del suelo", lbl_now:"Ahora",
+    report_btn:"⚠️ Reportar inundación ahora",
+    wa_btn:"🔔 Unirse a las alertas por WhatsApp",
+    call911:"📞 Llamar al 911",
+    disclaimer:"⚠️ Esta es una herramienta informativa, no un sistema oficial de alerta. Las condiciones pueden cambiar rápido — nunca cruce agua en movimiento. En una emergencia que ponga en riesgo la vida, llame al 911.",
+    rep_main:"⚠️ INUNDACIÓN REPORTADA · índice forzado a ALTO",
+    rep_sub_a:"Reportado", rep_sub_b:"se borra automáticamente tras 4h · toque aquí si el río NO está desbordado",
+    rep_chip:"⚠️ INUNDACIÓN REPORTADA",
+    rep_confirm:"¿Reportar que el Barú se está desbordando AHORA MISMO?\n\nEsto fuerza el índice a ALTO (100%). Se borra al tocarlo de nuevo, o automáticamente tras 4 horas.",
+    // dynamic values, keyed by their English string (EN falls back to the key itself)
+    "HIGH":"ALTO", "MODERATE":"MODERADO", "LOW":"BAJO",
+    "Dry Season":"Estación seca", "Transition":"Transición", "Green Season":"Estación verde", "Peak Wet":"Lluvia máxima",
+    "New Moon":"Luna nueva", "Waxing Crescent":"Luna creciente", "First Quarter":"Cuarto creciente",
+    "Waxing Gibbous":"Gibosa creciente", "Full Moon":"Luna llena", "Waning Gibbous":"Gibosa menguante",
+    "Last Quarter":"Cuarto menguante", "Waning Crescent":"Luna menguante"
+  }
+};
+let LANG = (function(){ try{ var s=localStorage.getItem('lang'); if(s==='en'||s==='es') return s; }catch(e){} return ((navigator.language||'en').toLowerCase().slice(0,2)==='es')?'es':'en'; })();
+function t(k){ if(k==null) return k; var L=I18N[LANG]||I18N.en; return (L[k]!=null?L[k]:(I18N.en[k]!=null?I18N.en[k]:k)); }
+function applyStaticLang(){
+  try{ document.documentElement.lang = LANG; }catch(e){}
+  var els = document.querySelectorAll('[data-i18n]');
+  for(var i=0;i<els.length;i++){ var k=els[i].getAttribute('data-i18n'); var v=t(k); if(v!=null) els[i].textContent=v; }
+  var be=document.getElementById('lang-en'), bs=document.getElementById('lang-es');
+  if(be) be.classList.toggle('active', LANG==='en');
+  if(bs) bs.classList.toggle('active', LANG==='es');
+}
+function i18nOverrideActive(){
+  try{ var raw=localStorage.getItem('flood_override'); if(!raw) return false; var o=JSON.parse(raw); return (Date.now()-o.ts) <= OVERRIDE_WINDOW_MS; }catch(e){ return false; }
+}
+function renderDynamicLang(){
+  try{
+    var now=new Date();
+    var hb=document.getElementById('hbadge');
+    if(hb && typeof getSeasonByDate==='function'){
+      var se=getSeasonByDate(now);
+      var m=now.toLocaleString(LANG==='es'?'es-CR':'en-US',{month:'long',timeZone:'America/Costa_Rica'});
+      hb.textContent = se.emoji+' '+t(se.name)+' · '+m;
+    }
+    if(i18nOverrideActive()) return; // leave the flood-report display intact
+    if(typeof G!=='undefined' && G && G.level){
+      var sl=document.getElementById('slbl'); if(sl) sl.textContent=t(G.level.label);
+      var c=document.getElementById('chips');
+      if(c) c.innerHTML =
+        '<span class="chip" style="color:'+G.level.color+'">'+t(G.level.label)+'</span>'+
+        ' <span class="chip" style="color:var(--teal)">'+G.phase.emoji+' '+t(G.phase.name)+'</span>'+
+        ' <span class="chip" style="color:var(--muted)">'+G.season.emoji+' '+t(G.season.name)+'</span>';
+    }
+  }catch(e){}
+}
+function setLang(l){
+  if(l!=='en'&&l!=='es') return;
+  LANG=l; try{ localStorage.setItem('lang',l); }catch(e){}
+  applyStaticLang();
+  renderDynamicLang();
+}
 // ═══ CONSTANTS ═══════════════════════════════════════════
 const MOUTH  = { lat:9.2703,  lon:-83.8580 };
 const COORDS = {
@@ -1275,11 +1365,11 @@ function applyFloodOverride() {
   const slbl = document.getElementById('slbl');
   if (slbl) { slbl.textContent = 'FLOODING'; slbl.style.color = '#c0392b'; }
   const chips = document.getElementById('chips');
-  if (chips) chips.innerHTML = '<span class="chip" style="color:#c0392b">⚠️ FLOODING REPORTED</span>';
+  if (chips) chips.innerHTML = '<span class="chip" style="color:#c0392b">'+t('rep_chip')+'</span>';
   const when = new Date(o.ts).toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', timeZone:'America/Costa_Rica' });
   if (banner) {
     banner.style.display = 'block';
-    banner.innerHTML = `⚠️ FLOODING REPORTED · index forced to HIGH<small>Reported ${when} · clears automatically after 4h · tap here if the river is NOT flooding</small>`;
+    banner.innerHTML = `${t('rep_main')}<small>${t('rep_sub_a')} ${when} · ${t('rep_sub_b')}</small>`;
   }
   if (btn) { btn.classList.add('active'); btn.textContent = '✓ Flooding reported — tap to clear'; }
   const water = document.getElementById('flood-water');
@@ -1288,7 +1378,7 @@ function applyFloodOverride() {
 
 function reportFlooding() {
   if (floodOverrideActive()) { clearFloodOverride(); return; }
-  if (!confirm('Report that the Barú is flooding RIGHT NOW?\n\nThis forces the index to HIGH (100%). It clears when you tap it off, or automatically after 4 hours.')) return;
+  if (!confirm(t('rep_confirm'))) return;
   try { localStorage.setItem('flood_override', JSON.stringify({ ts: Date.now() })); } catch(e) {}
   applyFloodOverride();
 }
@@ -1312,8 +1402,8 @@ async function loadAll() {
   // Header — always shows Costa Rica local time
   document.getElementById('htime').textContent = formatHeaderTime(now);
   // Use Costa Rica time for month name in badge
-  const crMonth = now.toLocaleString('en-US', { month:'long', timeZone:'America/Costa_Rica' });
-  document.getElementById('hbadge').textContent = `${season.emoji} ${season.name} · ${crMonth}`;
+  const crMonth = now.toLocaleString(LANG==='es'?'es-CR':'en-US', { month:'long', timeZone:'America/Costa_Rica' });
+  document.getElementById('hbadge').textContent = `${season.emoji} ${t(season.name)} · ${crMonth}`;
 
   // Tide
   TIDE_STALE = (now.getTime() > TIDE_T1) || (now.getTime() < TIDE_T0);
@@ -1377,12 +1467,12 @@ async function loadAll() {
   document.getElementById('arc').setAttribute('stroke', level.color);
   document.getElementById('snum').textContent = pct + '%';
   document.getElementById('snum').style.color = level.color;
-  document.getElementById('slbl').textContent = level.label;
+  document.getElementById('slbl').textContent = t(level.label);
   document.getElementById('slbl').style.color = level.color;
   document.getElementById('chips').innerHTML =
-    `<span class="chip" style="color:${level.color}">${level.label}</span>
-     <span class="chip" style="color:var(--teal)">${phase.emoji} ${phase.name}</span>
-     <span class="chip" style="color:var(--muted)">${season.emoji} ${season.name}</span>`;
+    `<span class="chip" style="color:${level.color}">${t(level.label)}</span>
+     <span class="chip" style="color:var(--teal)">${phase.emoji} ${t(phase.name)}</span>
+     <span class="chip" style="color:var(--muted)">${season.emoji} ${t(season.name)}</span>`;
 
   // Stats
   document.getElementById('ov-r24').textContent = rain24.toFixed(1);
@@ -1990,6 +2080,7 @@ function closeRadarModal() {
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeRadarModal(); });
 
 // ═══ BOOT ════════════════════════════════════════════════
+applyStaticLang();
 loadAll();
 setTimeout(() => {
   const el = document.getElementById('ov-loading');
