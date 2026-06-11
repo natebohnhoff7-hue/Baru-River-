@@ -204,6 +204,8 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 .safety-text { font-size:9.5px; line-height:1.65; color:var(--ink); opacity:0.78; margin-bottom:10px; }
 .call-911-btn { display:inline-block; background:var(--red); color:#fff; font-family:'DM Mono',monospace; font-weight:500; font-size:12px; letter-spacing:0.06em; padding:9px 24px; border-radius:20px; text-decoration:none; box-shadow:0 3px 10px rgba(192,57,43,0.30); }
 .call-911-btn:hover { background:#a93226; }
+.cne-link { display:block; width:fit-content; margin:2px auto 11px; font-family:'DM Mono',monospace; font-size:9.5px; font-weight:500; letter-spacing:0.04em; color:var(--ink); text-decoration:none; border:1px solid var(--border); border-radius:14px; padding:6px 14px; background:rgba(255,255,255,0.5); }
+.cne-link:hover { border-color:var(--green); color:var(--green-dark); }
 
 /* ── Flooding water immersion ─────────────────────────────
    Only visible while a flood report is live. A translucent water body rises to
@@ -625,6 +627,7 @@ CREATE POLICY "pub_write" ON observations   FOR INSERT WITH CHECK (true);</div>
 
 <div class="safety-note" style="margin:18px auto 4px">
   <div class="safety-text" data-i18n="disclaimer">⚠️ This is an informational tool, not an official warning system. Conditions can change fast — never cross moving water. In a life-threatening emergency, call 911.</div>
+  <a class="cne-link" href="https://www.facebook.com/CNECostaRica" target="_blank" rel="noopener" data-i18n="cne_link">🛡️ Official alerts · CNE Costa Rica</a>
   <a class="call-911-btn" href="tel:911" data-i18n="call911">📞 Call 911</a>
 </div>
 <div class="footer"><span class="dot"></span>LIVE · River Soul · Barú River · 9.2703°N 83.8580°W<br>OpenMeteo · GFS + ECMWF · Costa Rica Tide Tables · Supabase</div>
@@ -646,6 +649,7 @@ const I18N = {
     report_btn:"⚠️ Report flooding now",
     wa_btn:"🔔 Join flood alerts on WhatsApp",
     call911:"📞 Call 911",
+    cne_link:"🛡️ Official alerts · CNE Costa Rica",
     disclaimer:"⚠️ This is an informational tool, not an official warning system. Conditions can change fast — never cross moving water. In a life-threatening emergency, call 911.",
     rep_main:"⚠️ FLOODING REPORTED · index forced to HIGH",
     rep_sub_a:"Reported", rep_sub_b:"clears automatically after 4h · tap here if the river is NOT flooding",
@@ -663,6 +667,7 @@ const I18N = {
     report_btn:"⚠️ Reportar inundación ahora",
     wa_btn:"🔔 Unirse a las alertas por WhatsApp",
     call911:"📞 Llamar al 911",
+    cne_link:"🛡️ Alertas oficiales · CNE Costa Rica",
     disclaimer:"⚠️ Esta es una herramienta informativa, no un sistema oficial de alerta. Las condiciones pueden cambiar rápido — nunca cruce agua en movimiento. En una emergencia que ponga en riesgo la vida, llame al 911.",
     rep_main:"⚠️ INUNDACIÓN REPORTADA · índice forzado a ALTO",
     rep_sub_a:"Reportado", rep_sub_b:"se borra automáticamente tras 4h · toque aquí si el río NO está desbordado",
