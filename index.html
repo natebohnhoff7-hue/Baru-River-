@@ -810,7 +810,8 @@ function renderDynamicLang(){
       if(c) c.innerHTML =
         '<span class="chip" style="color:'+G.level.color+'">'+t(G.level.label)+'</span>'+
         ' <span class="chip" style="color:var(--teal)">'+G.phase.emoji+' '+t(G.phase.name)+'</span>'+
-        ' <span class="chip" style="color:var(--muted)">'+G.season.emoji+' '+t(G.season.name)+'</span>';
+        ' <span class="chip" style="color:var(--muted)">'+G.season.emoji+' '+t(G.season.name)+'</span>'+
+        ' <span class="chip" style="color:'+uvColor(G.uvMax)+'">☀️ UV '+(G.uvMax != null ? Math.round(G.uvMax) : '—')+'</span>';
     }
   }catch(e){}
 }
@@ -936,6 +937,14 @@ function riskLevel(s) {
   if(s>=0.70) return {label:'HIGH',    color:'#c0392b'};
   if(s>=0.40) return {label:'MODERATE',color:'#d68910'};
   return             {label:'LOW',     color:'#1e8449'};
+}
+function uvColor(uvi) {
+  if (uvi == null) return 'var(--muted)';
+  if (uvi <= 2)  return '#1e8449';   // Low
+  if (uvi <= 5)  return '#e9a825';   // Moderate
+  if (uvi <= 7)  return '#e8590c';   // High
+  if (uvi <= 10) return '#c0392b';   // Very High
+  return '#8e44ad';                  // Extreme (11+, common in CR)
 }
 function degToCompass(d) {
   if(d==null)return '';
@@ -1503,7 +1512,8 @@ async function loadAll() {
   const level = riskLevel(score);
   const pct = Math.round(score * 100);
 
-  G = { score, level, rain24, rain72, soilVal, tideM, phase, season, rainR, soilR, tideR, daily, now };
+  const uvMax = daily.uv_index_max?.[3] ?? null;
+  G = { score, level, rain24, rain72, soilVal, tideM, phase, season, rainR, soilR, tideR, daily, now, uvMax };
 
   const circ = 364.4;
   document.getElementById('arc').style.strokeDashoffset = circ - circ*score;
@@ -1515,7 +1525,8 @@ async function loadAll() {
   document.getElementById('chips').innerHTML =
     `<span class="chip" style="color:${level.color}">${t(level.label)}</span>
      <span class="chip" style="color:var(--teal)">${phase.emoji} ${t(phase.name)}</span>
-     <span class="chip" style="color:var(--muted)">${season.emoji} ${t(season.name)}</span>`;
+     <span class="chip" style="color:var(--muted)">${season.emoji} ${t(season.name)}</span>
+     <span class="chip" style="color:${uvColor(uvMax)}">☀️ UV ${uvMax != null ? Math.round(uvMax) : '—'}</span>`;
 
   document.getElementById('ov-r24').textContent = rain24.toFixed(1);
   document.getElementById('ov-r72').textContent = rain72.toFixed(1);
