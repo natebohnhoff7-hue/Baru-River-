@@ -3,7 +3,77 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Barú Flood Index · River Soul</title>
+<title>Barú River Flood Index · Dominical, Costa Rica</title>
+
+<!-- ── SEO ──────────────────────────────────────────────── -->
+<meta name="description" content="Real-time flood risk for the Barú River road crossing near Dominical, Costa Rica. Live rain totals, tide, lunar phase, and soil moisture — know before you cross.">
+<meta name="keywords" content="Barú river flood, Dominical Costa Rica, river crossing flood, Barú flood alert, Costa Rica flood risk, elbaru, Barú flooding, Dominical river">
+<meta name="author" content="River Soul · Dominical, Costa Rica">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#2d6a4f">
+<link rel="canonical" href="https://elbaru.com">
+
+<!-- ── Geo ──────────────────────────────────────────────── -->
+<meta name="geo.region" content="CR-P">
+<meta name="geo.placename" content="Dominical, Puntarenas, Costa Rica">
+<meta name="geo.position" content="9.2703;-83.8580">
+<meta name="ICBM" content="9.2703, -83.8580">
+
+<!-- ── Open Graph (WhatsApp / Facebook / Instagram link previews) ── -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://elbaru.com">
+<meta property="og:site_name" content="El Barú · Flood Index">
+<meta property="og:title" content="Barú River Flood Index · Dominical, Costa Rica">
+<meta property="og:description" content="Real-time flood risk for the Barú River road crossing. Live rain, tide, lunar phase, soil moisture — know before you cross.">
+<meta property="og:image" content="https://elbaru.com/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Barú River Flood Index — real-time flood risk for Dominical, Costa Rica">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="es_CR">
+
+<!-- ── Twitter / X Card ─────────────────────────────────── -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Barú River Flood Index · Dominical, Costa Rica">
+<meta name="twitter:description" content="Real-time flood risk for the Barú River road crossing. Live rain, tide, lunar phase, soil moisture — know before you cross.">
+<meta name="twitter:image" content="https://elbaru.com/og-image.png">
+
+<!-- ── Structured Data (JSON-LD) ────────────────────────── -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Barú River Flood Index",
+  "alternateName": "El Barú",
+  "url": "https://elbaru.com",
+  "description": "Real-time flood risk assessment for the Barú River road crossing near Dominical, Costa Rica. Combines live rainfall, tidal, lunar, and soil moisture data into a single safety index.",
+  "applicationCategory": "WeatherApplication",
+  "operatingSystem": "Any",
+  "inLanguage": ["en", "es"],
+  "isAccessibleForFree": true,
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "River Soul",
+    "url": "https://riversoulcr.com"
+  },
+  "areaServed": {
+    "@type": "Place",
+    "name": "Dominical, Puntarenas, Costa Rica",
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": 9.2703,
+      "longitude": -83.8580
+    }
+  }
+}
+</script>
+<!-- ─────────────────────────────────────────────────────── -->
+
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Mono:wght@400;500&family=Lora:ital@0;1&family=Fraunces:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -187,7 +257,6 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 .flood-report-btn { margin-top:14px; background:var(--red); border:3px solid #8c2418; color:#fff; border-radius:30px; padding:15px 32px; font-family:'DM Mono',monospace; font-weight:500; font-size:13px; letter-spacing:0.08em; text-transform:uppercase; cursor:pointer; box-shadow:0 5px 16px rgba(192,57,43,0.40); transition:background .2s,color .2s,box-shadow .2s,transform .12s; }
 .flood-report-btn:hover { background:#a93226; box-shadow:0 7px 20px rgba(192,57,43,0.50); transform:translateY(-1px); }
 .flood-report-btn:active { transform:translateY(1px); }
-/* When a report is live, invert to white-on-red so the two states stay distinct */
 .flood-report-btn.active { background:#fff; color:var(--red); border-color:var(--red); box-shadow:0 4px 12px rgba(192,57,43,0.25); }
 
 /* WhatsApp flood-alerts join button */
@@ -207,11 +276,7 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 .cne-link { display:block; width:fit-content; margin:2px auto 11px; font-family:'DM Mono',monospace; font-size:9.5px; font-weight:500; letter-spacing:0.04em; color:var(--ink); text-decoration:none; border:1px solid var(--border); border-radius:14px; padding:6px 14px; background:rgba(255,255,255,0.5); }
 .cne-link:hover { border-color:var(--green); color:var(--green-dark); }
 
-/* ── Flooding water immersion ─────────────────────────────
-   Only visible while a flood report is live. A translucent water body rises to
-   fill the viewport with a moving wavy surface, caustic shimmer and rising
-   bubbles. pointer-events:none so it never blocks the clear button/banner, and
-   kept light enough that the score + data stay readable underneath. */
+/* ── Flooding water immersion ───────────────────────────── */
 #flood-water { position:fixed; inset:0; z-index:50; pointer-events:none; overflow:hidden; display:none; }
 #flood-water.on { display:block; }
 .fw-body {
@@ -273,6 +338,9 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 
 /* Moon canvas */
 #moon-canvas { display:block; margin:0 auto 4px; }
+
+/* Weather unavailable warning */
+.weather-warn { display:none; font-size:9px; color:#c0392b; margin-bottom:8px; padding:5px 10px; background:rgba(192,57,43,0.06); border:1px solid rgba(192,57,43,0.18); border-radius:6px; }
 </style>
 </head>
 <body>
@@ -343,7 +411,9 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
   <div id="ov-content" style="display:none">
     <div class="card">
       <div class="card-title" data-i18n="ct_current">Current Conditions</div>
-      <div style="font-size:8px;color:var(--muted);margin-top:-6px;margin-bottom:10px;letter-spacing:0.05em" data-i18n="cc_source">via Open-Meteo · ECMWF + GFS · station-corrected for Pacífico Sur</div>
+      <div style="font-size:8px;color:var(--muted);margin-top:-6px;margin-bottom:6px;letter-spacing:0.05em" data-i18n="cc_source">via Open-Meteo · ECMWF + GFS · station-corrected for Pacífico Sur</div>
+      <!-- ↓ shown only when the weather fetch fails after retrying -->
+      <div id="ov-weather-warn" class="weather-warn">⚠️ Live weather unavailable — tap to retry or refresh the page</div>
       <div class="grid2">
         <div class="stat-box"><div class="stat-val" id="ov-r24">—</div><div class="stat-unit">mm</div><div class="stat-lbl" data-i18n="lbl_rain24">Rain 24h</div></div>
         <div class="stat-box"><div class="stat-val" id="ov-r72">—</div><div class="stat-unit">mm</div><div class="stat-lbl" data-i18n="lbl_rain72">Rain 72h</div></div>
@@ -704,7 +774,6 @@ const I18N = {
     rep_sub_a:"Reportado", rep_sub_b:"se borra automáticamente tras 4h · toque aquí si el río NO está desbordado",
     rep_chip:"⚠️ INUNDACIÓN REPORTADA",
     rep_confirm:"¿Reportar que el Barú se está desbordando AHORA MISMO?\n\nEsto fuerza el índice a ALTO (100%). Se borra al tocarlo de nuevo, o automáticamente tras 4 horas.",
-    // dynamic values, keyed by their English string (EN falls back to the key itself)
     "HIGH":"ALTO", "MODERATE":"MODERADO", "LOW":"BAJO",
     "Dry Season":"Estación seca", "Transition":"Transición", "Green Season":"Estación verde", "Peak Wet":"Lluvia máxima",
     "New Moon":"Luna nueva", "Waxing Crescent":"Luna creciente", "First Quarter":"Cuarto creciente",
@@ -734,7 +803,7 @@ function renderDynamicLang(){
       var m=now.toLocaleString(LANG==='es'?'es-CR':'en-US',{month:'long',timeZone:'America/Costa_Rica'});
       hb.textContent = se.emoji+' '+t(se.name)+' · '+m;
     }
-    if(i18nOverrideActive()) return; // leave the flood-report display intact
+    if(i18nOverrideActive()) return;
     if(typeof G!=='undefined' && G && G.level){
       var sl=document.getElementById('slbl'); if(sl) sl.textContent=t(G.level.label);
       var c=document.getElementById('chips');
@@ -764,9 +833,7 @@ const STATIONS = [
   { id:'uvita',     label:'Uvita',     lat:9.1533, lon:-83.7347, color:'#d4a96a', dist:'15km S'  },
 ];
 
-// ── Season detection: uses DAY OF YEAR for Pacífico Sur (Dominical/Uvita climate)
-// Anchored to actual local seasonal transitions, not calendar months
-// Dry: Dec-mid Apr · Transition: late Apr-mid May · Green: mid May-Sept · Peak: Oct-Nov
+// ── Season detection
 function getSeasonByDate(date) {
   const start = new Date(date.getFullYear(), 0, 0);
   const doy = Math.floor((date - start) / 86400000);
@@ -778,14 +845,8 @@ function getSeasonByDate(date) {
 
 const LUNAR_EPOCH = 947182440000, LUNAR_CYCLE = 29.530589*86400000;
 
-// ── TIDE MODEL · Observed high/low tide extremes for Dominical (tide port:
-// Bahía Uvita), taken from costarica.com daily tide tables — the same source the
-// scraper targets. These are real published extremes (feet, converted to metres).
-// Between extremes we cosine-interpolate, which matches the natural shape of a
-// semidiurnal tide. Covers Jun 7–21, 2026. When the clock runs past the last row,
-// TIDE_STALE flips true and the UI shows a refresh warning instead of a wrong number.
+// ── TIDE MODEL · observed table Jun 7–21 2026
 const FT_TO_M = 0.3048;
-// [ Costa-Rica-local ISO time, height (ft), 'H' | 'L' ]
 const TIDE_RAW = [
   ['2026-06-07T00:45:00-06:00',1.28,'L'],['2026-06-07T07:08:00-06:00',7.84,'H'],['2026-06-07T13:15:00-06:00',1.87,'L'],['2026-06-07T19:21:00-06:00',7.38,'H'],
   ['2026-06-08T01:30:00-06:00',1.48,'L'],['2026-06-08T07:54:00-06:00',7.91,'H'],['2026-06-08T14:07:00-06:00',1.80,'L'],['2026-06-08T20:13:00-06:00',7.22,'H'],
@@ -810,16 +871,12 @@ const TIDE_T1 = TIDE_TABLE[TIDE_TABLE.length - 1].ms;
 let TIDE_STALE = false;
 const DAYNAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
-// Throttle Supabase auto-logging to once every 3 hours
 const LOG_INTERVAL_MS = 3 * 3600 * 1000;
 
 // ═══ HELPERS ═════════════════════════════════════════════
 function lunarAge(d)  { return ((d-LUNAR_EPOCH)%LUNAR_CYCLE+LUNAR_CYCLE)%LUNAR_CYCLE; }
 function lunarPhase(age) {
   const p=age/LUNAR_CYCLE;
-  // Boundaries calibrated against authoritative astronomical sources for 2026
-  // (Catalina Sky Survey, moongiant). The LUNAR_EPOCH constant has small drift,
-  // and these p-thresholds are tuned to match observatory phase names within ±1 day.
   if(p<0.04||p>0.96) return {name:'New Moon',       emoji:'🌑',risk:0.90};
   if(p<0.21)         return {name:'Waxing Crescent', emoji:'🌒',risk:0.45};
   if(p<0.27)         return {name:'First Quarter',   emoji:'🌓',risk:0.65};
@@ -829,10 +886,6 @@ function lunarPhase(age) {
   if(p<0.79)         return {name:'Last Quarter',    emoji:'🌗',risk:0.65};
   return              {name:'Waning Crescent',       emoji:'🌘',risk:0.40};
 }
-// Cosine interpolation between the two bracketing observed extremes. Returns
-// metres. Name kept as harmonicTide() so existing call sites are unchanged.
-// Outside the table range it clamps to the nearest known extreme (never NaN);
-// staleness is surfaced separately via TIDE_STALE so we never show wrong data quietly.
 function harmonicTide(date) {
   const ms = date.getTime();
   if (ms <= TIDE_T0) return TIDE_TABLE[0].h;
@@ -864,26 +917,20 @@ function scoreRain(r24,r72) {
   const s72=r72<10?0:r72<40?0.2:r72<100?0.5:r72<200?0.75:1.0;
   return Math.min(s24*0.6+s72*0.4,1);
 }
-// Soil moisture U-curve: BOTH bone-dry AND saturated soils elevate flood risk.
-// Bone-dry tropical soils become hydrophobic — water sheets off rather than infiltrating.
-// Saturated soils have no remaining capacity — incoming water becomes runoff.
-// Safe band: 35-65% of saturation (per Nate's choice — narrower, more conservative).
-// v is m³/m³ from OpenMeteo; ~0.42 is field-saturation for tropical Pacífico Sur soils.
 function scoreSoil(v) {
   if (v == null) return 0.25;
   const vn = Math.max(0, Math.min(v / 0.42, 1.2));
-  if (vn < 0.20) return 0.85 - (vn / 0.20) * 0.40;            // 0.85 → 0.45 (bone dry)
-  if (vn < 0.35) return 0.45 - ((vn - 0.20) / 0.15) * 0.30;   // 0.45 → 0.15
-  if (vn < 0.65) return 0.10 + Math.abs(vn - 0.50) * 0.10;    // safe band, gentle U
-  if (vn < 0.85) return 0.15 + ((vn - 0.65) / 0.20) * 0.40;   // 0.15 → 0.55
-  if (vn < 1.00) return 0.55 + ((vn - 0.85) / 0.15) * 0.40;   // 0.55 → 0.95
-  return 0.95;                                                 // saturated, capped
+  if (vn < 0.20) return 0.85 - (vn / 0.20) * 0.40;
+  if (vn < 0.35) return 0.45 - ((vn - 0.20) / 0.15) * 0.30;
+  if (vn < 0.65) return 0.10 + Math.abs(vn - 0.50) * 0.10;
+  if (vn < 0.85) return 0.15 + ((vn - 0.65) / 0.20) * 0.40;
+  if (vn < 1.00) return 0.55 + ((vn - 0.85) / 0.15) * 0.40;
+  return 0.95;
 }
 function scoreTide(m) {
   if(m>=2.2)return 1.0; if(m>=1.8)return 0.80;
   if(m>=1.3)return 0.55; if(m>=0.8)return 0.30; return 0.12;
 }
-// Weights: Rainfall 40% · Lunar 20% · Soil 18% · Tide 14% · Season 8% = 100%
 function calcRisk(rR,lR,sR,tR,seaB) { return Math.min(rR*0.40+lR*0.20+sR*0.18+tR*0.14+seaB*0.08,1); }
 function riskLevel(s) {
   if(s>=0.70) return {label:'HIGH',    color:'#c0392b'};
@@ -903,7 +950,6 @@ async function fetchJSON(url, timeoutMs=10000) {
     return await r.json();
   } finally { clearTimeout(t); }
 }
-// Format date as "Wed, Apr 29 · 3:42 PM" in Costa Rica time, regardless of device timezone
 function formatHeaderTime(now) {
   return now.toLocaleString('en-US', {
     weekday:'short', month:'short', day:'numeric',
@@ -911,7 +957,6 @@ function formatHeaderTime(now) {
     timeZone:'America/Costa_Rica'
   });
 }
-// Get hour 0-23 in Costa Rica time (for chart x-axis labels)
 function getCRHour(date) {
   const s = date.toLocaleString('en-US', { hour:'2-digit', hour12:false, timeZone:'America/Costa_Rica' });
   return parseInt(s, 10) % 24;
@@ -922,11 +967,6 @@ function getCRMinute(date) {
 }
 
 // ═══ SUPABASE ════════════════════════════════════════════
-// Baked-in River Soul connection. This is the PUBLISHABLE key — it's meant to live
-// in public client code and is protected by the row-level-security policies set up
-// in Supabase. localStorage still overrides if someone enters their own in Config,
-// but by default every visitor on every device connects automatically (so History,
-// Log, and logging work for guests too — no setup form needed).
 const SB_DEFAULT_URL = 'https://vrssvfmwiblmfvtcdjib.supabase.co';
 const SB_DEFAULT_KEY = 'sb_publishable_iL5hhtUaAg-1VXMmb_gocg_viqM3LJQ';
 let SB_URL = localStorage.getItem('sb_url') || SB_DEFAULT_URL;
@@ -947,12 +987,10 @@ function initSB() {
 initSB();
 document.getElementById('cfg-url').value = SB_URL;
 document.getElementById('cfg-key').value = SB_KEY;
-// If connected on load (baked-in or saved keys), show it so Config doesn't look unconfigured
 if (sbClient) {
   var _ok = document.getElementById('cfg-ok');
   if (_ok) _ok.style.display = 'block';
 }
-// Config is admin-only: hidden from guests, revealed only via secret URL (elbaru.com/?admin)
 if (location.search.indexOf('admin') >= 0 || location.hash.indexOf('admin') >= 0) {
   var _cfgBtn = document.getElementById('config-tab-btn');
   if (_cfgBtn) _cfgBtn.style.display = '';
@@ -975,7 +1013,6 @@ async function saveConfig() {
     document.getElementById('cfg-ok').style.display = 'block';
     loadHistory();
     loadObsLog();
-    // Force a log immediately on first connect, bypassing throttle
     if (G.score) {
       lastLogTime = 0;
       logReading();
@@ -985,7 +1022,7 @@ async function saveConfig() {
   }
 }
 
-// ═══ TEMPEST (River Soul personal weather station) ═══════
+// ═══ TEMPEST ═════════════════════════════════════════════
 let TEMPEST_TOKEN = localStorage.getItem('tempest_token') || '';
 let TEMPEST_ID = localStorage.getItem('tempest_id') || '';
 document.getElementById('cfg-tempest-token').value = TEMPEST_TOKEN;
@@ -1024,14 +1061,13 @@ async function loadTempest() {
   }
 }
 
-// ═══ WORLDTIDES (optional) ════════════════════════════════
+// ═══ WORLDTIDES ══════════════════════════════════════════
 let WT_KEY = localStorage.getItem('wt_key') || '';
 document.getElementById('cfg-wt-key').value = WT_KEY;
 function saveWorldTides() {
   WT_KEY = document.getElementById('cfg-wt-key').value.trim();
   localStorage.setItem('wt_key', WT_KEY);
   document.getElementById('wt-ok').style.display = 'block';
-  // Reload to use new tide source
   if (G.score) loadAll();
 }
 
@@ -1054,8 +1090,6 @@ let G = {};
 let tideChartInst=null, wsChartInst=null, stRainChartInst=null, fcChartInst=null, histChartInst=null;
 
 // ═══ MOON DRAW ═══════════════════════════════════════════
-// Draws an accurate moon disc on the canvas based on lunar age in milliseconds.
-// Geometry verified at all 8 major phases — full moon renders as a complete bright disc.
 function drawMoon(phase, ageMs) {
   const canvas = document.getElementById('moon-canvas');
   if (!canvas) return;
@@ -1064,25 +1098,20 @@ function drawMoon(phase, ageMs) {
   const cx = W/2, cy = H/2, r = Math.min(W, H)/2 - 2;
   ctx.clearRect(0, 0, W, H);
 
-  // cycle position p ∈ [0,1): 0=new, 0.25=first quarter, 0.5=full, 0.75=last quarter
   const p = (ageMs % LUNAR_CYCLE) / LUNAR_CYCLE;
-  // illumination ∈ [0,1]: fraction of disc visibly lit
   const illum = 0.5 * (1 - Math.cos(2 * Math.PI * p));
   const waxing = p < 0.5;
 
   const lit  = '#f5ead8';
   const dark = '#0e1a14';
 
-  // Step 1: dark base disc
   ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2 * Math.PI);
   ctx.fillStyle = dark; ctx.fill();
 
-  // Step 2: clip to circle for clean terminator
   ctx.save();
   ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2 * Math.PI);
   ctx.clip();
 
-  // Step 3: paint the lit half (right if waxing, left if waning)
   ctx.beginPath();
   if (waxing) {
     ctx.arc(cx, cy, r, -Math.PI/2, Math.PI/2, false);
@@ -1092,10 +1121,6 @@ function drawMoon(phase, ageMs) {
   ctx.closePath();
   ctx.fillStyle = lit; ctx.fill();
 
-  // Step 4: terminator ellipse
-  // Half-width ex shrinks to 0 at quarter phases, grows to r at new/full
-  // < 50% lit: ellipse fills DARK over part of the lit half  → crescent
-  // ≥ 50% lit: ellipse fills LIT  over part of the dark half → gibbous/full
   const ex = r * Math.abs(1 - 2 * illum);
   ctx.beginPath();
   ctx.ellipse(cx, cy, ex, r, 0, 0, 2 * Math.PI);
@@ -1105,7 +1130,6 @@ function drawMoon(phase, ageMs) {
 
   ctx.restore();
 
-  // Subtle rim
   ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2 * Math.PI);
   ctx.strokeStyle = 'rgba(245,234,216,0.25)';
   ctx.lineWidth = 1;
@@ -1115,11 +1139,10 @@ function drawMoon(phase, ageMs) {
   document.getElementById('ov-mpct').textContent = Math.round(illum * 100) + '% lit';
 }
 
-// ═══ TIDE CHART (interactive scrub) ══════════════════════
+// ═══ TIDE CHART ══════════════════════════════════════════
 let tideSeries = [], tideExtremes = [], tideNowIdx = 0;
 
 function buildTideChart(now) {
-  // 24-hour window: 2h back (context), 22h forward — cleaner than the old 36h view
   const start = new Date(now.getTime() - 2*3600000);
   const end = new Date(now.getTime() + 22*3600000);
   tideSeries = [];
@@ -1129,7 +1152,6 @@ function buildTideChart(now) {
     t.setMinutes(t.getMinutes() + 10);
   }
 
-  // Find all extremes in the window
   tideExtremes = [];
   for (let i=1; i<tideSeries.length-1; i++) {
     if (tideSeries[i].h > tideSeries[i-1].h && tideSeries[i].h > tideSeries[i+1].h)
@@ -1138,7 +1160,6 @@ function buildTideChart(now) {
       tideExtremes.push({ type:'LOW', time:tideSeries[i].time, height:tideSeries[i].h, idx:i });
   }
 
-  // Next-tide stat box
   const nextE = tideExtremes.filter(e => e.time > now).sort((a,b) => a.time - b.time)[0];
   if (nextE) {
     const diff = nextE.time - now;
@@ -1149,7 +1170,6 @@ function buildTideChart(now) {
     document.getElementById('ov-ttm').textContent = dh > 0 ? `in ${dh}h ${dm}m` : `in ${dm}m`;
   }
 
-  // Show next 4 tide events — clean low/high/low/high preview
   const futureExtremes = tideExtremes.filter(e => e.time >= now).slice(0, 4);
   document.getElementById('tide-extremes').innerHTML = futureExtremes.map(e => {
     const t = e.time.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', timeZone:'America/Costa_Rica' });
@@ -1160,10 +1180,8 @@ function buildTideChart(now) {
 
   tideNowIdx = tideSeries.findIndex(p => p.time >= now);
 
-  // Initialize readout to "now"
   updateTideReadout(tideNowIdx, true);
 
-  // Hourly labels in CR time, only on the hour
   const labels = tideSeries.map(p => {
     const crHour = getCRHour(p.time);
     const crMin = getCRMinute(p.time);
@@ -1212,7 +1230,6 @@ function buildTideChart(now) {
         const ctx2 = chart.ctx;
         const area = chart.chartArea;
 
-        // Draw NOW line (red dashed, always)
         if (meta.data[tideNowIdx]) {
           const x = meta.data[tideNowIdx].x;
           ctx2.save();
@@ -1223,14 +1240,12 @@ function buildTideChart(now) {
           ctx2.lineWidth = 1.5;
           ctx2.setLineDash([3,3]);
           ctx2.stroke();
-          // "NOW" label
           ctx2.font = '8px "DM Mono", monospace';
           ctx2.fillStyle = 'rgba(192,57,43,0.7)';
           ctx2.fillText('NOW', x+3, area.top+9);
           ctx2.restore();
         }
 
-        // Draw scrub line (solid green) at current scrub position
         const scrubIdx = chart._scrubIdx;
         if (scrubIdx != null && scrubIdx !== tideNowIdx && meta.data[scrubIdx]) {
           const xs = meta.data[scrubIdx].x;
@@ -1243,7 +1258,6 @@ function buildTideChart(now) {
           ctx2.lineWidth = 1.2;
           ctx2.setLineDash([]);
           ctx2.stroke();
-          // Filled dot at the curve
           ctx2.beginPath();
           ctx2.arc(xs, ys, 4, 0, 2*Math.PI);
           ctx2.fillStyle = '#2d6a4f';
@@ -1255,7 +1269,6 @@ function buildTideChart(now) {
           ctx2.restore();
         }
 
-        // Draw markers at extremes
         tideExtremes.forEach(e => {
           if (!meta.data[e.idx]) return;
           const xe = meta.data[e.idx].x;
@@ -1271,14 +1284,12 @@ function buildTideChart(now) {
     }]
   });
 
-  // Hook up pointer/touch events for scrubbing
   attachTideScrub();
 }
 
 function attachTideScrub() {
   const canvas = document.getElementById('tide-chart');
   if (!canvas || !tideChartInst) return;
-  // Avoid double-binding by replacing the node's listeners via a flag
   if (canvas._scrubBound) return;
   canvas._scrubBound = true;
 
@@ -1287,7 +1298,6 @@ function attachTideScrub() {
     const x = clientX - rect.left;
     const meta = tideChartInst.getDatasetMeta(0);
     if (!meta.data.length) return;
-    // Find nearest point
     let nearestIdx = 0, minDist = Infinity;
     for (let i=0; i<meta.data.length; i++) {
       const d = Math.abs(meta.data[i].x - x);
@@ -1322,7 +1332,6 @@ function updateTideReadout(idx, isNow) {
     weekday: 'short', hour:'numeric', minute:'2-digit',
     timeZone:'America/Costa_Rica'
   });
-  // Determine state (rising/falling/peaking)
   const _nw = t('tide_now');
   let state = isNow ? _nw : t('tide_at');
   if (idx > 0 && idx < tideSeries.length-1) {
@@ -1339,12 +1348,7 @@ function updateTideReadout(idx, isNow) {
   document.getElementById('tide-readout-height').innerHTML = `${p.h.toFixed(2)}<span style="font-size:10px;color:var(--muted);font-family:'DM Mono'">m</span>`;
 }
 
-// ═══ FLOOD OVERRIDE · manual "it's flooding right now" report ════════════
-// Anyone can raise the alarm. For a life-safety tool a false alarm (people are
-// extra cautious) is the SAFE direction of error, so we don't gate raising it.
-// A report forces the index to HIGH / 100%, shows a red banner, logs to Supabase
-// if connected (so other guests see it too), and auto-expires after 6h so a stale
-// report clears itself. A true "only the owner can set it" would need a login.
+// ═══ FLOOD OVERRIDE ══════════════════════════════════════
 const OVERRIDE_WINDOW_MS = 4 * 3600 * 1000;
 
 function getLocalOverride() {
@@ -1360,7 +1364,6 @@ function getLocalOverride() {
 
 function floodOverrideActive() { return !!getLocalOverride(); }
 
-// Spawn / tear down the rising water overlay used during a live flood report.
 let floodBubblesSpawned = false;
 function spawnFloodBubbles() {
   const c = document.querySelector('#flood-water .fw-bubbles');
@@ -1395,7 +1398,6 @@ function applyFloodOverride() {
     clearFloodWater();
     return;
   }
-  // Force the score + ring to HIGH / 100%, overriding the calculated value
   G.score = 1; G.level = riskLevel(1);
   const arc = document.getElementById('arc');
   if (arc) { arc.style.strokeDashoffset = 0; arc.setAttribute('stroke', '#c0392b'); }
@@ -1428,23 +1430,16 @@ async function clearFloodOverride() {
   loadAll();
 }
 
-// The "Report flooding" button is a LOCAL toggle only: it sets a flag on this
-// device, forces HIGH, and clears when tapped off or after 4h. No database writes
-// and no cross-device mirror — so it can never get re-raised or stuck on.
-
 // ═══ MAIN LOAD ═══════════════════════════════════════════
 async function loadAll() {
   const now = new Date();
   const season = getSeasonByDate(now);
   const phase = lunarPhase(lunarAge(now));
 
-  // Header — always shows Costa Rica local time
   document.getElementById('htime').textContent = formatHeaderTime(now);
-  // Use Costa Rica time for month name in badge
   const crMonth = now.toLocaleString(LANG==='es'?'es-CR':'en-US', { month:'long', timeZone:'America/Costa_Rica' });
   document.getElementById('hbadge').textContent = `${season.emoji} ${t(season.name)} · ${crMonth}`;
 
-  // Tide
   TIDE_STALE = (now.getTime() > TIDE_T1) || (now.getTime() < TIDE_T0);
   const tideM = harmonicTide(now);
   document.getElementById('ov-tid').textContent = tideM.toFixed(2);
@@ -1459,19 +1454,30 @@ async function loadAll() {
     tideSrcEl.style.color = TIDE_STALE ? '#c0392b' : 'var(--muted)';
   }
 
-  // Kick off the independent sunset estimate right away so its network request
-  // runs in parallel with the main weather fetch below — not queued behind it.
-  // It writes only to #sunset-mini and never touches the flood score.
   loadSunsetMini();
 
-  // Weather data
+  // ── Weather fetch with one retry on failure ──────────────
+  // If attempt 0 fails (timeout, HTTP error, network blip), we wait 2.5s and
+  // try once more with a slightly longer timeout. If both attempts fail the
+  // warning banner appears in the Current Conditions card so users know why
+  // Temperature / Humidity / Wind / Soil are showing dashes. The flood score
+  // still calculates using tide + lunar + season (rain & soil default to 0 / 0.25).
   let weather = {};
+  let weatherOk = false;
   const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${MOUTH.lat}&longitude=${MOUTH.lon}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&hourly=soil_moisture_0_to_1cm&daily=precipitation_sum,uv_index_max,sunrise,sunset&past_days=3&forecast_days=7&timezone=America%2FCosta_Rica`;
-  try {
-    weather = await fetchJSON(weatherUrl, 10000);
-  } catch(e) {
-    console.warn('OpenMeteo failed:', e.message);
+  for (let _attempt = 0; _attempt < 2; _attempt++) {
+    try {
+      if (_attempt > 0) await new Promise(r => setTimeout(r, 2500));
+      weather = await fetchJSON(weatherUrl, _attempt === 0 ? 10000 : 12000);
+      weatherOk = true;
+      break;
+    } catch(e) {
+      console.warn('OpenMeteo attempt ' + (_attempt + 1) + ' failed:', e.message);
+    }
   }
+  const warnEl = document.getElementById('ov-weather-warn');
+  if (warnEl) warnEl.style.display = weatherOk ? 'none' : 'block';
+  // ────────────────────────────────────────────────────────
 
   const cur = weather?.current || {};
   const daily = weather?.daily || {};
@@ -1484,7 +1490,6 @@ async function loadAll() {
   const rainR = scoreRain(rain24, rain72);
   const soilR = scoreSoil(soilVal);
   const tideR = scoreTide(tideM);
-  // Soil status label — explains where on the U-curve we are
   let soilLabel = '';
   if (soilVal != null) {
     const vn = soilVal / 0.42;
@@ -1500,7 +1505,6 @@ async function loadAll() {
 
   G = { score, level, rain24, rain72, soilVal, tideM, phase, season, rainR, soilR, tideR, daily, now };
 
-  // Ring
   const circ = 364.4;
   document.getElementById('arc').style.strokeDashoffset = circ - circ*score;
   document.getElementById('arc').setAttribute('stroke', level.color);
@@ -1513,7 +1517,6 @@ async function loadAll() {
      <span class="chip" style="color:var(--teal)">${phase.emoji} ${t(phase.name)}</span>
      <span class="chip" style="color:var(--muted)">${season.emoji} ${t(season.name)}</span>`;
 
-  // Stats
   document.getElementById('ov-r24').textContent = rain24.toFixed(1);
   document.getElementById('ov-r72').textContent = rain72.toFixed(1);
   document.getElementById('ov-tmp').textContent = cur.temperature_2m?.toFixed(1) ?? '—';
@@ -1521,11 +1524,9 @@ async function loadAll() {
   document.getElementById('ov-wnd').textContent = cur.wind_speed_10m?.toFixed(0) ?? '—';
   document.getElementById('ov-soi').textContent = soilVal?.toFixed(3) ?? '—';
 
-  // Sun times (today) from the daily block — index 3 = today (past_days=3)
   const srEl = document.getElementById('ov-sunrise'); if (srEl) srEl.textContent = daily.sunrise?.[3] ? fmtSunsetTime(daily.sunrise[3]) : '—';
   const ssEl = document.getElementById('ov-sunset');  if (ssEl) ssEl.textContent  = daily.sunset?.[3]  ? fmtSunsetTime(daily.sunset[3])  : '—';
 
-  // Factor bars
   const factors = [
     { label:`${t('rf_rain')} 24h:${rain24.toFixed(1)}mm 72h:${rain72.toFixed(1)}mm`, val:rainR,    w:'40%', color:'var(--teal)' },
     { label:`${t('rf_lunar')} — ${t(phase.name)}`,                                   val:phase.risk, w:'20%', color:'#9b59b6' },
@@ -1544,12 +1545,10 @@ async function loadAll() {
   document.getElementById('ov-loading').style.display = 'none';
   document.getElementById('ov-content').style.display = 'block';
 
-  // A manual flood report (tapped button) forces HIGH regardless of the calculation
   applyFloodOverride();
 
   buildForecast();
   loadSurf();
-  // Auto-log every 3 hours if Supabase connected
   if (sbClient && (Date.now() - lastLogTime) >= LOG_INTERVAL_MS) {
     logReading();
   }
@@ -1594,16 +1593,13 @@ function buildForecast() {
     }
   });
 
-  // Fire ECMWF comparison independently — never let it block forecast rendering
   buildModelComparison(days, rains);
 }
 
-// ═══ MODEL COMPARISON · GFS vs ECMWF ═════════════════════
+// ═══ MODEL COMPARISON ════════════════════════════════════
 async function buildModelComparison(gfsDays, gfsRains) {
   const wrap = document.getElementById('model-compare');
   if (!wrap) return;
-  // Default GFS rains come from the main fetch (best-match, GFS-dominant in this region).
-  // Fetch ECMWF separately. If it fails, show GFS-only with a note.
   const ecmwfUrl = `https://api.open-meteo.com/v1/forecast?latitude=${MOUTH.lat}&longitude=${MOUTH.lon}&daily=precipitation_sum&forecast_days=7&timezone=America%2FCosta_Rica&models=ecmwf_ifs025`;
   let ecmwfRains = null;
   try {
@@ -1618,7 +1614,6 @@ async function buildModelComparison(gfsDays, gfsRains) {
     return;
   }
 
-  // Align lengths — show min(7, both)
   const n = Math.min(gfsRains.length, ecmwfRains.length, 7);
   let disagreeCount = 0;
   let maxDisagree = 0;
@@ -1627,7 +1622,6 @@ async function buildModelComparison(gfsDays, gfsRains) {
     const g = gfsRains[i] || 0;
     const e = ecmwfRains[i] || 0;
     const diff = Math.abs(g - e);
-    // Disagreement threshold: 15mm/day OR (one model >25mm and other <5mm)
     const disagree = diff >= 15 || (Math.max(g,e) >= 25 && Math.min(g,e) < 5);
     if (disagree) { disagreeCount++; if (diff > maxDisagree) maxDisagree = diff; }
     const dateStr = gfsDays[i];
@@ -1650,7 +1644,6 @@ async function buildModelComparison(gfsDays, gfsRains) {
 let wsLoaded = false;
 async function loadWatershed() {
   if (wsLoaded) return;
-  // Resilient fetch: use Promise.allSettled instead of Promise.all so one failure doesn't crash everything
   const settled = await Promise.allSettled(Object.entries(COORDS).map(async ([key, c]) => {
     const d = await fetchJSON(`https://api.open-meteo.com/v1/forecast?latitude=${c.lat}&longitude=${c.lon}&daily=precipitation_sum&past_days=3&forecast_days=1&timezone=America%2FCosta_Rica`, 10000);
     const today = d.daily?.precipitation_sum?.[3] ?? 0;
@@ -1781,7 +1774,7 @@ async function loadStations() {
   stLoaded = true;
 }
 
-// ═══ SUPABASE LOGGING (throttled) ════════════════════════
+// ═══ SUPABASE LOGGING ════════════════════════════════════
 async function logReading() {
   if (!sbClient || !G.score) return;
   try {
@@ -1962,20 +1955,7 @@ function buildJournal() {
   journalBuilt = true;
 }
 
-// ═══ SUNSET MINI · tonight's sunset quality (1–10) ══════════
-// Inverse of the flood model, for sky color — cross-referenced against how
-// SunsetWx / Alpenglow score it. High & mid clouds are the canvas that catches
-// low-angle light; low cloud on the western (ocean) horizon blocks the light
-// path; drier, cleaner air = punchier color; a MODERATE aerosol/dust load
-// enriches reds while a heavy load mutes them. Built on Open-Meteo cloud-by-
-// altitude + humidity + visibility, with the Air Quality API for dust. Fully
-// independent of the flood index — if it fails, the flood tool is untouched.
-//
-// MODEL STRUCTURE (revised): a "color potential" (the canvas of high/mid cloud
-// plus dry, clean air) is MULTIPLIED by a "visibility gate" (how much sunset
-// light actually reaches the eye). Low cloud on the ocean horizon and full
-// overcast both collapse the gate toward ~0.1, so a blocked sky bottoms out at
-// 1–2 no matter how good the high clouds are — you can't score what you can't see.
+// ═══ SUNSET MINI ═════════════════════════════════════════
 function ssHighCloud(ch){ if(ch<15)return 0.20; if(ch<40)return 0.20+(ch-15)/25*0.70; if(ch<70)return 0.90+(ch-40)/30*0.10; return Math.max(0.55,1.00-(ch-70)/30*0.45); }
 function ssMidCloud(cm){ if(cm<15)return 0.25; if(cm<45)return 0.25+(cm-15)/30*0.70; if(cm<75)return 0.95-(cm-45)/30*0.35; return Math.max(0.30,0.60-(cm-75)/25*0.30); }
 function ssHumidity(rh){ if(rh==null)return 0.5; if(rh<60)return 1.00; if(rh<75)return 1.00-(rh-60)/15*0.30; if(rh<88)return 0.70-(rh-75)/13*0.35; return Math.max(0.15,0.35-(rh-88)/12*0.20); }
@@ -1986,28 +1966,25 @@ function ssAir(visM,aod,dust){
   let dpen=1.0; if(dust!=null&&dust>40)dpen=Math.max(0.6,1-(dust-40)/160*0.4);
   return Math.min(1,(v*0.5+a*0.5)*dpen);
 }
-// VISIBILITY GATE — multiplicative. Low cloud blocks the horizon light path; a solid
-// LOW/MID deck (not thin high cirrus) leaves no gap for color to come through. High
-// cloud is the canvas, so it must NOT trip this gate. Either factor near 100% floors it.
 function ssLowGate(cl){
   if(cl<15) return 1.00;
-  if(cl<40) return 1.00-(cl-15)/25*0.20;            // 1.00 → 0.80  scattered low cloud: mild
-  if(cl<65) return 0.80-(cl-40)/25*0.35;            // 0.80 → 0.45  broken: moderate
-  if(cl<85) return 0.45-(cl-65)/20*0.27;            // 0.45 → 0.18  mostly low overcast: heavy
-  return Math.max(0.08,0.18-(cl-85)/15*0.10);       // 0.18 → 0.08  solid bank: floored
+  if(cl<40) return 1.00-(cl-15)/25*0.20;
+  if(cl<65) return 0.80-(cl-40)/25*0.35;
+  if(cl<85) return 0.45-(cl-65)/20*0.27;
+  return Math.max(0.08,0.18-(cl-85)/15*0.10);
 }
 function ssGapGate(deck){
   if(deck<70) return 1.00;
-  if(deck<88) return 1.00-(deck-70)/18*0.45;        // 1.00 → 0.55
-  if(deck<96) return 0.55-(deck-88)/8*0.35;         // 0.55 → 0.20
-  return Math.max(0.10,0.20-(deck-96)/4*0.10);      // 0.20 → 0.10
+  if(deck<88) return 1.00-(deck-70)/18*0.45;
+  if(deck<96) return 0.55-(deck-88)/8*0.35;
+  return Math.max(0.10,0.20-(deck-96)/4*0.10);
 }
 function ssNum(x){ return (x==null||isNaN(x))?0:x; }
 function sunsetHourKey(iso){ const m=iso&&iso.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})/); if(!m)return null; let h=parseInt(m[2],10); if(parseInt(m[3],10)>=30)h=(h+1)%24; return `${m[1]}T${String(h).padStart(2,'0')}:00`; }
 function fmtSunsetTime(iso){ const m=iso&&iso.match(/T(\d{2}):(\d{2})/); if(!m)return ''; let h=parseInt(m[1],10); const mn=m[2]; const ap=h>=12?'PM':'AM'; let h12=h%12; if(h12===0)h12=12; return `${h12}:${mn} ${ap}`; }
 function sunsetMiniColor(t){ if(t>=8)return '#e8590c'; if(t>=6)return '#e9a825'; if(t>=4)return '#9b8a3a'; return '#6a8a9a'; }
 function sunsetMiniNote(d){
-  const deck = Math.max(d.cl, d.cm);              // opaque blocking layer (high cirrus excluded)
+  const deck = Math.max(d.cl, d.cm);
   if(d.cl>=60) return 'low cloud may block it';
   if(deck>=85) return 'overcast — flat light';
   if(d.ch>=40 && d.cl<25) return 'high clouds, clear horizon';
@@ -2020,8 +1997,6 @@ let sunMiniDone = false;
 async function loadSunsetMini(){
   const el = document.getElementById('sunset-mini');
   if(!el || sunMiniDone) return;
-  // Fire both requests at once — the air-quality call is optional, so it should
-  // never add its latency on top of the cloud fetch. Worst case is max(9s,8s).
   const wUrl  = `https://api.open-meteo.com/v1/forecast?latitude=${MOUTH.lat}&longitude=${MOUTH.lon}&hourly=cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,relative_humidity_2m,visibility&daily=sunset&forecast_days=2&timezone=America%2FCosta_Rica`;
   const aqUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${MOUTH.lat}&longitude=${MOUTH.lon}&hourly=aerosol_optical_depth,dust&forecast_days=2&timezone=America%2FCosta_Rica`;
   const [wRes, aqRes] = await Promise.allSettled([ fetchJSON(wUrl, 9000), fetchJSON(aqUrl, 8000) ]);
@@ -2034,7 +2009,6 @@ async function loadSunsetMini(){
   const sunsets = w.daily?.sunset || [];
   if(!times.length || !sunsets.length) return;
 
-  // Tonight's sunset — or tomorrow's if tonight's has already passed
   const nowCR = getCRHour(new Date()) + getCRMinute(new Date())/60;
   const sunsetHourOf = iso => { const m = iso.match(/T(\d{2}):(\d{2})/); return m ? parseInt(m[1],10)+parseInt(m[2],10)/60 : 18; };
   let di = 0, label = t('sun_tonight');
@@ -2049,11 +2023,8 @@ async function loadSunsetMini(){
   let aod=null, dust=null;
   if(aq?.hourly?.time){ const ai = aq.hourly.time.indexOf(key); if(ai>=0){ aod=aq.hourly.aerosol_optical_depth?.[ai]; dust=aq.hourly.dust?.[ai]; } }
 
-  // Color potential — the canvas (high+mid cloud) plus dry, clean air. ~0.2 … 1.0
   const canvas = ssHighCloud(ch)*0.6 + ssMidCloud(cm)*0.4;
   const colorPotential = canvas*0.70 + ssHumidity(rh==null?null:rh)*0.18 + ssAir(vis,aod,dust)*0.12;
-  // Visibility gate — multiplicative; collapses on a low-cloud horizon or a solid
-  // low/mid deck. Fed by max(low,mid) — NOT total — so high cirrus stays the canvas.
   const gate = ssLowGate(cl) * ssGapGate(Math.max(cl, cm));
   const score01 = Math.min(1, colorPotential * gate);
   const ten = Math.max(1, Math.min(10, Math.round(score01*10)));
@@ -2065,10 +2036,7 @@ async function loadSunsetMini(){
   sunMiniDone = true;
 }
 
-// ═══ SURF · wave height + swell direction (Open-Meteo Marine) ═══════
-// Marine API needs an ocean point, so this samples just off Dominical beach
-// (MOUTH is now on land). Independent + non-blocking — failure leaves the
-// Sun & Surf wave fields as "—" and never affects the flood path.
+// ═══ SURF ════════════════════════════════════════════════
 const SURF = { lat:9.25, lon:-83.90 };
 async function loadSurf(){
   try {
@@ -2085,12 +2053,7 @@ async function loadSurf(){
   }
 }
 
-// ═══ WINDY RADAR ═════════════════════════════════════════
-// Free keyless Windy embed. Lazy-loaded only when the Radar tab is first opened,
-// so it adds zero weight to the flood load. Thumbnail is non-interactive (a click
-// overlay sits on top); tapping expands a full-screen modal with the live,
-// interactive radar. Fully independent of the flood score — if Windy is down,
-// only this tab is affected.
+// ═══ RADAR ═══════════════════════════════════════════════
 const RADAR_THUMB_SRC = 'https://embed.windy.com/embed2.html?lat=9.2703&lon=-83.8580&detailLat=9.2703&detailLon=-83.8580&zoom=10&overlay=radar&product=radar&menu=&message=&marker=true&calendar=now&type=map&location=coordinates&metricWind=default&metricTemp=default&radarRange=-1';
 const RADAR_FULL_SRC  = 'https://embed.windy.com/embed2.html?lat=9.2703&lon=-83.8580&detailLat=9.2703&detailLon=-83.8580&zoom=10&overlay=radar&product=radar&message=true&marker=true&calendar=now&type=map&location=coordinates&metricWind=default&metricTemp=default&radarRange=-1';
 const IMN_RADAR_IMG = 'https://www.imn.ac.cr/imagenes-sat/radar3m-animada.gif';
