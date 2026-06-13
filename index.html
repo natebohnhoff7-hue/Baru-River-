@@ -12,6 +12,9 @@
 <meta name="robots" content="index, follow">
 <meta name="theme-color" content="#2d6a4f">
 <link rel="canonical" href="https://elbaru.com">
+<link rel="alternate" hreflang="en" href="https://elbaru.com/">
+<link rel="alternate" hreflang="es" href="https://elbaru.com/?lang=es">
+<link rel="alternate" hreflang="x-default" href="https://elbaru.com/">
 
 <!-- ── Geo ──────────────────────────────────────────────── -->
 <meta name="geo.region" content="CR-P">
@@ -70,6 +73,65 @@
       "longitude": -83.8580
     }
   }
+}
+</script>
+<!-- ─────────────────────────────────────────────────────── -->
+
+<!-- ── FAQ Schema (People Also Ask / Featured Snippets) ── -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is the Barú Flood Index?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The Barú Flood Index is a free real-time flood risk tool for the road crossing at the Barú River near Dominical, Costa Rica. It combines live rainfall data, tide levels, lunar phase, soil moisture, and seasonal conditions into a single risk score — updated continuously so locals, guests, and travelers know whether the crossing is safe before they leave."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What does a HIGH flood risk mean on the Barú River?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "HIGH (70–100%) means conditions strongly favor flooding at the Barú road crossing near Dominical. Do not attempt to cross. Use the Río Lindo alternate route or wait for the index to drop. In a life-threatening emergency call 911 or contact CNE Costa Rica."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "When does the Barú River flood most often?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The Barú River floods most frequently during Green Season (May–November), with October and November being the most active months. Floods can also be triggered by intense upstream rainfall in the Tinamastes and Platanillo valleys — heavy rain there typically reaches the Dominical crossing within 2–6 hours."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is there an alternate route if the Barú road floods?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. The Río Lindo road provides an alternate route around the flooded Barú crossing. Allow extra travel time and check current conditions before departing. The Barú Flood Index shows current risk so you can plan ahead."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How accurate is the Barú Flood Index?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The index uses ECMWF and GFS weather model data from Open-Meteo, observed Costa Rica tide tables for Bahía Uvita, and a physically-based soil moisture model. It is an informational tool — always use your own judgment and never attempt to cross moving water regardless of the score shown."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does the Barú River flood in dry season?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Flooding is rare in dry season (December–April) but not impossible. Bone-dry tropical soil is hydrophobic — if an intense rain event hits after a long dry spell, water sheets off rather than absorbing, which can cause a flash flood even with relatively low rainfall totals. The Barú Flood Index accounts for this with its soil moisture model."
+      }
+    }
+  ]
 }
 </script>
 <!-- ─────────────────────────────────────────────────────── -->
@@ -341,6 +403,18 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 
 /* Weather unavailable warning */
 .weather-warn { display:none; font-size:9px; color:#c0392b; margin-bottom:8px; padding:5px 10px; background:rgba(192,57,43,0.06); border:1px solid rgba(192,57,43,0.18); border-radius:6px; }
+
+/* Visually hidden — readable by Google crawler and screen readers, invisible in UI */
+.sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+
+/* Blog cards */
+.blog-card { display:flex; gap:14px; align-items:flex-start; padding:14px; background:var(--card); border:1px solid var(--border); border-radius:14px; margin-bottom:10px; text-decoration:none; color:inherit; transition:border-color .2s, box-shadow .2s; }
+.blog-card:hover { border-color:rgba(45,106,79,0.35); box-shadow:0 2px 12px rgba(45,106,79,0.08); }
+.blog-num { font-family:'Playfair Display',serif; font-size:28px; color:rgba(45,106,79,0.18); line-height:1; flex-shrink:0; width:32px; }
+.blog-body { flex:1; }
+.blog-title { font-family:'Lora',serif; font-size:13px; font-style:italic; color:var(--green-dark); line-height:1.4; margin-bottom:5px; }
+.blog-excerpt { font-size:9px; color:var(--muted); line-height:1.7; margin-bottom:7px; }
+.blog-read { font-size:8.5px; letter-spacing:0.12em; text-transform:uppercase; color:var(--green); }
 </style>
 </head>
 <body>
@@ -402,11 +476,13 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
   <button class="tab-btn" data-i18n="tab_history" onclick="showTab('history',this)">History</button>
   <button class="tab-btn" data-i18n="tab_log" onclick="showTab('observe',this)">Log</button>
   <button class="tab-btn" data-i18n="tab_journal" onclick="showTab('journal',this)">Journal</button>
+  <button class="tab-btn" data-i18n="tab_blog" onclick="showTab('blog',this)">Blog</button>
   <button class="tab-btn" id="config-tab-btn" data-i18n="tab_config" style="display:none" onclick="showTab('config',this)">Config</button>
 </div>
 
 <!-- OVERVIEW -->
 <div id="tab-overview" class="tab-pane active">
+  <h2 class="sr-only">Current flood conditions — Barú River crossing, Dominical, Costa Rica</h2>
   <div id="ov-loading" class="loading"><div class="loader"></div>Fetching live conditions…</div>
   <div id="ov-content" style="display:none">
     <div class="card">
@@ -465,6 +541,7 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 
 <!-- WATERSHED -->
 <div id="tab-watershed" class="tab-pane">
+  <h2 class="sr-only">Barú watershed rainfall — Platanillo and Tinamastes upstream monitoring</h2>
   <div class="card">
     <div class="card-title" data-i18n="ct_wshed">Watershed Rainfall · 3 Points</div>
     <div style="font-size:9px;color:var(--muted);margin-bottom:10px;line-height:1.7">River Mouth, Platanillo mid-valley, and Tinamastes Valley upper catchment. Heavy upstream rain arrives at the crossing in 2–6 hours.</div>
@@ -479,6 +556,7 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 
 <!-- STATIONS -->
 <div id="tab-stations" class="tab-pane">
+  <h2 class="sr-only">Live weather stations near Dominical — Quepos, Dominical, Uvita</h2>
   <div class="card">
     <div class="card-title" data-i18n="ct_stations">3 Nearby Stations · Live</div>
     <div style="font-size:9px;color:var(--muted);margin-bottom:10px">Quepos, Dominical, Uvita — all within 40km of the Barú crossing.</div>
@@ -497,6 +575,7 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 
 <!-- FORECAST -->
 <div id="tab-forecast" class="tab-pane">
+  <h2 class="sr-only">7-day flood risk forecast for the Barú River, Dominical</h2>
   <div class="card">
     <div class="card-title" data-i18n="ct_forecast7">7-Day Risk Forecast</div>
     <div id="fc-strip-wrap" class="loading" style="padding:16px"><div class="loader"></div></div>
@@ -514,6 +593,7 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 
 <!-- RADAR -->
 <div id="tab-radar" class="tab-pane">
+  <h2 class="sr-only">Live weather radar — Barú watershed and Dominical, Costa Rica</h2>
   <div class="card">
     <div class="card-title" data-i18n="ct_radar">Live Radar</div>
     <div style="font-size:9px;color:var(--muted);margin-bottom:10px;line-height:1.7"><b>IMN national radar</b> (top) — Costa Rica's official weather-radar mosaic, refreshed every few minutes. <b>Windy</b> (below) — ground radar + model; tap to expand and scrub the timeline. Note: the Talamanca range can partly shadow radar over the zona sur, so cross-check both.</div>
@@ -539,6 +619,7 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 
 <!-- HISTORY -->
 <div id="tab-history" class="tab-pane">
+  <h2 class="sr-only">Historical flood score log — Barú River, Dominical</h2>
   <div id="hist-banner" class="setup-banner" style="display:none">Connect Supabase in <strong>Config</strong> to log history.</div>
   <div class="card">
     <div class="card-title" data-i18n="ct_score30">Flood Score · Last 30 Days</div>
@@ -552,6 +633,7 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 
 <!-- OBSERVE -->
 <div id="tab-observe" class="tab-pane">
+  <h2 class="sr-only">Log a river observation — community flood reporting for the Barú crossing</h2>
   <div id="obs-banner" class="setup-banner" style="display:none">Connect Supabase in <strong>Config</strong> to save observations.</div>
   <div class="card">
     <div class="card-title" data-i18n="ct_logobs">Log Observation</div>
@@ -599,6 +681,7 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 
 <!-- JOURNAL -->
 <div id="tab-journal" class="tab-pane">
+  <h2 class="sr-only">Flood event record and field journal — Barú River, River Soul, Dominical</h2>
   <div class="card">
     <div class="card-title" data-i18n="ct_floodrec">Flood Record · 2025</div>
     <div style="font-size:9px;color:var(--muted);margin-bottom:10px;line-height:1.7">Confirmed flood events at the Barú crossing, River Soul. Ground truth.</div>
@@ -616,6 +699,48 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
     <strong style="color:var(--ink)">Veranillo</strong> — little dry season hiding inside the wet season.<br>
     <strong style="color:var(--ink)">Las nubes en la montaña</strong> — clouds stacking on Tinamastes ridge. Watch the river.
   </div>
+</div>
+
+<!-- BLOG -->
+<div id="tab-blog" class="tab-pane">
+  <h2 class="sr-only">Barú River flood guides and stories — elbaru.com blog</h2>
+  <div style="font-size:9px;color:var(--muted);padding:0 0 14px;line-height:1.8">Stories, guides, and field notes from the Barú River crossing.</div>
+
+  <a href="blog-1-why-i-built-baru-flood-index.html" class="blog-card">
+    <div class="blog-num">01</div>
+    <div class="blog-body">
+      <div class="blog-title">Why I Built the Barú Flood Index</div>
+      <div class="blog-excerpt">I kept checking apps and none of them told me what I actually needed to know. So I built one that does.</div>
+      <div class="blog-read">Read →</div>
+    </div>
+  </a>
+
+  <a href="blog-2-who-baru-flood-index-is-for.html" class="blog-card">
+    <div class="blog-num">02</div>
+    <div class="blog-body">
+      <div class="blog-title">The Barú River Doesn't Care Who You Are</div>
+      <div class="blog-excerpt">Guests, locals, surfers, families — anyone crossing that road needs the same information.</div>
+      <div class="blog-read">Read →</div>
+    </div>
+  </a>
+
+  <a href="blog-3-what-baru-flooding-looks-like.html" class="blog-card">
+    <div class="blog-num">03</div>
+    <div class="blog-body">
+      <div class="blog-title">What It Looks Like When the Barú Floods</div>
+      <div class="blog-excerpt">October 2024. I went down to the crossing and the river was unrecognizable.</div>
+      <div class="blog-read">Read →</div>
+    </div>
+  </a>
+
+  <a href="blog-4-how-baru-flood-score-works.html" class="blog-card">
+    <div class="blog-num">04</div>
+    <div class="blog-body">
+      <div class="blog-title">Why Your Weather App Won't Tell You If the Barú Is Flooding</div>
+      <div class="blog-excerpt">Rain, tides, moon phase, and soil moisture — four things no single app was tracking together.</div>
+      <div class="blog-read">Read →</div>
+    </div>
+  </a>
 </div>
 
 <!-- CONFIG -->
@@ -711,7 +836,7 @@ const I18N = {
   en: {
     ld_fetch:"Fetching live conditions…",
     tab_overview:"Overview", tab_forecast:"Forecast", tab_radar:"Radar", tab_watershed:"Watershed",
-    tab_stations:"Stations", tab_history:"History", tab_log:"Log", tab_journal:"Journal", tab_config:"Config",
+    tab_stations:"Stations", tab_history:"History", tab_log:"Log", tab_journal:"Journal", tab_blog:"Blog", tab_config:"Config",
     ct_current:"Current Conditions", ct_factors:"Flood Risk Factors", ct_tide:"Tide · Bahía Uvita",
     cc_source:"via Open-Meteo · ECMWF + GFS · station-corrected for Pacífico Sur",
     lbl_rain24:"Rain 24h", lbl_rain72:"Rain 72h", lbl_temp:"Temperature", lbl_hum:"Humidity",
@@ -741,7 +866,7 @@ const I18N = {
   es: {
     ld_fetch:"Cargando condiciones en vivo…",
     tab_overview:"Resumen", tab_forecast:"Pronóstico", tab_radar:"Radar", tab_watershed:"Cuenca",
-    tab_stations:"Estaciones", tab_history:"Historial", tab_log:"Registro", tab_journal:"Diario", tab_config:"Config",
+    tab_stations:"Estaciones", tab_history:"Historial", tab_log:"Registro", tab_journal:"Diario", tab_blog:"Blog", tab_config:"Config",
     ct_current:"Condiciones actuales", ct_factors:"Factores de riesgo de inundación", ct_tide:"Marea · Bahía Uvita",
     cc_source:"vía Open-Meteo · ECMWF + GFS · corregido por estación para el Pacífico Sur",
     lbl_rain24:"Lluvia 24h", lbl_rain72:"Lluvia 72h", lbl_temp:"Temperatura", lbl_hum:"Humedad",
