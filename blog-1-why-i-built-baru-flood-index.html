@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Why I Built the Barú Flood Index · elbaru.com</title>
+<meta name="description" content="No weather app told me whether the Barú River road crossing was safe to drive. So I built one that does — combining rainfall, tides, lunar phase, and soil moisture into a single score.">
+<link rel="canonical" href="https://elbaru.com/blog-1-why-i-built-baru-flood-index.html">
+<meta property="og:title" content="Why I Built the Barú Flood Index">
+<meta property="og:description" content="No weather app told me whether the Barú River road crossing was safe. So I built one that does.">
+<meta property="og:url" content="https://elbaru.com/blog-1-why-i-built-baru-flood-index.html">
+<meta property="og:type" content="article">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Mono:wght@400;500&family=Lora:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--cream:#f7f2e8;--green-dark:#1a3a2a;--green:#2d6a4f;--green-light:#52b788;--teal:#0d7f7f;--ink:#1a2a20;--muted:#5a7a6a;--border:rgba(45,106,79,0.15);}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--cream);font-family:'Lora',serif;color:var(--ink);min-height:100vh;}
+.wrap{max-width:640px;margin:0 auto;padding:0 20px 60px;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 0 24px;border-bottom:1px solid var(--border);margin-bottom:36px;}
+.back{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--green);text-decoration:none;}
+.back:hover{color:var(--green-dark);}
+.site{font-family:'Playfair Display',serif;font-style:italic;font-size:16px;color:var(--green-dark);text-decoration:none;}
+.site:hover{color:var(--green);}
+h1{font-family:'Playfair Display',serif;font-size:28px;line-height:1.25;color:var(--green-dark);margin-bottom:16px;}
+.meta{font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:36px;padding-bottom:20px;border-bottom:1px solid var(--border);}
+.body p{font-size:15px;line-height:1.85;color:var(--ink);margin-bottom:22px;}
+.body strong{color:var(--green-dark);}
+.cta{display:inline-block;margin-top:8px;background:var(--green);color:#fff;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;padding:12px 24px;border-radius:10px;text-decoration:none;}
+.cta:hover{background:var(--green-dark);}
+.footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--border);font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);text-align:center;line-height:2;}
+.footer a{color:var(--teal);text-decoration:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <a class="back" href="/">← Barú Flood Index</a>
+    <a class="site" href="/">elbaru.com</a>
+  </div>
+
+  <h1>Why I Built the Barú Flood Index</h1>
+  <div class="meta">River Soul · Dominical, Costa Rica · elbaru.com</div>
+
+  <div class="body">
+    <p>There's a road that runs parallel to the Barú River just outside Dominical, Costa Rica. It's the main way in and out. And a few times a year — sometimes more — the river overtops its banks and swallows that road completely.</p>
+
+    <p>When that happens, you don't drive through it. You wait. Or you take the long way around through Río Lindo. Or, if nobody warned you it was coming, you find out the hard way.</p>
+
+    <p>I kept finding out the hard way.</p>
+
+    <p>Not because I wasn't paying attention. I was checking apps constantly — weather apps, rain radar, surf forecasts. I live here. I run a property on the river. I needed to know whether the road was going to flood, and I was checking everything I could find.</p>
+
+    <p>None of it told me what I needed to know.</p>
+
+    <p>The apps would show rain totals for Dominical. Fine. But the Barú doesn't just flood from the rain you can see outside your window. It floods when it rains hard in Tinamastes, 20 kilometers upstream. It floods when the tide is pushing back against the mouth. It floods when the soil has been bone dry for two months and suddenly can't absorb anything. All of those things can be true at once, or none of them, and no single app was putting it together.</p>
+
+    <p>So I built one that does.</p>
+
+    <p>The Barú Flood Index pulls live rainfall data from three points across the watershed, cross-references it with tide levels at Bahía Uvita, factors in the lunar phase, and runs it through a soil moisture model that accounts for whether the ground can actually absorb what's falling. It spits out a single number: LOW, MODERATE, or HIGH. Know before you go.</p>
+
+    <p>It's free. It always will be. This is a community tool, not a product.</p>
+
+    <p>If you live near the Barú, visit River Soul, drive into Dominical, or just want to know what the river is doing before you leave the house — this is what I built because I needed it and it didn't exist.</p>
+
+    <a class="cta" href="/">Check the live flood index →</a>
+  </div>
+
+  <div class="footer">
+    <a href="/">elbaru.com</a> · Free community tool · Barú River · Dominical, Costa Rica<br>
+    Built by <a href="https://riversoulcr.com">River Soul</a>
+  </div>
+</div>
+</body>
+</html>

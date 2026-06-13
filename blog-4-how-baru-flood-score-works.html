@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Why Your Weather App Won't Tell You If the Barú Is Flooding · elbaru.com</title>
+<meta name="description" content="The Barú River floods from four things at once — rainfall, tides, lunar phase, and soil moisture. No single weather app was combining them. Here's how the Barú Flood Index does it.">
+<link rel="canonical" href="https://elbaru.com/blog-4-how-baru-flood-score-works.html">
+<meta property="og:title" content="Why Your Weather App Won't Tell You If the Barú Is Flooding">
+<meta property="og:description" content="Rain, tides, moon phase, and soil moisture — four things no single app was tracking together.">
+<meta property="og:url" content="https://elbaru.com/blog-4-how-baru-flood-score-works.html">
+<meta property="og:type" content="article">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Mono:wght@400;500&family=Lora:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--cream:#f7f2e8;--green-dark:#1a3a2a;--green:#2d6a4f;--green-light:#52b788;--teal:#0d7f7f;--ink:#1a2a20;--muted:#5a7a6a;--border:rgba(45,106,79,0.15);}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--cream);font-family:'Lora',serif;color:var(--ink);min-height:100vh;}
+.wrap{max-width:640px;margin:0 auto;padding:0 20px 60px;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 0 24px;border-bottom:1px solid var(--border);margin-bottom:36px;}
+.back{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--green);text-decoration:none;}
+.back:hover{color:var(--green-dark);}
+.site{font-family:'Playfair Display',serif;font-style:italic;font-size:16px;color:var(--green-dark);text-decoration:none;}
+.site:hover{color:var(--green);}
+h1{font-family:'Playfair Display',serif;font-size:28px;line-height:1.25;color:var(--green-dark);margin-bottom:16px;}
+.meta{font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:36px;padding-bottom:20px;border-bottom:1px solid var(--border);}
+.body p{font-size:15px;line-height:1.85;color:var(--ink);margin-bottom:22px;}
+.body strong{color:var(--green-dark);}
+.cta{display:inline-block;margin-top:8px;background:var(--green);color:#fff;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;padding:12px 24px;border-radius:10px;text-decoration:none;}
+.cta:hover{background:var(--green-dark);}
+.footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--border);font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);text-align:center;line-height:2;}
+.footer a{color:var(--teal);text-decoration:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <a class="back" href="/">← Barú Flood Index</a>
+    <a class="site" href="/">elbaru.com</a>
+  </div>
+
+  <h1>Why Your Weather App Won't Tell You If the Barú Is Flooding</h1>
+  <div class="meta">River Soul · Dominical, Costa Rica · elbaru.com</div>
+
+  <div class="body">
+    <p>Your weather app knows it's raining in Dominical. That's not enough.</p>
+
+    <p>The Barú River floods from a combination of four things happening at once — and until elbaru.com, no single tool was tracking all of them together for this specific crossing.</p>
+
+    <p><strong>Rainfall</strong> is the obvious one. But it's not just the rain at the river mouth. The Barú watershed stretches up through Platanillo and Tinamastes, two valleys in the coastal mountains behind Dominical. Heavy rain there — rain you cannot see from the beach — sends water downstream and it hits the crossing two to six hours later. The Barú Flood Index monitors rainfall at three points across the watershed simultaneously, not just one.</p>
+
+    <p><strong>Tides</strong> matter more than most people realize. The Barú empties into the Pacific just south of Dominical. At high tide, the ocean pushes back against the river mouth. Water that would otherwise drain gets backed up. The crossing floods faster and stays flooded longer. The index pulls live tide data for Bahía Uvita and weights it accordingly.</p>
+
+    <p><strong>Lunar phase</strong> drives tidal range. Full and new moons produce spring tides — the highest highs and lowest lows. When a full moon aligns with heavy rainfall, the risk multiplies. This is built into the score automatically.</p>
+
+    <p><strong>Soil moisture</strong> is the one that surprises people most. Bone-dry tropical soil is hydrophobic. After a long dry season, the earth can't absorb sudden rain — it sheets off the surface straight into the river. Saturated soil at the other end does the same thing for a different reason. The safe window is in between, when the ground is actually absorbing. The index models this continuously.</p>
+
+    <p>Put those four factors together, weight them against the season, and you get a number between 0 and 100 with a plain-language risk level: LOW, MODERATE, or HIGH.</p>
+
+    <p>That's the Barú Flood Index. One number. Four data sources. Built because no single app was doing this.</p>
+
+    <a class="cta" href="/">See the current score →</a>
+  </div>
+
+  <div class="footer">
+    <a href="/">elbaru.com</a> · Free community tool · Barú River · Dominical, Costa Rica<br>
+    Built by <a href="https://riversoulcr.com">River Soul</a>
+  </div>
+</div>
+</body>
+</html>
