@@ -596,21 +596,28 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
   <h2 class="sr-only">Live weather radar — Barú watershed and Dominical, Costa Rica</h2>
   <div class="card">
     <div class="card-title" data-i18n="ct_radar">Live Radar</div>
-    <div style="font-size:9px;color:var(--muted);margin-bottom:10px;line-height:1.7"><b>IMN national radar</b> (top) — Costa Rica's official weather-radar mosaic, refreshed every few minutes. <b>Windy</b> (below) — ground radar + model; tap to expand and scrub the timeline. Note: the Talamanca range can partly shadow radar over the zona sur, so cross-check both.</div>
+    <div style="font-size:9px;color:var(--muted);margin-bottom:10px;line-height:1.7"><b>Windy live radar</b> (top) — ground radar + model; tap to expand and scrub the timeline. <b>Windy rain accumulation</b> (middle) — 24/48h precip totals, the better read for flood forecasting. <b>IMN national radar</b> (bottom) — Costa Rica's official mosaic. Note: the Talamanca range can partly shadow radar over the zona sur, so cross-check.</div>
     <div class="radar-grid">
+      <div class="radar-panel">
+        <div class="radar-panel-label">Windy · live radar</div>
+        <div class="radar-thumb">
+          <iframe id="radar-thumb-frame" class="radar-thumb-frame" title="Windy radar — Barú watershed" frameborder="0"></iframe>
+          <div class="radar-thumb-click" onclick="openRadarModal()"><span class="radar-thumb-badge">⤢ Expand</span></div>
+        </div>
+      </div>
+      <div class="radar-panel">
+        <div class="radar-panel-label">Windy · rain accumulation (24/48h)</div>
+        <div class="radar-thumb">
+          <iframe id="rainaccu-thumb-frame" class="radar-thumb-frame" title="Windy rain accumulation — Barú watershed" frameborder="0"></iframe>
+          <div class="radar-thumb-click" onclick="openRainAccuModal()"><span class="radar-thumb-badge">⤢ Expand</span></div>
+        </div>
+      </div>
       <div class="radar-panel">
         <div class="radar-panel-label">IMN · national radar (animated)</div>
         <a href="https://www.imn.ac.cr/imagenes-sat/radar3m-animada.gif" target="_blank" rel="noopener" class="radar-thumb" style="display:block;height:340px">
           <img id="imn-radar-img" class="radar-thumb-frame" style="object-fit:contain;background:#0a1410" alt="IMN national radar — Costa Rica" />
           <div class="radar-thumb-click"><span class="radar-thumb-badge">⤢ Open full</span></div>
         </a>
-      </div>
-      <div class="radar-panel">
-        <div class="radar-panel-label">Windy</div>
-        <div class="radar-thumb">
-          <iframe id="radar-thumb-frame" class="radar-thumb-frame" title="Windy radar — Barú watershed" frameborder="0"></iframe>
-          <div class="radar-thumb-click" onclick="openRadarModal()"><span class="radar-thumb-badge">⤢ Expand</span></div>
-        </div>
       </div>
     </div>
     <div style="font-size:8px;color:var(--muted);margin-top:8px;text-align:center">Radar © IMN (imn.ac.cr) &amp; © Windy.com · independent of the flood score</div>
@@ -818,6 +825,15 @@ CREATE POLICY "pub_write" ON observations   FOR INSERT WITH CHECK (true);</div>
     <button class="radar-modal-close" onclick="closeRadarModal()">✕ Close</button>
   </div>
   <iframe id="radar-modal-frame" class="radar-modal-frame" title="Windy radar — full screen" frameborder="0"></iframe>
+</div>
+
+<!-- Windy rain accumulation fullscreen modal -->
+<div id="rainaccu-modal" class="radar-modal" style="display:none">
+  <div class="radar-modal-bar">
+    <span>Windy Rain Accumulation · Barú Watershed</span>
+    <button class="radar-modal-close" onclick="closeRainAccuModal()">✕ Close</button>
+  </div>
+  <iframe id="rainaccu-modal-frame" class="radar-modal-frame" title="Windy rain accumulation — full screen" frameborder="0"></iframe>
 </div>
 
 <div class="safety-note" style="margin:18px auto 4px">
@@ -1637,7 +1653,15 @@ async function loadAll() {
   const level = riskLevel(score);
   const pct = Math.round(score * 100);
 
-  const uvMax = daily.uv_index_max?.[3] ?? null;
+  // UV from solar geometry — Open-Meteo daily uv_index_max under-reads for
+  // the deep tropics (9°N). Computes clear-sky solar-noon UV from declination.
+  function calcDailyMaxUV(now, lat) {
+    const rad = Math.PI/180, doy = Math.floor((now - new Date(now.getFullYear(),0,0))/86400000);
+    const decl = 23.45*Math.sin(rad*(360/365)*(doy-81));
+    const cosZ = Math.sin(rad*lat)*Math.sin(rad*decl) + Math.cos(rad*lat)*Math.cos(rad*decl);
+    return cosZ <= 0 ? 0 : Math.round(Math.min(14, 11.5*Math.pow(cosZ,1.25)));
+  }
+  const uvMax = calcDailyMaxUV(now, MOUTH.lat);
   G = { score, level, rain24, rain72, soilVal, tideM, phase, season, rainR, soilR, tideR, daily, now, uvMax };
 
   const circ = 364.4;
@@ -2192,12 +2216,16 @@ async function loadSurf(){
 // ═══ RADAR ═══════════════════════════════════════════════
 const RADAR_THUMB_SRC = 'https://embed.windy.com/embed2.html?lat=9.2703&lon=-83.8580&detailLat=9.2703&detailLon=-83.8580&zoom=10&overlay=radar&product=radar&menu=&message=&marker=true&calendar=now&type=map&location=coordinates&metricWind=default&metricTemp=default&radarRange=-1';
 const RADAR_FULL_SRC  = 'https://embed.windy.com/embed2.html?lat=9.2703&lon=-83.8580&detailLat=9.2703&detailLon=-83.8580&zoom=10&overlay=radar&product=radar&message=true&marker=true&calendar=now&type=map&location=coordinates&metricWind=default&metricTemp=default&radarRange=-1';
+const RAINACCU_THUMB_SRC = 'https://embed.windy.com/embed2.html?lat=9.2703&lon=-83.8580&detailLat=9.2703&detailLon=-83.8580&zoom=10&overlay=rainAccu&product=ecmwf&menu=&message=&marker=true&calendar=now&type=map&location=coordinates&metricWind=default&metricTemp=default&radarRange=-1';
+const RAINACCU_FULL_SRC  = 'https://embed.windy.com/embed2.html?lat=9.2703&lon=-83.8580&detailLat=9.2703&detailLon=-83.8580&zoom=10&overlay=rainAccu&product=ecmwf&message=true&marker=true&calendar=now&type=map&location=coordinates&metricWind=default&metricTemp=default&radarRange=-1';
 const IMN_RADAR_IMG = 'https://www.imn.ac.cr/imagenes-sat/radar3m-animada.gif';
 let radarLoaded = false;
 function loadRadar() {
   if (radarLoaded) return;
   const thumb = document.getElementById('radar-thumb-frame');
   if (thumb) thumb.src = RADAR_THUMB_SRC;
+  const rainaccu = document.getElementById('rainaccu-thumb-frame');
+  if (rainaccu) rainaccu.src = RAINACCU_THUMB_SRC;
   const imn = document.getElementById('imn-radar-img');
   if (imn) imn.src = IMN_RADAR_IMG + '?t=' + Date.now();
   radarLoaded = true;
@@ -2215,7 +2243,20 @@ function closeRadarModal() {
   if (modal) modal.style.display = 'none';
   document.body.style.overflow = '';
 }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeRadarModal(); });
+function openRainAccuModal() {
+  const modal = document.getElementById('rainaccu-modal');
+  const frame = document.getElementById('rainaccu-modal-frame');
+  if (!modal || !frame) return;
+  if (frame.dataset.src !== RAINACCU_FULL_SRC) { frame.src = RAINACCU_FULL_SRC; frame.dataset.src = RAINACCU_FULL_SRC; }
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function closeRainAccuModal() {
+  const modal = document.getElementById('rainaccu-modal');
+  if (modal) modal.style.display = 'none';
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeRadarModal(); closeRainAccuModal(); } });
 
 // ═══ BOOT ════════════════════════════════════════════════
 applyStaticLang();
