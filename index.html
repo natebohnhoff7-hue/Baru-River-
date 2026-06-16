@@ -1848,7 +1848,7 @@ async function loadAll() {
     { label:`${t('rf_soil')} ${soilVal?.toFixed(3) ?? '—'} m³/m³ ${soilLabel}`,      val:soilR,    w:'13%', color:'var(--sand)' },
     { label:`${t('rf_tide')} ${tideM.toFixed(2)}m`,                                  val:tideR,    w:'14%', color:'var(--teal-light)' },
     { label:`${t('rf_season')} — ${t(season.name)}`,                                 val:season.base, w:'8%', color:'var(--green)' },
-    { label:`Operator (manual)`,                                                       val:opR,      w:'10%', color:'#e67e22' },
+    { label:`Field Observation`,                                                       val:opR,      w:'10%', color:'#e67e22' },
   ];
   document.getElementById('ov-bars').innerHTML = factors.map(f => `
     <div class="bar-row">
@@ -1856,7 +1856,7 @@ async function loadAll() {
       <div class="bar-track"><div class="bar-fill" style="width:${f.val*100}%;background:${f.color}"></div></div>
     </div>`).join('');
   document.getElementById('ov-formula').innerHTML =
-    `Rain×0.40 + Lunar×0.15 + Soil×0.13 + Tide×0.14 + Season×0.08 + Operator×0.10<br>= <span style="color:${level.color}">${score.toFixed(3)} → ${t(level.label)}</span>`;
+    `Rain×0.40 + Lunar×0.15 + Soil×0.13 + Tide×0.14 + Season×0.08 + Field Obs×0.10<br>= <span style="color:${level.color}">${score.toFixed(3)} → ${t(level.label)}</span>`;
 
   document.getElementById('ov-loading').style.display = 'none';
   document.getElementById('ov-content').style.display = 'block';
