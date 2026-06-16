@@ -319,27 +319,6 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 .flood-report-btn { margin-top:14px; background:var(--red); border:3px solid #8c2418; color:#fff; border-radius:30px; padding:15px 32px; font-family:'DM Mono',monospace; font-weight:500; font-size:13px; letter-spacing:0.08em; text-transform:uppercase; cursor:pointer; box-shadow:0 5px 16px rgba(192,57,43,0.40); transition:background .2s,color .2s,box-shadow .2s,transform .12s; }
 .flood-report-btn:hover { background:#a93226; box-shadow:0 7px 20px rgba(192,57,43,0.50); transform:translateY(-1px); }
 .flood-report-btn:active { transform:translateY(1px); }
-/* ── NEWS TICKER ─────────────────────────────────────────── */
-.ticker-outer{display:none;overflow:hidden;position:relative;z-index:58;width:100%;}
-.ticker-outer.on{display:block;}
-.ticker-outer.sev-info{background:#e9a825;}
-.ticker-outer.sev-warning{background:#c0670a;}
-.ticker-outer.sev-danger{background:#c0392b;}
-.ticker-track{display:flex;align-items:center;padding:8px 0;white-space:nowrap;overflow:hidden;}
-.ticker-label{flex-shrink:0;font-family:'DM Mono',monospace;font-size:9px;font-weight:500;letter-spacing:0.16em;text-transform:uppercase;color:rgba(255,255,255,0.95);background:rgba(0,0,0,0.22);padding:4px 12px;border-right:2px solid rgba(255,255,255,0.3);}
-.ticker-scroll{display:inline-block;white-space:nowrap;padding-left:60px;animation:tickerMove 35s linear infinite;font-family:'DM Mono',monospace;font-size:11px;color:#fff;font-weight:500;letter-spacing:0.04em;}
-@keyframes tickerMove{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
-/* ── OPERATOR / TOGGLE UI ──────────────────────────────── */
-.op-slider-wrap{display:flex;align-items:center;gap:12px;margin-bottom:6px;}
-.op-slider-wrap input[type=range]{flex:1;accent-color:var(--green);cursor:pointer;}
-.op-big{font-family:'Playfair Display',serif;font-size:28px;color:var(--green-dark);min-width:52px;text-align:right;}
-.toggle-row{display:flex;align-items:center;gap:12px;margin:10px 0 14px;}
-.tog{position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0;cursor:pointer;}
-.tog-track{position:absolute;inset:0;background:#ccc;border-radius:24px;transition:.25s;}
-.tog-track.on{background:var(--green);}
-.tog-thumb{position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.25s;box-shadow:0 1px 3px rgba(0,0,0,0.2);}
-.tog-thumb.on{transform:translateX(20px);}
-
 .flood-report-btn.active { background:#fff; color:var(--red); border-color:var(--red); box-shadow:0 4px 12px rgba(192,57,43,0.25); }
 
 /* WhatsApp flood-alerts join button */
@@ -468,14 +447,6 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 <div id="flood-banner" class="flood-banner" style="display:none" onclick="clearFloodOverride()"></div>
 
 <!-- Score -->
-
-<!-- NEWS TICKER -->
-<div id="alert-ticker" class="ticker-outer">
-  <div class="ticker-track">
-    <span class="ticker-label" id="ticker-label">⚠ ALERT</span>
-    <span id="ticker-text" class="ticker-scroll"></span>
-  </div>
-</div>
 <div class="ring-wrap">
   <div class="ring-outer">
     <svg viewBox="0 0 140 140" width="140" height="140">
@@ -781,41 +752,6 @@ body { background:var(--cream); font-family:'DM Mono',monospace; color:var(--ink
 
 <!-- CONFIG -->
 <div id="tab-config" class="tab-pane">
-  <!-- OPERATOR -->
-  <div class="card">
-    <div class="card-title">Operator Adjustment · 10% of Score</div>
-    <div style="font-size:9px;color:var(--muted);margin-bottom:14px;line-height:1.8">Offshore system, IMN advisory, local knowledge the model can't see — dial it up. Zero by default. Persists until you change it.</div>
-    <label class="cfg-label">Manual Factor — drag to set</label>
-    <div class="op-slider-wrap">
-      <input type="range" id="op-slider" min="0" max="100" value="0" oninput="updateOpDisplay()">
-      <span class="op-big" id="op-pct">0%</span>
-    </div>
-    <div id="op-pts" style="font-size:9px;color:var(--muted);margin-bottom:14px;text-align:center">→ adds 0 pts to total score</div>
-    <button class="btn-save" onclick="saveOperator()">Set &amp; Refresh Score</button>
-    <div class="ok" id="op-ok" style="display:none;margin-top:6px">✓ Saved — score updated</div>
-  </div>
-  <!-- ALERT TICKER -->
-  <div class="card">
-    <div class="card-title">Alert Ticker</div>
-    <div style="font-size:9px;color:var(--muted);margin-bottom:14px;line-height:1.8">Paste an IMN advisory or any message. Toggle on — it scrolls across the top of the app like a news banner. Stays on until you turn it off.</div>
-    <label class="cfg-label">Alert Text</label>
-    <textarea class="cfg-input" id="alert-text" rows="4" style="resize:vertical" placeholder="e.g. ⚠ IMN Advisory: Onda Tropical #12 + ITCZ activa — lluvias y aguaceros fuertes esta tarde y noche. Pacífico Sur en alerta."></textarea>
-    <label class="cfg-label">Severity / Color</label>
-    <select class="cfg-input" id="alert-sev">
-      <option value="info">Info — yellow</option>
-      <option value="warning" selected>Warning — orange</option>
-      <option value="danger">Danger — red</option>
-    </select>
-    <div class="toggle-row">
-      <div class="tog" onclick="toggleAlert()">
-        <div id="tog-track" class="tog-track"></div>
-        <div id="tog-thumb" class="tog-thumb"></div>
-      </div>
-      <span style="font-size:10px;color:var(--ink)" id="toggle-label">Ticker OFF</span>
-    </div>
-    <button class="btn-save" onclick="saveAlert()">Save Alert</button>
-    <div class="ok" id="alert-ok" style="display:none;margin-top:6px">✓ Alert updated</div>
-  </div>
   <div class="card">
     <div class="card-title">Supabase Connection</div>
     <div style="font-size:9px;color:var(--muted);margin-bottom:12px;line-height:1.8">Create a free project at <strong>supabase.com</strong>, run the SQL below once, then paste your keys here.</div>
@@ -1137,8 +1073,7 @@ function scoreTide(m) {
   if(m>=2.2)return 1.0; if(m>=1.8)return 0.80;
   if(m>=1.3)return 0.55; if(m>=0.8)return 0.30; return 0.12;
 }
-// WEIGHTS: Rain 40 / Lunar 15 / Soil 13 / Tide 14 / Season 8 / Operator 10
-function calcRisk(rR,lR,sR,tR,seaB,opR) { return Math.min(rR*0.40+lR*0.15+sR*0.13+tR*0.14+seaB*0.08+(opR||0)*0.10,1); }
+function calcRisk(rR,lR,sR,tR,seaB) { return Math.min(rR*0.40+lR*0.20+sR*0.18+tR*0.14+seaB*0.08,1); }
 function riskLevel(s) {
   if(s>=0.70) return {label:'HIGH',    color:'#c0392b'};
   if(s>=0.40) return {label:'MODERATE',color:'#d68910'};
@@ -1179,93 +1114,6 @@ function getCRHour(date) {
 function getCRMinute(date) {
   const s = date.toLocaleString('en-US', { minute:'2-digit', timeZone:'America/Costa_Rica' });
   return parseInt(s, 10);
-}
-
-
-// ═══ OPERATOR & ALERT (ADMIN — Supabase-backed) ══════════
-// localStorage = instant render cache; Supabase = truth for ALL visitors
-
-function getOpFactor(){try{return Math.max(0,Math.min(100,parseInt(localStorage.getItem('op_factor')||'0',10)))/100;}catch(e){return 0;}}
-
-function updateOpDisplay(){
-  const slider=document.getElementById('op-slider');if(!slider)return;
-  const v=parseInt(slider.value,10);
-  const pts=Math.round(v*0.10);
-  const pctEl=document.getElementById('op-pct');const ptsEl=document.getElementById('op-pts');
-  if(pctEl)pctEl.textContent=v+'%';
-  if(ptsEl)ptsEl.textContent='→ adds '+pts+' pts to total score';
-}
-
-async function writeSiteConfig(patch){
-  if(!sbClient)return;
-  try{const{error}=await sbClient.from('site_config').upsert({id:1,...patch},{onConflict:'id'});if(error)console.warn('site_config write:',error.message);}catch(e){console.warn('writeSiteConfig:',e);}
-}
-
-async function loadSiteConfig(){
-  if(!sbClient)return;
-  try{
-    const{data,error}=await sbClient.from('site_config').select('*').eq('id',1).single();
-    if(error||!data)return;
-    try{
-      localStorage.setItem('alert_text',data.alert_text||'');
-      localStorage.setItem('alert_on',data.alert_on?'1':'0');
-      localStorage.setItem('alert_sev',data.alert_sev||'warning');
-      localStorage.setItem('op_factor',String(data.op_factor||0));
-    }catch(e){}
-    renderTicker();
-  }catch(e){console.warn('loadSiteConfig:',e);}
-}
-
-function renderTicker(){
-  try{
-    const text=(localStorage.getItem('alert_text')||'').trim();
-    const on=localStorage.getItem('alert_on')==='1';
-    const sev=localStorage.getItem('alert_sev')||'warning';
-    const outer=document.getElementById('alert-ticker');
-    const inner=document.getElementById('ticker-text');
-    if(!outer||!inner)return;
-    inner.textContent=text+'          '+text+'          '+text;
-    outer.className='ticker-outer'+(on&&text?' on sev-'+sev:'');
-    const lbl=document.getElementById('ticker-label');
-    if(lbl){if(sev==='danger')lbl.textContent='🔴 DANGER';else if(sev==='warning')lbl.textContent='⚠ WARNING';else lbl.textContent='ℹ INFO';}
-    const track=document.getElementById('tog-track');const thumb=document.getElementById('tog-thumb');
-    const tlbl=document.getElementById('toggle-label');const ta=document.getElementById('alert-text');
-    const sevSel=document.getElementById('alert-sev');const sliderEl=document.getElementById('op-slider');
-    if(track)track.className='tog-track'+(on?' on':'');
-    if(thumb)thumb.className='tog-thumb'+(on?' on':'');
-    if(tlbl)tlbl.textContent=on?'Ticker ON':'Ticker OFF';
-    if(ta&&!ta.value)ta.value=text;
-    if(sevSel)sevSel.value=sev;
-    if(sliderEl){sliderEl.value=Math.round(getOpFactor()*100);updateOpDisplay();}
-  }catch(e){console.warn('renderTicker:',e);}
-}
-
-function toggleAlert(){
-  const on=localStorage.getItem('alert_on')==='1';
-  const newOn=!on;
-  try{localStorage.setItem('alert_on',newOn?'1':'0');}catch(e){}
-  writeSiteConfig({alert_on:newOn});
-  renderTicker();
-}
-
-async function saveOperator(){
-  const v=parseInt(document.getElementById('op-slider')?.value||'0',10);
-  try{localStorage.setItem('op_factor',String(v));}catch(e){}
-  await writeSiteConfig({op_factor:v});
-  const ok=document.getElementById('op-ok');
-  if(ok){ok.style.display='block';setTimeout(()=>ok.style.display='none',2500);}
-  loadAll();
-}
-
-async function saveAlert(){
-  const text=(document.getElementById('alert-text')?.value||'').trim();
-  const on=localStorage.getItem('alert_on')==='1';
-  const sev=document.getElementById('alert-sev')?.value||'warning';
-  try{localStorage.setItem('alert_text',text);localStorage.setItem('alert_sev',sev);}catch(e){}
-  await writeSiteConfig({alert_text:text,alert_on:on,alert_sev:sev});
-  renderTicker();
-  const ok=document.getElementById('alert-ok');
-  if(ok){ok.style.display='block';setTimeout(()=>ok.style.display='none',2500);}
 }
 
 // ═══ SUPABASE ════════════════════════════════════════════
@@ -1385,7 +1233,6 @@ function showTab(name, btn) {
   if (name === 'observe')   { loadObsLog(); checkObsBanner(); }
   if (name === 'journal')   buildJournal();
   if (name === 'radar')     loadRadar();
-  if (name === 'config')    renderTicker();
 }
 
 // ═══ GLOBAL STATE ════════════════════════════════════════
@@ -1738,7 +1585,6 @@ async function loadAll() {
   const now = new Date();
   const season = getSeasonByDate(now);
   const phase = lunarPhase(lunarAge(now));
-  const opR = getOpFactor();
 
   document.getElementById('htime').textContent = formatHeaderTime(now);
   const crMonth = now.toLocaleString(LANG==='es'?'es-CR':'en-US', { month:'long', timeZone:'America/Costa_Rica' });
@@ -1803,7 +1649,7 @@ async function loadAll() {
     else if (vn < 0.85) soilLabel = t('soil_filling');
     else                soilLabel = t('soil_sat');
   }
-  const score = calcRisk(rainR, phase.risk, soilR, tideR, season.base, opR);
+  const score = calcRisk(rainR, phase.risk, soilR, tideR, season.base);
   const level = riskLevel(score);
   const pct = Math.round(score * 100);
 
@@ -1829,8 +1675,7 @@ async function loadAll() {
     `<span class="chip" style="color:${level.color}">${t(level.label)}</span>
      <span class="chip" style="color:var(--teal)">${phase.emoji} ${t(phase.name)}</span>
      <span class="chip" style="color:var(--muted)">${season.emoji} ${t(season.name)}</span>
-     <span class="chip" style="color:${uvColor(uvMax)}">☀️ UV ${uvMax != null ? Math.round(uvMax) : '—'}</span>`+
-     (opR>0?` <span class="chip" style="color:#e67e22">⚡ +${Math.round(opR*10)}pts operator</span>`:'');
+     <span class="chip" style="color:${uvColor(uvMax)}">☀️ UV ${uvMax != null ? Math.round(uvMax) : '—'}</span>`;
 
   document.getElementById('ov-r24').textContent = rain24.toFixed(1);
   document.getElementById('ov-r72').textContent = rain72.toFixed(1);
@@ -1844,11 +1689,10 @@ async function loadAll() {
 
   const factors = [
     { label:`${t('rf_rain')} 24h:${rain24.toFixed(1)}mm 72h:${rain72.toFixed(1)}mm`, val:rainR,    w:'40%', color:'var(--teal)' },
-    { label:`${t('rf_lunar')} — ${t(phase.name)}`,                                   val:phase.risk, w:'15%', color:'#9b59b6' },
-    { label:`${t('rf_soil')} ${soilVal?.toFixed(3) ?? '—'} m³/m³ ${soilLabel}`,      val:soilR,    w:'13%', color:'var(--sand)' },
+    { label:`${t('rf_lunar')} — ${t(phase.name)}`,                                   val:phase.risk, w:'20%', color:'#9b59b6' },
+    { label:`${t('rf_soil')} ${soilVal?.toFixed(3) ?? '—'} m³/m³ ${soilLabel}`,      val:soilR,    w:'18%', color:'var(--sand)' },
     { label:`${t('rf_tide')} ${tideM.toFixed(2)}m`,                                  val:tideR,    w:'14%', color:'var(--teal-light)' },
     { label:`${t('rf_season')} — ${t(season.name)}`,                                 val:season.base, w:'8%', color:'var(--green)' },
-    { label:`Operator (manual)`,                                                       val:opR,      w:'10%', color:'#e67e22' },
   ];
   document.getElementById('ov-bars').innerHTML = factors.map(f => `
     <div class="bar-row">
@@ -1856,7 +1700,7 @@ async function loadAll() {
       <div class="bar-track"><div class="bar-fill" style="width:${f.val*100}%;background:${f.color}"></div></div>
     </div>`).join('');
   document.getElementById('ov-formula').innerHTML =
-    `Rain×0.40 + Lunar×0.15 + Soil×0.13 + Tide×0.14 + Season×0.08 + Operator×0.10<br>= <span style="color:${level.color}">${score.toFixed(3)} → ${t(level.label)}</span>`;
+    `Rain×0.40 + Lunar×0.20 + Soil×0.18 + Tide×0.14 + Season×0.08<br>= <span style="color:${level.color}">${score.toFixed(3)} → ${t(level.label)}</span>`;
 
   document.getElementById('ov-loading').style.display = 'none';
   document.getElementById('ov-content').style.display = 'block';
@@ -2416,8 +2260,6 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeRadar
 
 // ═══ BOOT ════════════════════════════════════════════════
 applyStaticLang();
-renderTicker();
-loadSiteConfig();
 loadAll();
 setTimeout(() => {
   const el = document.getElementById('ov-loading');
