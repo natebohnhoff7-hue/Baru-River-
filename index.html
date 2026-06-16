@@ -1830,7 +1830,7 @@ async function loadAll() {
      <span class="chip" style="color:var(--teal)">${phase.emoji} ${t(phase.name)}</span>
      <span class="chip" style="color:var(--muted)">${season.emoji} ${t(season.name)}</span>
      <span class="chip" style="color:${uvColor(uvMax)}">☀️ UV ${uvMax != null ? Math.round(uvMax) : '—'}</span>`+
-     (opR>0?` <span class="chip" style="color:#e67e22">⚡ +${Math.round(opR*10)}pts operator</span>`:'');
+     '';
 
   document.getElementById('ov-r24').textContent = rain24.toFixed(1);
   document.getElementById('ov-r72').textContent = rain72.toFixed(1);
