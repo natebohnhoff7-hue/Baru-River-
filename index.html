@@ -1182,24 +1182,40 @@ function getCRMinute(date) {
 }
 
 
-// ═══ OPERATOR & ALERT (ADMIN) ════════════════════════════
+// ═══ OPERATOR & ALERT (ADMIN — Supabase-backed) ══════════
+// localStorage = instant render cache; Supabase = truth for ALL visitors
+
 function getOpFactor(){try{return Math.max(0,Math.min(100,parseInt(localStorage.getItem('op_factor')||'0',10)))/100;}catch(e){return 0;}}
+
 function updateOpDisplay(){
   const slider=document.getElementById('op-slider');if(!slider)return;
   const v=parseInt(slider.value,10);
   const pts=Math.round(v*0.10);
-  const pctEl=document.getElementById('op-pct');
-  const ptsEl=document.getElementById('op-pts');
+  const pctEl=document.getElementById('op-pct');const ptsEl=document.getElementById('op-pts');
   if(pctEl)pctEl.textContent=v+'%';
   if(ptsEl)ptsEl.textContent='→ adds '+pts+' pts to total score';
 }
-function saveOperator(){
-  const v=parseInt(document.getElementById('op-slider')?.value||'0',10);
-  try{localStorage.setItem('op_factor',String(v));}catch(e){}
-  const ok=document.getElementById('op-ok');
-  if(ok){ok.style.display='block';setTimeout(()=>ok.style.display='none',2500);}
-  loadAll();
+
+async function writeSiteConfig(patch){
+  if(!sbClient)return;
+  try{const{error}=await sbClient.from('site_config').upsert({id:1,...patch},{onConflict:'id'});if(error)console.warn('site_config write:',error.message);}catch(e){console.warn('writeSiteConfig:',e);}
 }
+
+async function loadSiteConfig(){
+  if(!sbClient)return;
+  try{
+    const{data,error}=await sbClient.from('site_config').select('*').eq('id',1).single();
+    if(error||!data)return;
+    try{
+      localStorage.setItem('alert_text',data.alert_text||'');
+      localStorage.setItem('alert_on',data.alert_on?'1':'0');
+      localStorage.setItem('alert_sev',data.alert_sev||'warning');
+      localStorage.setItem('op_factor',String(data.op_factor||0));
+    }catch(e){}
+    renderTicker();
+  }catch(e){console.warn('loadSiteConfig:',e);}
+}
+
 function renderTicker(){
   try{
     const text=(localStorage.getItem('alert_text')||'').trim();
@@ -1208,18 +1224,13 @@ function renderTicker(){
     const outer=document.getElementById('alert-ticker');
     const inner=document.getElementById('ticker-text');
     if(!outer||!inner)return;
-    // Triple the text so scroll feels seamless at any screen width
     inner.textContent=text+'          '+text+'          '+text;
     outer.className='ticker-outer'+(on&&text?' on sev-'+sev:'');
     const lbl=document.getElementById('ticker-label');
     if(lbl){if(sev==='danger')lbl.textContent='🔴 DANGER';else if(sev==='warning')lbl.textContent='⚠ WARNING';else lbl.textContent='ℹ INFO';}
-    // Sync admin UI
-    const track=document.getElementById('tog-track');
-    const thumb=document.getElementById('tog-thumb');
-    const tlbl=document.getElementById('toggle-label');
-    const ta=document.getElementById('alert-text');
-    const sevSel=document.getElementById('alert-sev');
-    const sliderEl=document.getElementById('op-slider');
+    const track=document.getElementById('tog-track');const thumb=document.getElementById('tog-thumb');
+    const tlbl=document.getElementById('toggle-label');const ta=document.getElementById('alert-text');
+    const sevSel=document.getElementById('alert-sev');const sliderEl=document.getElementById('op-slider');
     if(track)track.className='tog-track'+(on?' on':'');
     if(thumb)thumb.className='tog-thumb'+(on?' on':'');
     if(tlbl)tlbl.textContent=on?'Ticker ON':'Ticker OFF';
@@ -1228,17 +1239,30 @@ function renderTicker(){
     if(sliderEl){sliderEl.value=Math.round(getOpFactor()*100);updateOpDisplay();}
   }catch(e){console.warn('renderTicker:',e);}
 }
+
 function toggleAlert(){
   const on=localStorage.getItem('alert_on')==='1';
-  try{localStorage.setItem('alert_on',on?'0':'1');}catch(e){}
+  const newOn=!on;
+  try{localStorage.setItem('alert_on',newOn?'1':'0');}catch(e){}
+  writeSiteConfig({alert_on:newOn});
   renderTicker();
 }
-function saveAlert(){
+
+async function saveOperator(){
+  const v=parseInt(document.getElementById('op-slider')?.value||'0',10);
+  try{localStorage.setItem('op_factor',String(v));}catch(e){}
+  await writeSiteConfig({op_factor:v});
+  const ok=document.getElementById('op-ok');
+  if(ok){ok.style.display='block';setTimeout(()=>ok.style.display='none',2500);}
+  loadAll();
+}
+
+async function saveAlert(){
   const text=(document.getElementById('alert-text')?.value||'').trim();
-  const on=document.getElementById('alert-sev')?document.getElementById('alert-sev').parentElement.querySelector('#tog-track')?.classList.contains('on'):false;
-  const onVal=localStorage.getItem('alert_on')||'0';
+  const on=localStorage.getItem('alert_on')==='1';
   const sev=document.getElementById('alert-sev')?.value||'warning';
   try{localStorage.setItem('alert_text',text);localStorage.setItem('alert_sev',sev);}catch(e){}
+  await writeSiteConfig({alert_text:text,alert_on:on,alert_sev:sev});
   renderTicker();
   const ok=document.getElementById('alert-ok');
   if(ok){ok.style.display='block';setTimeout(()=>ok.style.display='none',2500);}
@@ -2393,6 +2417,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeRadar
 // ═══ BOOT ════════════════════════════════════════════════
 applyStaticLang();
 renderTicker();
+loadSiteConfig();
 loadAll();
 setTimeout(() => {
   const el = document.getElementById('ov-loading');
