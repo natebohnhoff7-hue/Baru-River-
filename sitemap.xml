@@ -3,11 +3,35 @@
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://elbaru.com/</loc>
-    <lastmod>2026-06-13</lastmod>
+    <lastmod>2026-07-29</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="en" href="https://elbaru.com/"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://elbaru.com/?lang=es"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://elbaru.com/"/>
+  </url>
+  <url>
+    <loc>https://elbaru.com/blog-1-why-i-built-baru-flood-index.html</loc>
+    <lastmod>2026-07-29</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://elbaru.com/blog-2-who-baru-flood-index-is-for.html</loc>
+    <lastmod>2026-07-29</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://elbaru.com/blog-3-what-baru-flooding-looks-like.html</loc>
+    <lastmod>2026-07-29</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://elbaru.com/blog-4-how-baru-flood-score-works.html</loc>
+    <lastmod>2026-07-29</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
   </url>
 </urlset>
