@@ -1,1 +1,15 @@
+User-agent: *
+Allow: /
 
+# Retired builds — do not index (delete these files when convenient)
+Disallow: /baru-flood-v3.html
+Disallow: /baru-flood-v5html
+Disallow: /baru-flood-v6.html
+Disallow: /baru-flood-v7.html
+Disallow: /baru-flood-v8.html
+Disallow: /baru-flood-v9.html
+Disallow: /baru-flood-v10.html
+Disallow: /baru.html.12
+Disallow: /re%20-index.html
+
+Sitemap: https://elbaru.com/sitemap.xml
