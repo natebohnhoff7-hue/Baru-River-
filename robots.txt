@@ -11,5 +11,6 @@ Disallow: /baru-flood-v9.html
 Disallow: /baru-flood-v10.html
 Disallow: /baru.html.12
 Disallow: /re%20-index.html
+Disallow: /es/
 
 Sitemap: https://elbaru.com/sitemap.xml
