@@ -1,0 +1,41 @@
+name: IMN alerts
+
+# Pulls the IMN weather-advisory feed and upserts the ones that name the
+# Pacifico Sur / Baru catchment into Supabase. The site reads from Supabase.
+#
+# Note: GitHub's scheduled runs are best-effort, not punctual — a */15 cron
+# often lands 15-40 min late when GitHub is busy. That is fine for a ticker
+# (IMN posts every 1-3 days). Do not build anything time-critical on it.
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:        # lets you run it by hand from the Actions tab
+
+# don't pile up runs if one is slow
+concurrency:
+  group: imn-alerts
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Pull IMN alerts into Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: python imn_alerts.py
