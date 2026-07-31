@@ -230,7 +230,7 @@ body{background:var(--cream);font-family:'DM Mono',monospace;color:var(--ink);mi
 .blog-title{font-family:'Lora',serif;font-size:13px;font-style:italic;color:var(--green-dark);line-height:1.4;margin-bottom:5px}
 .blog-excerpt{font-size:9px;color:var(--muted);line-height:1.7;margin-bottom:7px}
 .blog-read{font-size:8.5px;letter-spacing:0.12em;text-transform:uppercase;color:var(--green)}
-</style>
+.imn-box{width:100%;margin:2px 0 12px;background:var(--card);border:1px solid var(--border);border-left:4px solid var(--amber);border-radius:12px;padding:11px 13px;text-align:left}.imn-box.sev-danger{border-left-color:var(--red)}.imn-box.sev-warning{border-left-color:#c0670a}.imn-box.sev-info{border-left-color:var(--amber)}.imn-box-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px}.imn-box-tag{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:#fff;background:var(--amber);padding:2px 8px;border-radius:9px;white-space:nowrap}.imn-box.sev-danger .imn-box-tag{background:var(--red)}.imn-box.sev-warning .imn-box-tag{background:#c0670a}.imn-box-time{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.1em;color:var(--muted);white-space:nowrap}.imn-box-text{font-family:'DM Mono',monospace;font-size:10.5px;line-height:1.7;color:var(--ink)}.imn-box-src{display:inline-block;margin-top:8px;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:var(--teal);text-decoration:none}.imn-box-src:hover{color:var(--green-dark)}</style>
 </head>
 <body>
 <div id="flood-water" aria-hidden="true">
@@ -270,7 +270,7 @@ body{background:var(--cream);font-family:'DM Mono',monospace;color:var(--ink);mi
     </div>
   </div>
   <div class="chips" id="chips"><span class="chip" style="color:#888">Fetching…</span></div>
-  <div id="sunset-mini" class="sunset-mini" style="display:none"></div>
+  <div id="imn-box" class="imn-box" style="display:none"><div class="imn-box-head"><span class="imn-box-tag" id="imn-box-tag">IMN</span><span class="imn-box-time" id="imn-box-time"></span></div><div class="imn-box-text" id="imn-box-text"></div><a class="imn-box-src" id="imn-box-src" href="https://www.imn.ac.cr/avisos-meteorologicos" target="_blank" rel="noopener"></a></div><div id="sunset-mini" class="sunset-mini" style="display:none"></div>
   <button id="flood-report-btn" class="flood-report-btn" data-i18n="report_btn" onclick="reportFlooding()">⚠️ Report flooding now</button>
   <a class="wa-alerts-btn" href="https://chat.whatsapp.com/ErtsBDxSl9196eCVZ0BoPz?mode=gi_t" target="_blank" rel="noopener" data-i18n="wa_btn">🔔 Join flood alerts on WhatsApp</a>
 </div>
@@ -301,7 +301,7 @@ body{background:var(--cream);font-family:'DM Mono',monospace;color:var(--ink);mi
         <div class="stat-box"><div class="stat-val" id="ov-tmp">—</div><div class="stat-unit">°C</div><div class="stat-lbl" data-i18n="lbl_temp">Temperature</div></div>
         <div class="stat-box"><div class="stat-val" id="ov-hum">—</div><div class="stat-unit">%</div><div class="stat-lbl" data-i18n="lbl_hum">Humidity</div></div>
         <div class="stat-box"><div class="stat-val" id="ov-wnd">—</div><div class="stat-unit">km/h</div><div class="stat-lbl" data-i18n="lbl_wind">Wind</div></div>
-        <div class="stat-box"><div class="stat-val" id="ov-soi">—</div><div class="stat-unit">m³/m³</div><div class="stat-lbl" data-i18n="lbl_soil">Soil Moisture</div></div>
+        <div class="stat-box"><div class="stat-val" id="ov-soi">—</div><div class="stat-unit">m³/m³</div><div class="stat-lbl" data-i18n="lbl_soil">Soil Moisture</div><div class="stat-lbl" id="imn-soil" style="display:none;margin-top:3px;color:var(--teal);font-weight:500"></div>
       </div>
     </div>
     <div class="card">
@@ -451,7 +451,7 @@ function t(k){if(k==null)return k;var L=I18N[LANG]||I18N.en;return(L[k]!=null?L[
 function applyStaticLang(){try{document.documentElement.lang=LANG;}catch(e){}var els=document.querySelectorAll('[data-i18n]');for(var i=0;i<els.length;i++){var k=els[i].getAttribute('data-i18n');var v=t(k);if(v!=null)els[i].textContent=v;}var be=document.getElementById('lang-en'),bs=document.getElementById('lang-es');if(be)be.classList.toggle('active',LANG==='en');if(bs)bs.classList.toggle('active',LANG==='es');}
 function i18nOverrideActive(){try{var raw=localStorage.getItem('flood_override');if(!raw)return false;var o=JSON.parse(raw);return(Date.now()-o.ts)<=OVERRIDE_WINDOW_MS;}catch(e){return false;}}
 function renderDynamicLang(){try{var now=new Date();var hb=document.getElementById('hbadge');if(hb&&typeof getSeasonByDate==='function'){var se=getSeasonByDate(now);var m=now.toLocaleString(LANG==='es'?'es-CR':'en-US',{month:'long',timeZone:'America/Costa_Rica'});hb.textContent=se.emoji+' '+t(se.name)+' · '+m;}if(i18nOverrideActive())return;if(typeof G!=='undefined'&&G&&G.level){var sl=document.getElementById('slbl');if(sl)sl.textContent=t(G.level.label);var c=document.getElementById('chips');if(c)c.innerHTML='<span class="chip" style="color:'+G.level.color+'">'+t(G.level.label)+'</span> <span class="chip" style="color:var(--teal)">'+G.phase.emoji+' '+t(G.phase.name)+'</span> <span class="chip" style="color:var(--muted)">'+G.season.emoji+' '+t(G.season.name)+'</span> <span class="chip" style="color:'+uvColor(G.uvMax)+'">☀️ UV '+(G.uvMax!=null?Math.round(G.uvMax):'—')+'</span>';}}catch(e){}}
-function setLang(l){if(l!=='en'&&l!=='es')return;LANG=l;try{localStorage.setItem('lang',l);}catch(e){}applyStaticLang();renderDynamicLang();}
+function setLang(l){if(l!=='en'&&l!=='es')return;LANG=l;try{localStorage.setItem('lang',l);}catch(e){}applyStaticLang();renderDynamicLang();renderIMNBox();}
 const MOUTH={lat:9.2703,lon:-83.8580};
 const COORDS={mouth:{lat:9.2703,lon:-83.8580,label:'River Soul (Barú River)'},platanillo:{lat:9.2900,lon:-83.8100,label:'Platanillo (Mid-Valley)'},tinamastes:{lat:9.3059,lon:-83.7779,label:'Tinamastes Valley'}};
 const STATIONS=[{id:'quepos',label:'Quepos',lat:9.4319,lon:-84.1604,color:'#2d6a4f',dist:'38km N'},{id:'dominical',label:'Dominical',lat:9.2528,lon:-83.8648,color:'#0d7f7f',dist:'2km SW'},{id:'uvita',label:'Uvita',lat:9.1533,lon:-83.7347,color:'#d4a96a',dist:'15km S'}];
@@ -500,7 +500,41 @@ function getOpFactor(){try{return Math.max(0,Math.min(100,parseInt(localStorage.
 function updateOpDisplay(){const slider=document.getElementById('op-slider');if(!slider)return;const v=parseInt(slider.value,10);const pts=Math.round(v*0.10);const pctEl=document.getElementById('op-pct');const ptsEl=document.getElementById('op-pts');if(pctEl)pctEl.textContent=v+'%';if(ptsEl)ptsEl.textContent='→ adds '+pts+' pts to total score';}
 async function writeSiteConfig(patch){if(!sbClient)return;try{const{error}=await sbClient.from('site_config').upsert({id:1,...patch},{onConflict:'id'});if(error)console.warn('site_config write:',error.message);}catch(e){console.warn('writeSiteConfig:',e);}}
 async function loadSiteConfig(){if(!sbClient)return;try{const{data,error}=await sbClient.from('site_config').select('*').eq('id',1).single();if(error||!data)return;try{localStorage.setItem('alert_text',data.alert_text||'');localStorage.setItem('alert_on',data.alert_on?'1':'0');localStorage.setItem('alert_sev',data.alert_sev||'warning');localStorage.setItem('op_factor',String(data.op_factor||0));}catch(e){}renderTicker();}catch(e){console.warn('loadSiteConfig:',e);}}
-function renderTicker(){try{const text=(localStorage.getItem('alert_text')||'').trim();const on=localStorage.getItem('alert_on')==='1';const sev=localStorage.getItem('alert_sev')||'warning';const outer=document.getElementById('alert-ticker');const inner=document.getElementById('ticker-text');if(!outer||!inner)return;inner.textContent=text+'          '+text+'          '+text;outer.className='ticker-outer'+(on&&text?' on sev-'+sev:'');const lbl=document.getElementById('ticker-label');if(lbl){if(sev==='danger')lbl.textContent='🔴 DANGER';else if(sev==='warning')lbl.textContent='⚠ WARNING';else lbl.textContent='ℹ INFO';}const track=document.getElementById('tog-track');const thumb=document.getElementById('tog-thumb');const tlbl=document.getElementById('toggle-label');const ta=document.getElementById('alert-text');const sevSel=document.getElementById('alert-sev');const sliderEl=document.getElementById('op-slider');if(track)track.className='tog-track'+(on?' on':'');if(thumb)thumb.className='tog-thumb'+(on?' on':'');if(tlbl)tlbl.textContent=on?'Ticker ON':'Ticker OFF';if(ta&&!ta.value)ta.value=text;if(sevSel)sevSel.value=sev;if(sliderEl){sliderEl.value=Math.round(getOpFactor()*100);updateOpDisplay();}}catch(e){console.warn('renderTicker:',e);}}
+window.__imnAlert=null;window.__imnSoil=null;
+async function loadIMN(){if(!sbClient)return;try{
+const since48=new Date(Date.now()-48*3600000).toISOString();
+const r1=await sbClient.from('imn_alerts').select('*').eq('relevant',true).gte('published',since48).order('published',{ascending:false}).limit(1);
+if(!r1.error&&r1.data&&r1.data.length)window.__imnAlert=r1.data[0];
+const since7=new Date(Date.now()-7*24*3600000).toISOString();
+const r2=await sbClient.from('imn_alerts').select('soil_pct,published').eq('relevant',true).not('soil_pct','is',null).gte('published',since7).order('published',{ascending:false}).limit(1);
+if(!r2.error&&r2.data&&r2.data.length)window.__imnSoil=r2.data[0];
+renderTicker();renderIMNSoil();renderIMNBox();
+}catch(e){console.warn('loadIMN:',e);}}
+function renderIMNBox(){try{
+var a=window.__imnAlert;var box=document.getElementById('imn-box');if(!box)return;
+if(!a){box.style.display='none';return;}
+var es=(LANG==='es');
+var txt=(es?(a.advertencia||a.title||''):(a.summary_en||a.advertencia||a.title||'')).trim();
+if(!txt){box.style.display='none';return;}
+var sev=a.severity==='HIGH'?'danger':(a.severity==='MODERATE'?'warning':'info');
+box.className='imn-box sev-'+sev;
+var tag=document.getElementById('imn-box-tag');
+if(tag)tag.textContent=a.severity==='HIGH'?(es?'IMN \u00b7 ALTO':'IMN \u00b7 HIGH')
+:(a.severity==='MODERATE'?(es?'IMN \u00b7 MODERADO':'IMN \u00b7 MODERATE'):'IMN');
+var t=document.getElementById('imn-box-text');if(t)t.textContent=txt;
+var tm=document.getElementById('imn-box-time');
+if(tm&&a.published){var mins=Math.max(0,Math.round((Date.now()-new Date(a.published).getTime())/60000));
+var rel=mins<60?(mins+'m'):(mins<1440?(Math.round(mins/60)+'h'):(Math.round(mins/1440)+'d'));
+tm.textContent=rel+(es?' atr\u00e1s':' ago');}
+var src=document.getElementById('imn-box-src');
+if(src){src.href=a.link||'https://www.imn.ac.cr/avisos-meteorologicos';
+src.textContent=es?'Instituto Meteorol\u00f3gico Nacional \u2192':'Costa Rica Met Office (IMN) \u2192';}
+box.style.display='block';
+}catch(e){console.warn('renderIMNBox:',e);}}
+function renderIMNSoil(){try{const el=document.getElementById('imn-soil');if(!el)return;const s=window.__imnSoil;
+if(s&&s.soil_pct!=null){el.textContent='IMN '+Math.round(s.soil_pct)+'%';el.style.display='block';}
+else{el.style.display='none';}}catch(e){}}
+function renderTicker(){try{const text=(localStorage.getItem('alert_text')||'').trim();const on=localStorage.getItem('alert_on')==='1';const sev=localStorage.getItem('alert_sev')||'warning';let dText=text,dOn=on,dSev=sev,isIMN=false;if(!(on&&text)&&window.__imnAlert){const a=window.__imnAlert;const t=(a.summary_en||a.advertencia||a.title||'').trim();if(t){dText=t;dOn=true;isIMN=true;dSev=a.severity==='HIGH'?'danger':(a.severity==='MODERATE'?'warning':'info');}}const outer=document.getElementById('alert-ticker');const inner=document.getElementById('ticker-text');if(!outer||!inner)return;inner.textContent=dText+'          '+dText+'          '+dText;outer.className='ticker-outer'+(dOn&&dText?' on sev-'+dSev:'');const lbl=document.getElementById('ticker-label');if(lbl){if(isIMN)lbl.textContent='⚠ IMN';else if(dSev==='danger')lbl.textContent='🔴 DANGER';else if(dSev==='warning')lbl.textContent='⚠ WARNING';else lbl.textContent='ℹ INFO';}const track=document.getElementById('tog-track');const thumb=document.getElementById('tog-thumb');const tlbl=document.getElementById('toggle-label');const ta=document.getElementById('alert-text');const sevSel=document.getElementById('alert-sev');const sliderEl=document.getElementById('op-slider');if(track)track.className='tog-track'+(on?' on':'');if(thumb)thumb.className='tog-thumb'+(on?' on':'');if(tlbl)tlbl.textContent=on?'Ticker ON':'Ticker OFF';if(ta&&!ta.value)ta.value=text;if(sevSel)sevSel.value=sev;if(sliderEl){sliderEl.value=Math.round(getOpFactor()*100);updateOpDisplay();}}catch(e){console.warn('renderTicker:',e);}}
 function toggleAlert(){const on=localStorage.getItem('alert_on')==='1';const newOn=!on;try{localStorage.setItem('alert_on',newOn?'1':'0');}catch(e){}writeSiteConfig({alert_on:newOn});renderTicker();}
 async function saveOperator(){const v=parseInt(document.getElementById('op-slider')?.value||'0',10);try{localStorage.setItem('op_factor',String(v));}catch(e){}await writeSiteConfig({op_factor:v});const ok=document.getElementById('op-ok');if(ok){ok.style.display='block';setTimeout(()=>ok.style.display='none',2500);}loadAll();}
 async function saveAlert(){const text=(document.getElementById('alert-text')?.value||'').trim();const on=localStorage.getItem('alert_on')==='1';const sev=document.getElementById('alert-sev')?.value||'warning';try{localStorage.setItem('alert_text',text);localStorage.setItem('alert_sev',sev);}catch(e){}await writeSiteConfig({alert_text:text,alert_on:on,alert_sev:sev});renderTicker();const ok=document.getElementById('alert-ok');if(ok){ok.style.display='block';setTimeout(()=>ok.style.display='none',2500);}}
@@ -670,6 +704,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeRadarModal();c
 applyStaticLang();
 renderTicker();
 loadSiteConfig();
+loadIMN();
 loadAll();
 setTimeout(()=>{const el=document.getElementById('ov-loading');if(el&&el.style.display!=='none')el.innerHTML='<div class="err">⚠️ Could not load data. Check internet and refresh.</div>';},30000);
 </script>
