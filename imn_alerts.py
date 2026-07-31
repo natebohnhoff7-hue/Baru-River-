@@ -63,6 +63,26 @@ def severity(normed):
     return "INFO"
 
 
+RAIN_RANGE = re.compile(
+    r"acumulad\w*[^.]{0,70}?(\d{1,3})\s*(?:mm)?\s*(?:[-\u2013]|\sy\s|\sa\s)\s*(\d{1,3})\s*mm",
+    re.IGNORECASE)
+RAIN_PEAK = re.compile(
+    r"m[a\u00e1]ximos?[^.]{0,50}?(\d{1,3})\s*(?:[-\u2013]\s*(\d{1,3}))?\s*mm",
+    re.IGNORECASE)
+
+
+def rain_figures(desc):
+    """IMN states forecast accumulations — the most actionable number they give."""
+    out = []
+    r = RAIN_RANGE.search(desc)
+    if r:
+        out.append("rain %s\u2013%s mm" % (r.group(1), r.group(2)))
+    p = RAIN_PEAK.search(desc)
+    if p:
+        out.append("peaks to %s mm" % (p.group(2) or p.group(1)))
+    return ", ".join(out)
+
+
 HAZARDS = [
     (re.compile(r"inundacion"), "flooding"),
     (re.compile(r"deslizamiento"), "landslides"),
@@ -74,7 +94,7 @@ HAZARDS = [
 ]
 
 
-def summary_en(normed, severity, soil):
+def summary_en(normed, severity, soil, desc=""):
     """Build a plain-English line from what we detected, rather than machine
     translating a safety message. Deterministic: no hallucination risk."""
     hz = []
@@ -90,6 +110,9 @@ def summary_en(normed, severity, soil):
     else:
         h = ", ".join(hz[:-1]) + " and " + hz[-1]
     out = "IMN advisory \u2014 South Pacific watersheds: " + h + "."
+    rain = rain_figures(desc)
+    if rain:
+        out += " Forecast " + rain + "."
     if soil is not None:
         out += " Soil saturation %d%%." % int(soil)
     if severity == "HIGH":
@@ -147,7 +170,7 @@ def parse_feed(xml_text):
         soil_v = float(soil.group(1)) if soil else None
 
         rows.append({
-            "summary_en": summary_en(normed, sev, soil_v),
+            "summary_en": summary_en(normed, sev, soil_v, desc),
             "guid": guid,
             "published": published,
             "title": title,
