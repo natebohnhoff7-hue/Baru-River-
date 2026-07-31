@@ -230,7 +230,7 @@ body{background:var(--cream);font-family:'DM Mono',monospace;color:var(--ink);mi
 .blog-title{font-family:'Lora',serif;font-size:13px;font-style:italic;color:var(--green-dark);line-height:1.4;margin-bottom:5px}
 .blog-excerpt{font-size:9px;color:var(--muted);line-height:1.7;margin-bottom:7px}
 .blog-read{font-size:8.5px;letter-spacing:0.12em;text-transform:uppercase;color:var(--green)}
-.imn-box{width:100%;margin:2px 0 12px;background:var(--card);border:1px solid var(--border);border-left:4px solid var(--amber);border-radius:12px;padding:11px 13px;text-align:left}.imn-box.sev-danger{border-left-color:var(--red)}.imn-box.sev-warning{border-left-color:#c0670a}.imn-box.sev-info{border-left-color:var(--amber)}.imn-box-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px}.imn-box-tag{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:#fff;background:var(--amber);padding:2px 8px;border-radius:9px;white-space:nowrap}.imn-box.sev-danger .imn-box-tag{background:var(--red)}.imn-box.sev-warning .imn-box-tag{background:#c0670a}.imn-box-time{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.1em;color:var(--muted);white-space:nowrap}.imn-box-text{font-family:'DM Mono',monospace;font-size:10.5px;line-height:1.7;color:var(--ink)}.imn-box-src{display:inline-block;margin-top:8px;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:var(--teal);text-decoration:none}.imn-box-src:hover{color:var(--green-dark)}</style>
+.imn-box{width:100%;margin:2px 0 12px;background:var(--card);border:1px solid var(--border);border-left:4px solid var(--amber);border-radius:12px;padding:11px 13px;text-align:left}.imn-box.sev-danger{border-left-color:var(--red)}.imn-box.sev-warning{border-left-color:#c0670a}.imn-box.sev-info{border-left-color:var(--amber)}.imn-box-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px}.imn-box-tag{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.14em;text-transform:uppercase;color:#fff;background:var(--amber);padding:2px 8px;border-radius:9px;white-space:nowrap}.imn-box.sev-danger .imn-box-tag{background:var(--red)}.imn-box.sev-warning .imn-box-tag{background:#c0670a}.imn-box-time{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.1em;color:var(--muted);white-space:nowrap}.imn-box-text{font-family:'DM Mono',monospace;font-size:10.5px;line-height:1.7;color:var(--ink)}.imn-box-src{display:inline-block;margin-top:8px;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:var(--teal);text-decoration:none}.imn-box-src:hover{color:var(--green-dark)}.imn-fc{width:100%;margin:-6px 0 12px;display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:10px;overflow:hidden}.imn-fc-cell{background:var(--card);padding:8px 4px;text-align:center}.imn-fc-per{font-family:'DM Mono',monospace;font-size:7.5px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}.imn-fc-val{font-family:'DM Mono',monospace;font-size:8.5px;line-height:1.35;color:var(--ink)}</style>
 </head>
 <body>
 <div id="flood-water" aria-hidden="true">
@@ -270,7 +270,7 @@ body{background:var(--cream);font-family:'DM Mono',monospace;color:var(--ink);mi
     </div>
   </div>
   <div class="chips" id="chips"><span class="chip" style="color:#888">Fetching…</span></div>
-  <div id="imn-box" class="imn-box" style="display:none"><div class="imn-box-head"><span class="imn-box-tag" id="imn-box-tag">IMN</span><span class="imn-box-time" id="imn-box-time"></span></div><div class="imn-box-text" id="imn-box-text"></div><a class="imn-box-src" id="imn-box-src" href="https://www.imn.ac.cr/avisos-meteorologicos" target="_blank" rel="noopener"></a></div><div id="sunset-mini" class="sunset-mini" style="display:none"></div>
+  <div id="imn-box" class="imn-box" style="display:none"><div class="imn-box-head"><span class="imn-box-tag" id="imn-box-tag">IMN</span><span class="imn-box-time" id="imn-box-time"></span></div><div class="imn-box-text" id="imn-box-text"></div><a class="imn-box-src" id="imn-box-src" href="https://www.imn.ac.cr/avisos-meteorologicos" target="_blank" rel="noopener"></a></div><div id="imn-fc" class="imn-fc" style="display:none"><div class="imn-fc-cell"><div class="imn-fc-per" id="fc-p0"></div><div class="imn-fc-val" id="fc-v0"></div></div><div class="imn-fc-cell"><div class="imn-fc-per" id="fc-p1"></div><div class="imn-fc-val" id="fc-v1"></div></div><div class="imn-fc-cell"><div class="imn-fc-per" id="fc-p2"></div><div class="imn-fc-val" id="fc-v2"></div></div><div class="imn-fc-cell"><div class="imn-fc-per" id="fc-p3"></div><div class="imn-fc-val" id="fc-v3"></div></div></div><div id="sunset-mini" class="sunset-mini" style="display:none"></div>
   <button id="flood-report-btn" class="flood-report-btn" data-i18n="report_btn" onclick="reportFlooding()">⚠️ Report flooding now</button>
   <a class="wa-alerts-btn" href="https://chat.whatsapp.com/ErtsBDxSl9196eCVZ0BoPz?mode=gi_t" target="_blank" rel="noopener" data-i18n="wa_btn">🔔 Join flood alerts on WhatsApp</a>
 </div>
@@ -451,7 +451,7 @@ function t(k){if(k==null)return k;var L=I18N[LANG]||I18N.en;return(L[k]!=null?L[
 function applyStaticLang(){try{document.documentElement.lang=LANG;}catch(e){}var els=document.querySelectorAll('[data-i18n]');for(var i=0;i<els.length;i++){var k=els[i].getAttribute('data-i18n');var v=t(k);if(v!=null)els[i].textContent=v;}var be=document.getElementById('lang-en'),bs=document.getElementById('lang-es');if(be)be.classList.toggle('active',LANG==='en');if(bs)bs.classList.toggle('active',LANG==='es');}
 function i18nOverrideActive(){try{var raw=localStorage.getItem('flood_override');if(!raw)return false;var o=JSON.parse(raw);return(Date.now()-o.ts)<=OVERRIDE_WINDOW_MS;}catch(e){return false;}}
 function renderDynamicLang(){try{var now=new Date();var hb=document.getElementById('hbadge');if(hb&&typeof getSeasonByDate==='function'){var se=getSeasonByDate(now);var m=now.toLocaleString(LANG==='es'?'es-CR':'en-US',{month:'long',timeZone:'America/Costa_Rica'});hb.textContent=se.emoji+' '+t(se.name)+' · '+m;}if(i18nOverrideActive())return;if(typeof G!=='undefined'&&G&&G.level){var sl=document.getElementById('slbl');if(sl)sl.textContent=t(G.level.label);var c=document.getElementById('chips');if(c)c.innerHTML='<span class="chip" style="color:'+G.level.color+'">'+t(G.level.label)+'</span> <span class="chip" style="color:var(--teal)">'+G.phase.emoji+' '+t(G.phase.name)+'</span> <span class="chip" style="color:var(--muted)">'+G.season.emoji+' '+t(G.season.name)+'</span> <span class="chip" style="color:'+uvColor(G.uvMax)+'">☀️ UV '+(G.uvMax!=null?Math.round(G.uvMax):'—')+'</span>';}}catch(e){}}
-function setLang(l){if(l!=='en'&&l!=='es')return;LANG=l;try{localStorage.setItem('lang',l);}catch(e){}applyStaticLang();renderDynamicLang();renderIMNBox();}
+function setLang(l){if(l!=='en'&&l!=='es')return;LANG=l;try{localStorage.setItem('lang',l);}catch(e){}applyStaticLang();renderDynamicLang();renderIMNBox();renderIMNFc();}
 const MOUTH={lat:9.2703,lon:-83.8580};
 const COORDS={mouth:{lat:9.2703,lon:-83.8580,label:'River Soul (Barú River)'},platanillo:{lat:9.2900,lon:-83.8100,label:'Platanillo (Mid-Valley)'},tinamastes:{lat:9.3059,lon:-83.7779,label:'Tinamastes Valley'}};
 const STATIONS=[{id:'quepos',label:'Quepos',lat:9.4319,lon:-84.1604,color:'#2d6a4f',dist:'38km N'},{id:'dominical',label:'Dominical',lat:9.2528,lon:-83.8648,color:'#0d7f7f',dist:'2km SW'},{id:'uvita',label:'Uvita',lat:9.1533,lon:-83.7347,color:'#d4a96a',dist:'15km S'}];
@@ -508,8 +508,22 @@ if(!r1.error&&r1.data&&r1.data.length)window.__imnAlert=r1.data[0];
 const since7=new Date(Date.now()-7*24*3600000).toISOString();
 const r2=await sbClient.from('imn_alerts').select('soil_pct,published').eq('relevant',true).not('soil_pct','is',null).gte('published',since7).order('published',{ascending:false}).limit(1);
 if(!r2.error&&r2.data&&r2.data.length)window.__imnSoil=r2.data[0];
-renderTicker();renderIMNSoil();renderIMNBox();
+try{const rf=await sbClient.from('imn_forecast').select('*').eq('id',1).limit(1);if(!rf.error&&rf.data&&rf.data.length)window.__imnFc=rf.data[0];}catch(e){}renderTicker();renderIMNSoil();renderIMNBox();renderIMNFc();
 }catch(e){console.warn('loadIMN:',e);}}
+window.__imnFc=null;
+function renderIMNFc(){try{
+var f=window.__imnFc;var el=document.getElementById('imn-fc');if(!el)return;
+if(!f){el.style.display='none';return;}
+var es=(LANG==='es');
+var labels=es?['MADRUGADA','MA\u00d1ANA','TARDE','NOCHE']
+             :['PRE-DAWN','MORNING','AFTERNOON','NIGHT'];
+var keys=['madrugada','manana','tarde','noche'];var any=false;
+for(var i=0;i<4;i++){
+var v=f[keys[i]+(es?'_es':'_en')]||f[keys[i]+'_es']||'';
+var p=document.getElementById('fc-p'+i),d=document.getElementById('fc-v'+i);
+if(p)p.textContent=labels[i];if(d)d.textContent=v;if(v)any=true;}
+el.style.display=any?'grid':'none';
+}catch(e){console.warn('renderIMNFc:',e);}}
 function renderIMNBox(){try{
 var a=window.__imnAlert;var box=document.getElementById('imn-box');if(!box)return;
 if(!a){box.style.display='none';return;}
