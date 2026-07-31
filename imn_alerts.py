@@ -63,6 +63,40 @@ def severity(normed):
     return "INFO"
 
 
+HAZARDS = [
+    (re.compile(r"inundacion"), "flooding"),
+    (re.compile(r"deslizamiento"), "landslides"),
+    (re.compile(r"caudales|quebradas|rios pequenos"), "rising streams"),
+    (re.compile(r"alcantarillado"), "storm drains backing up"),
+    (re.compile(r"tormenta electrica"), "thunderstorms"),
+    (re.compile(r"aguacero"), "heavy downpours"),
+    (re.compile(r"rafagas"), "strong wind gusts"),
+]
+
+
+def summary_en(normed, severity, soil):
+    """Build a plain-English line from what we detected, rather than machine
+    translating a safety message. Deterministic: no hallucination risk."""
+    hz = []
+    for rx, en in HAZARDS:
+        if rx.search(normed) and en not in hz:
+            hz.append(en)
+    if not hz:
+        hz = ["rain"]
+    if len(hz) == 1:
+        h = hz[0]
+    elif len(hz) == 2:
+        h = hz[0] + " and " + hz[1]
+    else:
+        h = ", ".join(hz[:-1]) + " and " + hz[-1]
+    out = "IMN advisory \u2014 South Pacific watersheds: " + h + "."
+    if soil is not None:
+        out += " Soil saturation %d%%." % int(soil)
+    if severity == "HIGH":
+        out += " Do not cross moving water."
+    return out
+
+
 def section(desc, label):
     """Pull 'Label: ...' out of the description, up to the next blank line
     or the next section heading."""
@@ -109,13 +143,17 @@ def parse_feed(xml_text):
 
         soil = SOIL_RX.search(desc)
 
+        sev = severity(normed)
+        soil_v = float(soil.group(1)) if soil else None
+
         rows.append({
+            "summary_en": summary_en(normed, sev, soil_v),
             "guid": guid,
             "published": published,
             "title": title,
-            "severity": severity(normed),
+            "severity": sev,
             "relevant": is_relevant(normed),
-            "soil_pct": float(soil.group(1)) if soil else None,
+            "soil_pct": soil_v,
             "advertencia": section(desc, "Advertencia"),
             "diagnostico": section(desc, r"Diagn[oó]stico"),
             "pronostico": section(desc, r"Pron[oó]stico"),
