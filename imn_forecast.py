@@ -13,6 +13,7 @@ Env:
     SUPABASE_ANON_KEY
 """
 
+import datetime
 import json
 import os
 import re
@@ -148,9 +149,15 @@ def main():
         print("::warning::forecast parse raised: %s" % e)
 
     if not row:
-        print("::warning::could not find the %s row \u2014 IMN may have "
-              "changed the page. Forecast not updated." % REGION)
-        return 0
+        print("::error::could not find the %s row \u2014 IMN likely changed "
+              "the page. Forecast NOT updated; the site will hide the strip "
+              "once the last stamp ages out." % REGION, file=sys.stderr)
+        return 1
+
+    # The site hides the forecast strip when this stamp is missing or older
+    # than its freshness window. Only a genuinely fresh parse gets stamped.
+    row["updated_at"] = (datetime.datetime.now(datetime.timezone.utc)
+                         .replace(microsecond=0).isoformat())
 
     try:
         status = upsert(row, base_url, key)
@@ -159,6 +166,7 @@ def main():
         return 0
 
     print("ok http=%s  valid: %s" % (status, row.get("valid_for", "?")))
+    print("  stamped: %s" % row["updated_at"])
     for k in ("madrugada", "manana", "tarde", "noche"):
         print("  %-10s %-34s %s" % (k, row.get(k + "_es", ""), row.get(k + "_en", "")))
     return 0
